@@ -64,7 +64,7 @@ Nothing is anonymous to the database administrator. Private means private from o
 | Frontend | Livewire 3 · Alpine.js · Tailwind (CDN) |
 | Database | PostgreSQL (default connection) or SQLite; the app creates its own `users` table, sharing a database with other apps is a deployment choice, not something the code enforces |
 | Realtime | Laravel Reverb, private channels only |
-| Auth | Jetstream/Fortify sessions; Sanctum tokens for `/auth/ecosystem` (SSO handoff, to be replaced by the signed redeem flow the other apps use) |
+| Auth | Jetstream/Fortify sessions; sign-in through InfoDot via `/auth/ecosystem` (signed redeem, see [Ecosystem](#ecosystem)) |
 | AI | Anthropic Messages API for the moderation first pass; model from `ANTHROPIC_MODEL` |
 | Queue | Laravel queue (`database` by default); **a worker is required**, see below |
 
@@ -103,6 +103,11 @@ php artisan reverb:start        # realtime
 | `PULSE_EDIT_WINDOW_MINUTES` | `30` | `0` switches editing off |
 | `PULSE_LIMIT_POST` / `_COMMENT` / `_REACT` / `_REPORT` / `_JOIN_REQUEST` | 20 / 30 / 60 / 10 / 10 | per user per minute; `0` removes a limit |
 | `PULSE_JOIN_REQUEST_COOLDOWN_DAYS` | `7` | after a denied request |
+| `INFODOT_SERVICE_SECRET` | empty | Must equal `ECOSYSTEM_SECRET_PULSE` in InfoDot. Empty means InfoDot sign-in is off (only a token already in this database is accepted) |
+| `INFODOT_PLATFORM_KEY` | `pulse` | This platform's key in InfoDot |
+| `INFODOT_REDEEM_URL` | `https://infodot.co.za/api/ecosystem/redeem` | |
+| `INFODOT_REDEEM_TIMEOUT` | `5` | seconds |
+| `INFODOT_PROVISION_USERS` | `true` | `false` stops InfoDot creating accounts here; people who already have one still sign in |
 
 ### Operations
 
@@ -110,6 +115,7 @@ php artisan reverb:start        # realtime
 php artisan pulse:recount --dry-run   # exits 1 if any counter has drifted
 php artisan pulse:recount             # repair members / reactions / comments / hashtag counters
 php artisan pulse:sweep-pending       # hold posts stuck in "pending" for a human
+php artisan infodot:link-team {team} {uuid} --promote   # link an existing team to its InfoDot company
 ```
 
 ### Tests
@@ -122,7 +128,24 @@ The suite also passes on PostgreSQL 16.
 
 ## Ecosystem
 
-Dot.Pulse is one of the apps in the InfoDot ecosystem. Single sign-on from the InfoDot hub is handled by `GET /auth/ecosystem` (a Sanctum token in the query string); this is being replaced by the signed redeem flow the other Dot apps use, once the canonical branch is chosen.
+Dot.Pulse is one of the apps in the InfoDot ecosystem.
+
+### Signing in through InfoDot
+
+`GET /auth/ecosystem?token=...` is the sign-in hand-off from the InfoDot hub. Each Dot app has its own database, so Pulse does not look the token up locally: it sends it to InfoDot's redeem endpoint with `Authorization: Bearer INFODOT_SERVICE_SECRET` and `{token, platform: "pulse"}`, and InfoDot answers with the person and their companies.
+
+- The email must be verified by InfoDot (exactly `true`), otherwise the sign-in is refused.
+- A person with no account here gets one, in the same state as a self-registered user: random password nobody knows, a personal team, and a `PulseProfile` (role `customer`) so they can post at once. An existing account is matched by email; an unverified local one is adopted and its password replaced.
+- Platform roles (`moderator`, `admin` on `PulseProfile`) are never read from InfoDot and never granted by sign-in. An existing moderator keeps theirs.
+- InfoDot's companies are synced to Jetstream teams on every sign-in (`teams.infodot_team_uuid`): owners/admins create a company here, members are attached to it, and a company InfoDot stops listing is detached at the next sign-in. Pulse stays one global network: teams are not a visibility boundary.
+- InfoDot unreachable or erroring gives 503 (try again); a refused token gives 403. The route is throttled to 10 requests a minute and the session id is regenerated at sign-in. A `redirect` is honoured only if it is a path on this app.
+- A token already in this database (shared-database setups) is still accepted first and spent.
+
+Deploying it needs both ends set:
+
+1. In InfoDot: `ECOSYSTEM_SECRET_PULSE` set, and Pulse marked live (InfoDot refuses to redeem for a platform that is not live).
+2. Here: `INFODOT_SERVICE_SECRET` (the same value), `INFODOT_PLATFORM_KEY=pulse`, then `php artisan migrate`.
+3. For teams that already exist here, link each to its company so sign-in reuses it instead of creating a second one: `php artisan infodot:link-team {team} {uuid} --promote` (`--promote` turns a personal team into the company).
 
 ## License
 

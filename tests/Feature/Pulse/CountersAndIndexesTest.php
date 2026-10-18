@@ -206,13 +206,16 @@ class CountersAndIndexesTest extends TestCase
     public function test_the_migrations_roll_back_and_forward_cleanly(): void
     {
         // Guards the FK swaps and index drops in the down() methods, on
-        // whichever driver the suite runs on.
-        $this->artisan('migrate:rollback', ['--step' => 2])->assertSuccessful();
+        // whichever driver the suite runs on. Three steps: the InfoDot team
+        // link, then the two moderation migrations.
+        $this->artisan('migrate:rollback', ['--step' => 3])->assertSuccessful();
+        $this->assertFalse(Schema::hasColumn('teams', 'infodot_team_uuid'));
         $this->assertFalse(Schema::hasTable('community_join_requests'));
         $this->assertFalse(Schema::hasColumn('pulse_reports', 'community_id'));
 
         $this->artisan('migrate')->assertSuccessful();
         $this->assertTrue(Schema::hasTable('community_join_requests'));
+        $this->assertTrue(Schema::hasColumn('teams', 'infodot_team_uuid'));
         $this->assertTrue(Schema::hasColumn('pulse_posts', 'published_at'));
     }
 }
