@@ -3,28 +3,33 @@
 namespace App\Events;
 
 use App\Models\PulsePost;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Live feed updates -- README advertises "real-time feed updates via
- * Laravel Reverb" but laravel/reverb was only ever a composer dependency
- * (no config/broadcasting.php, no config/reverb.php, no
- * routes/channels.php) before this pass. Fired the moment a post actually
- * becomes visible in the public feed -- from AiModerationService's
- * auto-approve path and ModerationQueue::approve() (see both call sites).
+ * Tells open feeds that a post just went live, so they refetch. It is a
+ * nudge, not a copy of the post: the payload is only what that nudge needs,
+ * and the feed itself is re-queried through the viewer's own visibility
+ * rules.
  *
- * Public channel, not private: HomeFeed's own query has no team or
- * community visibility filter today (it lists every published() post
- * platform-wide) -- a private per-team channel here would impose a
- * privacy boundary the HTTP feed itself doesn't have. broadcastWith() is
- * deliberately minimal: only what a feed card needs to render, matching
- * what HomeFeed's own listing already exposes.
+ * Channels (all private, i.e. authenticated through /broadcasting/auth):
+ *  - a post with no community, or in a public one, goes to `pulse.feed`,
+ *    which any signed-in user may join;
+ *  - a post in a private community goes ONLY to `community.{id}`, which only
+ *    members may join, and carries no community name.
+ *
+ * It used to go to a public channel named `pulse-feed` with the title and
+ * community name of every post, including private-community posts, to
+ * anyone who opened a websocket.
+ *
+ * ShouldDispatchAfterCommit: never announce a post inside a transaction that
+ * could still roll back.
  */
-class PostPublished implements ShouldBroadcast
+class PostPublished implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -32,7 +37,13 @@ class PostPublished implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new Channel('pulse-feed')];
+        $community = $this->post->community;
+
+        if ($community !== null && $community->isPrivate()) {
+            return [new PrivateChannel("community.{$community->id}")];
+        }
+
+        return [new PrivateChannel('pulse.feed')];
     }
 
     public function broadcastAs(): string
@@ -42,12 +53,14 @@ class PostPublished implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        $community = $this->post->community;
+
         return [
             'id' => $this->post->id,
-            'title' => $this->post->title,
             'type' => $this->post->type,
             'author_name' => $this->post->author->name,
-            'community_name' => $this->post->community?->name,
+            // Only ever a public community's name.
+            'community_name' => $community?->isPublic() ? $community->name : null,
         ];
     }
 }

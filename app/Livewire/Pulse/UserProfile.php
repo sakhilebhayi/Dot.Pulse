@@ -30,6 +30,7 @@ class UserProfile extends Component
     {
         return PulsePost::where('user_id', $this->profileUser->id)
             ->published()
+            ->visibleTo(auth()->user())
             ->with('community')
             ->latest()
             ->limit(20)

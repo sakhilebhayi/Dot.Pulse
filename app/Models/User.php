@@ -94,6 +94,41 @@ class User extends Authenticatable
         return $this->belongsToMany(self::class, 'pulse_followers', 'follower_id', 'following_id')->withTimestamps();
     }
 
+    /**
+     * Platform-wide moderation (PulseProfile.role). Distinct from being a
+     * moderator of one community, which is a community_memberships.role.
+     */
+    public function isPlatformModerator(): bool
+    {
+        return in_array($this->pulseProfile?->role, ['moderator', 'admin'], true);
+    }
+
+    /**
+     * Ids of the communities this user manages: created, or holds the
+     * admin/moderator role in.
+     *
+     * @return list<int>
+     */
+    public function managedCommunityIds(): array
+    {
+        $viaRole = CommunityMembership::where('user_id', $this->id)
+            ->whereIn('role', Community::MANAGER_ROLES)
+            ->pluck('community_id');
+
+        return Community::where('created_by', $this->id)
+            ->pluck('id')
+            ->merge($viaRole)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** Whether the moderation queue has anything this user may act on. */
+    public function canAccessModeration(): bool
+    {
+        return $this->isPlatformModerator() || $this->managedCommunityIds() !== [];
+    }
+
     public function isFollowing(self $user): bool
     {
         return $this->following()->where('users.id', $user->id)->exists();

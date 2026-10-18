@@ -100,7 +100,10 @@
          styling. --}}
     @vite(['resources/js/app.js'])
 </head>
-<body data-user-id="{{ auth()->id() }}">
+{{-- data-community-channels: the private communities this user belongs to,
+     one realtime channel each (resources/js/pulse-realtime.js). Public
+     communities need none: their posts ride the shared private feed channel. --}}
+<body data-user-id="{{ auth()->id() }}" data-community-channels="{{ auth()->check() ? auth()->user()->joinedCommunities()->where('visibility', '!=', 'public')->pluck('communities.id')->implode(',') : '' }}">
     <x-banner />
 
     <aside class="sidebar">
@@ -121,7 +124,7 @@
             </a>
 
             @auth
-                @if(in_array(auth()->user()->pulseProfile?->role, ['moderator', 'admin'], true))
+                @if(auth()->user()->canAccessModeration())
                     <a href="{{ route('moderation') }}" class="nav-item {{ request()->routeIs('moderation') ? 'active' : '' }}">
                         <span class="material-symbols-rounded nav-icon">gavel</span>
                         Moderation
@@ -172,6 +175,38 @@
     </div>
 
     @stack('modals')
+
+    {{-- Rate-limited actions (App\Support\PulseThrottle) answer HTTP 429.
+         Livewire would show its raw error overlay; show a short notice instead. --}}
+    <div id="pulse-notice" role="status" aria-live="polite" class="dot-card" hidden
+         style="position:fixed;right:20px;bottom:20px;z-index:80;max-width:320px;padding:0.75rem 1rem;font-size:12.5px;color:#f4f4f5;box-shadow:0 12px 32px rgba(0,0,0,0.5);"></div>
+
     @livewireScripts
+    <script>
+        document.addEventListener('livewire:init', () => {
+            let hideTimer;
+
+            Livewire.hook('request', ({ respond, fail }) => {
+                let retryAfter = null;
+
+                respond(({ response }) => { retryAfter = response?.headers?.get('Retry-After') ?? null; });
+
+                fail(({ status, preventDefault }) => {
+                    if (status !== 429) { return; }
+
+                    preventDefault();
+
+                    const notice = document.getElementById('pulse-notice');
+                    notice.textContent = retryAfter
+                        ? `You are doing that too quickly. Try again in ${retryAfter} seconds.`
+                        : 'You are doing that too quickly. Try again in a moment.';
+                    notice.hidden = false;
+
+                    clearTimeout(hideTimer);
+                    hideTimer = setTimeout(() => { notice.hidden = true; }, 6000);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

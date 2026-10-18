@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class BroadcastServiceProvider extends ServiceProvider
@@ -50,7 +52,32 @@ class BroadcastServiceProvider extends ServiceProvider
                 return false;
             }
 
-            return $post->isPublished() || $post->user_id === $user->id;
+            // The same rule the page itself enforces (PulsePostPolicy::view):
+            // live posts to anyone who can see the community, held or
+            // removed posts to their author and responsible moderators.
+            return Gate::forUser($user)->allows('view', $post);
+        });
+
+        /**
+         * Feed nudges for posts with no community or in a public one (see
+         * App\Events\PostPublished). Replaces the old PUBLIC `pulse-feed`
+         * channel: any signed-in user may listen, nobody else. Private-
+         * community posts never travel on it.
+         */
+        Broadcast::channel('pulse.feed', fn (User $user) => true);
+
+        /**
+         * Feed nudges for a private community's posts: its members only.
+         * Same fail-closed, non-int-typed-parameter shape as post.{postId}.
+         */
+        Broadcast::channel('community.{communityId}', function (User $user, $communityId) {
+            if (! is_string($communityId) || ! ctype_digit($communityId)) {
+                return false;
+            }
+
+            $community = Community::find((int) $communityId);
+
+            return $community !== null && Gate::forUser($user)->allows('view', $community);
         });
 
         /**

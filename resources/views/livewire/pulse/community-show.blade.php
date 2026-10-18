@@ -7,6 +7,11 @@
                     @if($community->industry)
                         <span class="dot-badge dot-badge-accent">{{ $community->industry }}</span>
                     @endif
+                    @if($community->isPrivate())
+                        <span class="dot-badge dot-badge-neutral" title="Only members can see what is posted here">
+                            <span class="material-symbols-rounded" style="font-size:12px;margin-right:3px;" aria-hidden="true">lock</span>Private
+                        </span>
+                    @endif
                 </div>
                 @if($community->description)
                     <p style="font-size:13.5px;color:#a1a1aa;line-height:1.6;margin:8px 0 0;max-width:560px;">{{ $community->description }}</p>
@@ -23,6 +28,26 @@
             @endauth
         </div>
     </div>
+
+    @if($this->canManage && $this->pendingRequests->isNotEmpty())
+        <div class="dot-card" style="padding:1.25rem 1.5rem;">
+            <h3 style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#f4f4f5;margin:0 0 0.2rem;">Asking to join</h3>
+            <p style="font-size:12px;color:#71717a;margin:0 0 0.9rem;">{{ $this->pendingRequests->count() }} waiting for a manager of this community.</p>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                @foreach($this->pendingRequests as $joinRequest)
+                    <div class="dot-row" style="display:flex;align-items:center;gap:12px;padding:10px 14px;" wire:key="join-request-{{ $joinRequest->id }}">
+                        <a href="{{ route('users.show', $joinRequest->user) }}" class="dot-avatar" style="width:30px;height:30px;font-size:12px;">{{ strtoupper(substr($joinRequest->user->name, 0, 1)) }}</a>
+                        <div style="min-width:0;flex:1;">
+                            <a href="{{ route('users.show', $joinRequest->user) }}" style="font-size:13px;font-weight:600;color:#f4f4f5;text-decoration:none;">{{ $joinRequest->user->name }}</a>
+                            <span style="font-size:11px;color:#52525b;margin-left:8px;">asked {{ $joinRequest->created_at->diffForHumans() }}</span>
+                        </div>
+                        <button wire:click="approveRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-primary" style="font-size:12px;padding:5px 12px;">Approve</button>
+                        <button wire:click="denyRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">Deny</button>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     <div class="dot-card" style="padding:1.25rem 1.5rem;">
         <h3 style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#f4f4f5;margin:0 0 0.9rem;">Posts</h3>

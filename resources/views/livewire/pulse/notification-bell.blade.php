@@ -19,12 +19,17 @@
         @else
             <div style="display:flex;flex-direction:column;gap:2px;">
                 @foreach($this->recent as $notification)
-                    <a href="{{ route('users.show', $notification->data['follower_id']) }}"
-                       style="display:block;padding:8px 10px;border-radius:8px;text-decoration:none;{{ is_null($notification->read_at) ? 'background:rgba(241,198,46,0.06);border-left:2px solid #f1c62e;' : 'border-left:2px solid transparent;' }}">
-                        <p style="font-size:12.5px;color:#d4d4d8;margin:0;">
-                            <strong style="color:#f4f4f5;">{{ $notification->data['follower_name'] }}</strong> started following you
-                        </p>
-                        <p style="font-size:11px;color:#3f3f46;margin:2px 0 0;">{{ $notification->created_at->diffForHumans() }}</p>
+                    @php $row = $this->present($notification); @endphp
+                    <a @if($row['url']) href="{{ $row['url'] }}" @endif
+                       style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;text-decoration:none;{{ is_null($notification->read_at) ? 'background:rgba(241,198,46,0.06);' : '' }}"
+                       wire:key="notification-{{ $notification->id }}">
+                        <span aria-hidden="true" style="flex-shrink:0;width:6px;height:6px;border-radius:50%;margin-top:6px;background:{{ is_null($notification->read_at) ? '#f1c62e' : 'transparent' }};"></span>
+                        <span style="min-width:0;">
+                            <span style="display:block;font-size:12.5px;color:#d4d4d8;">
+                                <strong style="color:#f4f4f5;">{{ $row['lead'] }}</strong>{{ $row['text'] }}
+                            </span>
+                            <span style="display:block;font-size:11px;color:#3f3f46;margin-top:2px;">{{ $notification->created_at->diffForHumans() }}</span>
+                        </span>
                     </a>
                 @endforeach
             </div>

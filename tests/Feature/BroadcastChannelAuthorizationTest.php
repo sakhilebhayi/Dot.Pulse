@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\User;
 use App\Providers\BroadcastServiceProvider;
@@ -91,6 +92,18 @@ class BroadcastChannelAuthorizationTest extends TestCase
         ]);
 
         $this->authRequest($author, "private-post.{$post->id}")->assertOk();
+    }
+
+    public function test_a_private_community_posts_comment_channel_is_members_only(): void
+    {
+        $community = Community::factory()->private()->create();
+        $member = User::factory()->withPersonalTeam()->create();
+        $community->addMember($member);
+        $post = PulsePost::factory()->create(['community_id' => $community->id]);
+        $stranger = User::factory()->withPersonalTeam()->create();
+
+        $this->authRequest($stranger, "private-post.{$post->id}")->assertForbidden();
+        $this->authRequest($member, "private-post.{$post->id}")->assertOk();
     }
 
     public function test_a_nonexistent_post_id_fails_closed(): void

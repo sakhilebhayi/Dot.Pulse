@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
+    ->middleware('throttle:10,1')
     ->name('ecosystem.auth');
 
 Route::get('/', fn () => view('welcome'));
@@ -25,7 +26,7 @@ Route::middleware([
         );
 
         return view('dashboard', [
-            'totalPosts' => PulsePost::published()->count(),
+            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
             'totalCommunities' => Community::count(),
             'myPoints' => $profile->community_points ?? 0,
         ]);
