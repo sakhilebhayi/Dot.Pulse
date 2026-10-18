@@ -9,7 +9,7 @@
 
     @if($showForm)
         <form wire:submit="publish" style="margin-top:1rem;display:flex;flex-direction:column;gap:0.9rem;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="form-grid-2">
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#a1a1aa;margin-bottom:6px;">Type</label>
                     <select wire:model="type" class="dot-input">
@@ -43,13 +43,13 @@
                 @error('body') <p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p> @enderror
             </div>
 
-            <div style="display:flex;align-items:center;gap:14px;padding-top:2px;">
+            <div class="inline-form-row" style="gap:10px 14px;padding-top:2px;">
                 <button type="submit" class="dot-btn dot-btn-primary" wire:loading.attr="disabled" style="opacity:1;">
                     <span wire:loading.remove>Publish</span>
                     <span wire:loading>Posting…</span>
                 </button>
-                <button type="button" wire:click="$set('showForm', false)" style="background:none;border:none;font-size:13px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
-                <span style="font-size:11px;color:#52525b;margin-left:auto;">Posts are checked automatically. Anything uncertain waits for a person.</span>
+                <button type="button" wire:click="$set('showForm', false)" class="tap" style="background:none;border:none;font-size:13px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                <span style="font-size:11px;color:#52525b;margin-left:auto;flex:1 1 14rem;">Posts are checked automatically. Anything uncertain waits for a person.</span>
             </div>
         </form>
     @endif

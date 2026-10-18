@@ -20,7 +20,7 @@
                 {{ strtoupper(substr($post->author->name, 0, 1)) }}
             </a>
             <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <div class="meta-row">
                     <a href="{{ route('users.show', $post->author) }}" style="font-size:13.5px;font-weight:600;color:#f4f4f5;text-decoration:none;">{{ $post->author->name }}</a>
                     <livewire:pulse.follow-button :user="$post->author" :compact="true" wire:key="follow-{{ $post->author->id }}-postshow" />
                     <span class="dot-badge dot-badge-accent">
@@ -39,8 +39,8 @@
                         <textarea wire:model="editBody" rows="5" class="dot-input"></textarea>
                         @error('editBody')<p style="color:#f87171;font-size:11px;margin:0;">{{ $message }}</p>@enderror
                         <div style="display:flex;gap:10px;">
-                            <button type="submit" class="dot-btn dot-btn-primary" style="padding:5px 12px;font-size:12px;">Save</button>
-                            <button type="button" wire:click="cancelEdit" style="background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                            <button type="submit" class="dot-btn dot-btn-primary tap" style="padding:5px 12px;font-size:12px;">Save</button>
+                            <button type="button" wire:click="cancelEdit" class="tap" style="background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
                         </div>
                     </form>
                 @else
@@ -62,7 +62,7 @@
                     </div>
                 @endif
 
-                <div style="display:flex;align-items:center;gap:16px;margin-top:14px;">
+                <div class="action-row" style="margin-top:14px;">
                     <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#71717a;">
                         <span>👍</span>
                         <span>{{ $post->reactions_count }}</span>
@@ -73,12 +73,12 @@
                     </span>
                     @can('update', $post)
                         @unless($editingPost)
-                            <button wire:click="startEditPost" style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Edit</button>
+                            <button wire:click="startEditPost" class="tap" style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Edit</button>
                         @endunless
                     @endcan
                     @can('delete', $post)
                         @if($post->user_id === auth()->id())
-                            <button wire:click="deletePost" wire:confirm="Delete this post? This also removes its comments from view." style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Delete</button>
+                            <button wire:click="deletePost" wire:confirm="Delete this post? This also removes its comments from view." class="tap" style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Delete</button>
                         @endif
                     @endcan
                     @can('report', $post)
@@ -86,16 +86,16 @@
                     @endcan
                     @can('remove', $post)
                         @if($post->status !== 'removed')
-                            <button wire:click="promptRemove('post')" style="background:none;border:none;font-size:11.5px;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;">Remove as moderator</button>
+                            <button wire:click="promptRemove('post')" class="tap" style="background:none;border:none;font-size:11.5px;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;">Remove as moderator</button>
                         @endif
                     @endcan
                 </div>
 
                 @if($removingTarget === 'post')
-                    <form wire:submit="removeAsModerator" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-                        <input type="text" wire:model="removeReason" placeholder="Reason for removing (kept in the moderation log)" class="dot-input" style="flex:1;" />
-                        <button type="submit" class="dot-btn" style="background:#e24b4a;color:#fff;flex-shrink:0;">Remove</button>
-                        <button type="button" wire:click="cancelRemove" class="dot-btn dot-btn-ghost" style="flex-shrink:0;">Cancel</button>
+                    <form wire:submit="removeAsModerator" class="inline-form-row" style="margin-top:10px;">
+                        <input type="text" wire:model="removeReason" placeholder="Reason for removing (kept in the moderation log)" class="dot-input" aria-label="Reason for removing" />
+                        <button type="submit" class="dot-btn tap" style="background:#e24b4a;color:#fff;flex-shrink:0;">Remove</button>
+                        <button type="button" wire:click="cancelRemove" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">Cancel</button>
                     </form>
                     @error('removeReason')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
                 @endif
@@ -110,7 +110,7 @@
             <form wire:submit="postComment" style="margin-bottom:1.5rem;">
                 <textarea wire:model="newCommentBody" rows="3" placeholder="Write a comment…" class="dot-input"></textarea>
                 @error('newCommentBody')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
-                <button type="submit" class="dot-btn dot-btn-primary" style="margin-top:8px;">
+                <button type="submit" class="dot-btn dot-btn-primary tap" style="margin-top:8px;">
                     Post comment
                 </button>
             </form>
@@ -127,7 +127,7 @@
                         @include('livewire.pulse.partials.comment', ['comment' => $comment, 'isReply' => false])
 
                         @if($comment->replies->isNotEmpty())
-                            <div style="margin-left:32px;margin-top:12px;display:flex;flex-direction:column;gap:12px;border-left:1px solid rgba(255,255,255,0.07);padding-left:16px;">
+                            <div class="reply-thread">
                                 @foreach($comment->replies as $reply)
                                     @include('livewire.pulse.partials.comment', ['comment' => $reply, 'isReply' => true])
                                 @endforeach
@@ -135,19 +135,19 @@
                         @endif
 
                         @if($replyingToId === $comment->id)
-                            <div style="margin-left:32px;margin-top:12px;">
+                            <div class="reply-form">
                                 <form wire:submit="postReply({{ $comment->id }})">
                                     <textarea wire:model="replyBody" rows="2" placeholder="Write a reply…" class="dot-input"></textarea>
                                     @error('replyBody')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
                                     <div style="display:flex;gap:10px;margin-top:8px;">
-                                        <button type="submit" class="dot-btn dot-btn-primary" style="padding:5px 12px;font-size:12px;">Reply</button>
-                                        <button type="button" wire:click="cancelReply" style="background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                                        <button type="submit" class="dot-btn dot-btn-primary tap" style="padding:5px 12px;font-size:12px;">Reply</button>
+                                        <button type="button" wire:click="cancelReply" class="tap" style="background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
                                     </div>
                                 </form>
                             </div>
                         @else
                             @can('comment', $post)
-                                <button wire:click="startReply({{ $comment->id }})" style="margin-left:4px;margin-top:6px;background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Reply</button>
+                                <button wire:click="startReply({{ $comment->id }})" class="tap" style="margin-left:4px;margin-top:6px;background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Reply</button>
                             @endcan
                         @endif
                     </div>

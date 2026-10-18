@@ -6,7 +6,7 @@
     @else
         <div style="display:flex;flex-direction:column;gap:0.4rem;">
             @foreach($this->trending as $hashtag)
-                <button wire:click="filterByHashtag('{{ $hashtag->name }}')" wire:key="trending-{{ $hashtag->id }}"
+                <button wire:click="filterByHashtag('{{ $hashtag->name }}')" wire:key="trending-{{ $hashtag->id }}" class="tap"
                     style="display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:4px 2px;cursor:pointer;text-align:left;color:inherit;">
                     <span style="font-size:12px;color:#a1a1aa;font-family:'JetBrains Mono',monospace;">#{{ $hashtag->name }}</span>
                     <span style="font-size:11px;color:#52525b;">{{ $hashtag->recent_posts_count }}</span>

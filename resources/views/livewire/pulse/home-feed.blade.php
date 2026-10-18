@@ -1,12 +1,12 @@
 <div>
-    <div class="flex items-center justify-between mb-4">
+    <div class="section-head">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;">Community Feed</h3>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3" style="flex-wrap:wrap;">
             <div style="display:flex;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:3px;">
-                <button wire:click="$set('followingOnly', false)" style="padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ ! $followingOnly ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ ! $followingOnly ? '#f1c62e' : '#71717a' }};">For You</button>
-                <button wire:click="$set('followingOnly', true)" style="padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $followingOnly ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $followingOnly ? '#f1c62e' : '#71717a' }};">Following</button>
+                <button wire:click="$set('followingOnly', false)" class="tap" style="padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ ! $followingOnly ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ ! $followingOnly ? '#f1c62e' : '#71717a' }};">For You</button>
+                <button wire:click="$set('followingOnly', true)" class="tap" style="padding:5px 12px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $followingOnly ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $followingOnly ? '#f1c62e' : '#71717a' }};">Following</button>
             </div>
-            <select wire:model.live="filterType" class="dot-input" style="font-size:11px;padding:5px 10px;width:auto;">
+            <select wire:model.live="filterType" class="dot-input tap" aria-label="Filter by post type" style="font-size:11px;padding:5px 10px;width:auto;">
                 <option value="">All types</option>
                 @foreach(\App\Models\PulsePost::$types as $type)
                     <option value="{{ $type }}">{{ ucfirst(str_replace('_', ' ', $type)) }}</option>
@@ -20,7 +20,7 @@
             <span class="dot-badge dot-badge-accent" style="font-family:'JetBrains Mono',monospace;">
                 #{{ $hashtagFilter }}
             </span>
-            <button wire:click="clearHashtagFilter" style="background:none;border:none;color:#52525b;font-size:11px;cursor:pointer;">Clear</button>
+            <button wire:click="clearHashtagFilter" class="tap" style="background:none;border:none;color:#52525b;font-size:11px;cursor:pointer;">Clear</button>
         </div>
     @endif
 
@@ -44,7 +44,7 @@
                             {{ strtoupper(substr($post->author->name, 0, 1)) }}
                         </a>
                         <div style="flex:1;min-width:0;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                            <div class="meta-row">
                                 <a href="{{ route('users.show', $post->author) }}" style="font-size:13.5px;font-weight:600;color:#f4f4f5;text-decoration:none;">{{ $post->author->name }}</a>
                                 <livewire:pulse.follow-button :user="$post->author" :compact="true" wire:key="follow-{{ $post->author->id }}-feed-{{ $post->id }}" />
                                 <span class="dot-badge dot-badge-accent">
@@ -72,12 +72,12 @@
                                 </div>
                             @endif
 
-                            <div style="display:flex;align-items:center;gap:16px;margin-top:12px;">
-                                <button wire:click="react({{ $post->id }})" style="display:flex;align-items:center;gap:5px;background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">
+                            <div class="action-row" style="margin-top:12px;">
+                                <button wire:click="react({{ $post->id }})" class="tap" aria-label="React to this post" style="display:flex;align-items:center;gap:5px;background:none;border:none;font-size:12px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">
                                     <span>👍</span>
                                     <span>{{ $post->reactions_count }}</span>
                                 </button>
-                                <a href="{{ route('posts.show', $post) }}" style="display:flex;align-items:center;gap:5px;font-size:12px;color:#71717a;text-decoration:none;">
+                                <a href="{{ route('posts.show', $post) }}" class="tap" aria-label="Open comments" style="display:flex;align-items:center;gap:5px;font-size:12px;color:#71717a;text-decoration:none;">
                                     <span>💬</span>
                                     <span>{{ $post->comments_count }}</span>
                                 </a>

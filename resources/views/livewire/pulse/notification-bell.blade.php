@@ -1,16 +1,16 @@
 <div x-data="{ open: false }" style="position:relative;">
-    <button @click="open = !open" class="topbar-btn" title="Notifications" style="position:relative;">
-        <span class="material-symbols-rounded">notifications</span>
+    <button @click="open = !open" @keydown.escape.window="open = false" class="topbar-btn" title="Notifications" aria-label="Notifications" :aria-expanded="open.toString()" style="position:relative;">
+        <span class="material-symbols-rounded" aria-hidden="true">notifications</span>
         @if($this->unreadCount > 0)
             <span style="position:absolute;top:-2px;right:-2px;background:#f1c62e;color:#08354f;font-size:9px;font-weight:700;border-radius:100px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'JetBrains Mono',monospace;">{{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}</span>
         @endif
     </button>
 
-    <div x-show="open" x-cloak @click.outside="open = false" class="dot-card" style="position:absolute;top:38px;right:0;width:320px;max-height:400px;overflow-y:auto;z-index:50;padding:0.75rem;">
+    <div x-show="open" x-cloak @click.outside="open = false" class="dot-card bell-panel">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
             <h3 style="font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:#f4f4f5;margin:0;">Notifications</h3>
             @if($this->unreadCount > 0)
-                <button wire:click="markAllRead" style="background:none;border:none;color:#71717a;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;">Mark all read</button>
+                <button wire:click="markAllRead" class="tap" style="background:none;border:none;color:#71717a;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;">Mark all read</button>
             @endif
         </div>
 
