@@ -1,12 +1,13 @@
 <div class="dot-card" style="padding:1.5rem;">
-    <div class="flex items-center justify-between mb-4">
+    <div class="section-head">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;">Communities</h3>
         <input
             wire:model.live="search"
             type="text"
             placeholder="Search communities…"
-            class="dot-input"
-            style="width:200px;font-size:12px;padding:6px 10px;"
+            class="dot-input search-field"
+            aria-label="Search communities"
+            style="font-size:12px;padding:6px 10px;"
         />
     </div>
 
@@ -46,21 +47,21 @@
                     </div>
                     <div style="flex-shrink:0;">
                         @if($isMember)
-                            <button wire:click="leave({{ $community->id }})" class="dot-btn dot-btn-ghost" style="font-size:11px;padding:5px 11px;">
+                            <button wire:click="leave({{ $community->id }})" class="dot-btn dot-btn-ghost tap" style="font-size:11px;padding:5px 11px;">
                                 Leave
                             </button>
                         @elseif($requestStatus === 'pending')
-                            <button wire:click="cancelRequest({{ $community->id }})" class="dot-btn dot-btn-ghost" style="font-size:11px;padding:5px 11px;" title="Withdraw your request">
+                            <button wire:click="cancelRequest({{ $community->id }})" class="dot-btn dot-btn-ghost tap" style="font-size:11px;padding:5px 11px;" title="Withdraw your request">
                                 Requested
                             </button>
                         @elseif(isset($this->coolingDown[$community->id]))
                             <span class="dot-badge dot-badge-neutral" title="A manager declined your request. You can ask again later.">Not accepted</span>
                         @elseif($community->isPrivate())
-                            <button wire:click="join({{ $community->id }})" class="dot-btn dot-btn-primary" style="font-size:11px;padding:5px 11px;">
+                            <button wire:click="join({{ $community->id }})" class="dot-btn dot-btn-primary tap" style="font-size:11px;padding:5px 11px;">
                                 Request to join
                             </button>
                         @else
-                            <button wire:click="join({{ $community->id }})" class="dot-btn dot-btn-primary" style="font-size:11px;padding:5px 11px;">
+                            <button wire:click="join({{ $community->id }})" class="dot-btn dot-btn-primary tap" style="font-size:11px;padding:5px 11px;">
                                 Join
                             </button>
                         @endif

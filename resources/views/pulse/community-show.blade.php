@@ -1,6 +1,6 @@
 <x-app-layout>
 
-<div style="padding:2rem 2.5rem 3rem;max-width:1100px;">
+<div class="pulse-page">
 
     <a href="{{ route('dashboard') }}" style="font-size:0.78rem;color:#52525b;text-decoration:none;">&larr; Back to feed</a>
 

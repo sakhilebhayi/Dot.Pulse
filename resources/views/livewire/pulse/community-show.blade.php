@@ -1,8 +1,8 @@
 <div style="display:flex;flex-direction:column;gap:1rem;">
     <div class="dot-card" style="padding:1.5rem;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-            <div style="min-width:0;">
-                <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;">
+            <div style="min-width:0;flex:1 1 16rem;">
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;">
                     <h2 style="font-family:'Syne',sans-serif;font-size:19px;font-weight:700;color:#f4f4f5;margin:0;">{{ $community->name }}</h2>
                     @if($community->industry)
                         <span class="dot-badge dot-badge-accent">{{ $community->industry }}</span>
@@ -21,9 +21,9 @@
 
             @auth
                 @if($this->isMember)
-                    <button wire:click="leave" class="dot-btn dot-btn-ghost" style="flex-shrink:0;">Leave</button>
+                    <button wire:click="leave" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">Leave</button>
                 @else
-                    <button wire:click="join" class="dot-btn dot-btn-primary" style="flex-shrink:0;">Join</button>
+                    <button wire:click="join" class="dot-btn dot-btn-primary tap" style="flex-shrink:0;">Join</button>
                 @endif
             @endauth
         </div>
@@ -35,14 +35,14 @@
             <p style="font-size:12px;color:#71717a;margin:0 0 0.9rem;">{{ $this->pendingRequests->count() }} waiting for a manager of this community.</p>
             <div style="display:flex;flex-direction:column;gap:2px;">
                 @foreach($this->pendingRequests as $joinRequest)
-                    <div class="dot-row" style="display:flex;align-items:center;gap:12px;padding:10px 14px;" wire:key="join-request-{{ $joinRequest->id }}">
+                    <div class="dot-row" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:10px 14px;" wire:key="join-request-{{ $joinRequest->id }}">
                         <a href="{{ route('users.show', $joinRequest->user) }}" class="dot-avatar" style="width:30px;height:30px;font-size:12px;">{{ strtoupper(substr($joinRequest->user->name, 0, 1)) }}</a>
-                        <div style="min-width:0;flex:1;">
+                        <div style="min-width:0;flex:1 1 9rem;">
                             <a href="{{ route('users.show', $joinRequest->user) }}" style="font-size:13px;font-weight:600;color:#f4f4f5;text-decoration:none;">{{ $joinRequest->user->name }}</a>
                             <span style="font-size:11px;color:#52525b;margin-left:8px;">asked {{ $joinRequest->created_at->diffForHumans() }}</span>
                         </div>
-                        <button wire:click="approveRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-primary" style="font-size:12px;padding:5px 12px;">Approve</button>
-                        <button wire:click="denyRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">Deny</button>
+                        <button wire:click="approveRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-primary tap" style="font-size:12px;padding:5px 12px;">Approve</button>
+                        <button wire:click="denyRequest({{ $joinRequest->id }})" class="dot-btn dot-btn-ghost tap" style="font-size:12px;padding:5px 12px;">Deny</button>
                     </div>
                 @endforeach
             </div>
@@ -58,7 +58,7 @@
             <div style="display:flex;flex-direction:column;gap:2px;">
                 @foreach($this->posts as $post)
                     <a href="{{ route('posts.show', $post) }}" class="dot-row" style="display:block;padding:12px 14px;text-decoration:none;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                        <div class="meta-row">
                             <span style="font-size:12.5px;font-weight:600;color:#f4f4f5;">{{ $post->author->name }}</span>
                             <span class="dot-badge dot-badge-accent">{{ str_replace('_', ' ', ucfirst($post->type)) }}</span>
                             <span style="font-size:11px;color:#3f3f46;margin-left:auto;">{{ $post->created_at->diffForHumans() }}</span>

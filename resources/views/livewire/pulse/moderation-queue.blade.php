@@ -1,10 +1,10 @@
 <div style="max-width:760px;">
     <div style="display:flex;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:3px;width:fit-content;margin-bottom:1.25rem;">
-        <button wire:click="$set('tab', 'held')" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'held' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'held' ? '#f1c62e' : '#71717a' }};">
+        <button wire:click="$set('tab', 'held')" class="tap" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'held' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'held' ? '#f1c62e' : '#71717a' }};">
             Held posts
             <span class="metric-val" style="margin-left:6px;font-size:11px;">{{ $this->heldPosts->count() }}</span>
         </button>
-        <button wire:click="$set('tab', 'reports')" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'reports' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'reports' ? '#f1c62e' : '#71717a' }};">
+        <button wire:click="$set('tab', 'reports')" class="tap" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'reports' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'reports' ? '#f1c62e' : '#71717a' }};">
             Reports
             <span class="metric-val" style="margin-left:6px;font-size:11px;">{{ $this->reportCount }}</span>
         </button>
@@ -27,7 +27,7 @@
                 };
             @endphp
             <div class="dot-card" style="padding:1.25rem 1.5rem;margin-bottom:1rem;" wire:key="held-{{ $post->id }}">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px;">
                     <div>
                         <p style="font-size:13.5px;font-weight:600;color:#f4f4f5;margin:0;">{{ $post->author->name }}</p>
                         <p style="font-size:11.5px;color:#71717a;margin:2px 0 0;">
@@ -54,21 +54,21 @@
                 @endif
 
                 @if($rejectingPostId === $post->id)
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <input type="text" wire:model="rejectReason" placeholder="Reason for rejecting" class="dot-input" style="flex:1;" />
-                        <button wire:click="confirmReject({{ $post->id }})" class="dot-btn" style="background:#e24b4a;color:#fff;flex-shrink:0;">
+                    <div class="inline-form-row">
+                        <input type="text" wire:model="rejectReason" placeholder="Reason for rejecting" class="dot-input" aria-label="Reason" />
+                        <button wire:click="confirmReject({{ $post->id }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;flex-shrink:0;">
                             Confirm reject
                         </button>
-                        <button wire:click="cancelReject" class="dot-btn dot-btn-ghost" style="flex-shrink:0;">
+                        <button wire:click="cancelReject" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">
                             Cancel
                         </button>
                     </div>
                 @else
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <button wire:click="approve({{ $post->id }})" class="dot-btn" style="background:#22c55e;color:#052e10;">
+                    <div class="inline-form-row">
+                        <button wire:click="approve({{ $post->id }})" class="dot-btn tap" style="background:#22c55e;color:#052e10;">
                             Approve
                         </button>
-                        <button wire:click="promptReject({{ $post->id }})" class="dot-btn" style="background:#e24b4a;color:#fff;">
+                        <button wire:click="promptReject({{ $post->id }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;">
                             Reject
                         </button>
                     </div>
@@ -92,7 +92,7 @@
                 $authorName = $isPost || $isComment ? $target?->author?->name : $target?->name;
             @endphp
             <div class="dot-card" style="padding:1.25rem 1.5rem;margin-bottom:1rem;" wire:key="report-{{ $group['key'] }}">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px;">
                     <div style="min-width:0;">
                         <p style="font-size:13.5px;font-weight:600;color:#f4f4f5;margin:0;">{{ $kind }} by {{ $authorName ?? 'a deleted account' }}</p>
                         <p style="font-size:11.5px;color:#71717a;margin:2px 0 0;">
@@ -131,20 +131,20 @@
                 @endif
 
                 @if($resolving)
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <input type="text" wire:model="resolveReason" placeholder="Why it is being removed (kept in the log)" class="dot-input" style="flex:1;" />
-                        <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn" style="background:#e24b4a;color:#fff;flex-shrink:0;">Confirm removal</button>
-                        <button wire:click="cancelResolve" class="dot-btn dot-btn-ghost" style="flex-shrink:0;">Cancel</button>
+                    <div class="inline-form-row">
+                        <input type="text" wire:model="resolveReason" placeholder="Why it is being removed (kept in the log)" class="dot-input" aria-label="Reason" />
+                        <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;flex-shrink:0;">Confirm removal</button>
+                        <button wire:click="cancelResolve" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">Cancel</button>
                     </div>
                     @error('resolveReason')<p style="color:#f87171;font-size:11px;margin:6px 0 0;">{{ $message }}</p>@enderror
                 @else
-                    <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="inline-form-row">
                         @if($isPost || $isComment)
-                            <button wire:click="promptResolve('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn" style="background:#e24b4a;color:#fff;">Remove {{ strtolower($kind) }}</button>
+                            <button wire:click="promptResolve('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;">Remove {{ strtolower($kind) }}</button>
                         @else
-                            <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn" style="background:#22c55e;color:#052e10;">Mark reviewed</button>
+                            <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#22c55e;color:#052e10;">Mark reviewed</button>
                         @endif
-                        <button wire:click="dismissReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn dot-btn-ghost">Dismiss</button>
+                        <button wire:click="dismissReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn dot-btn-ghost tap">Dismiss</button>
                     </div>
                 @endif
             </div>
