@@ -108,6 +108,10 @@ php artisan reverb:start        # realtime
 | `INFODOT_REDEEM_URL` | `https://infodot.co.za/api/ecosystem/redeem` | |
 | `INFODOT_REDEEM_TIMEOUT` | `5` | seconds |
 | `INFODOT_PROVISION_USERS` | `true` | `false` stops InfoDot creating accounts here; people who already have one still sign in |
+| `ANALYTICS_INGEST_URL` | empty | Full Dot.Analytics URL, ending `/api/ingest/snapshots`. Empty means nothing is published |
+| `ANALYTICS_INGEST_SECRET` | empty | Same value as `ANALYTICS_INGEST_SECRET_PULSE` in Dot.Analytics. Empty means nothing is published |
+| `ANALYTICS_PLATFORM_KEY` | `pulse` | This platform's key in Dot.Analytics' metric catalogue |
+| `ANALYTICS_COMPANY_UUID` | empty | InfoDot company uuid the platform-wide numbers are filed under. Empty means nothing is published |
 
 ### Operations
 
@@ -115,6 +119,7 @@ php artisan reverb:start        # realtime
 php artisan pulse:recount --dry-run   # exits 1 if any counter has drifted
 php artisan pulse:recount             # repair members / reactions / comments / hashtag counters
 php artisan pulse:sweep-pending       # hold posts stuck in "pending" for a human
+php artisan pulse:publish-metrics --dry-run   # print the Dot.Analytics snapshot; sends and queues nothing
 php artisan infodot:link-team {team} {uuid} --promote   # link an existing team to its InfoDot company
 ```
 
@@ -146,6 +151,28 @@ Deploying it needs both ends set:
 1. In InfoDot: `ECOSYSTEM_SECRET_PULSE` set, and Pulse marked live (InfoDot refuses to redeem for a platform that is not live).
 2. Here: `INFODOT_SERVICE_SECRET` (the same value), `INFODOT_PLATFORM_KEY=pulse`, then `php artisan migrate`.
 3. For teams that already exist here, link each to its company so sign-in reuses it instead of creating a second one: `php artisan infodot:link-team {team} {uuid} --promote` (`--promote` turns a personal team into the company).
+
+### Publishing metrics to Dot.Analytics
+
+Once a day Pulse queues one signed, aggregate-only snapshot for Dot.Analytics (`php artisan pulse:publish-metrics`, scheduled daily at 00:10 UTC).
+
+**These numbers describe the platform, not a customer company.** Pulse is one global social network by owner decision: posts, comments and reactions belong to people, not to companies or teams. So the snapshot is a platform-wide aggregate, filed under one InfoDot company that you name in `ANALYTICS_COMPANY_UUID` (the operator's own company). It is not split per team, and no team or customer is ever described by it.
+
+What is sent (exactly these keys, all whole numbers, nothing else):
+
+| Key | Meaning |
+|---|---|
+| `posts_7d` | Posts published in the last 7 days. Held, pending, draft, removed and deleted posts are not counted |
+| `active_users_7d` | Distinct people who published a post, wrote a comment or reacted in the last 7 days, on live content only (a published, non-deleted post; a non-deleted comment) |
+| `held_posts` | Posts held for human review right now (status `flagged`) |
+
+The body is `{platform, company_uuid, taken_at, period: "day", metrics: {...}}`. `taken_at` is the start of the UTC day, so a retry or a second run the same day is an idempotent replay at Dot.Analytics. Windows are the 7 x 24 hours up to the moment the command runs, on the UTC clock. **No names, emails, titles, bodies or any row data are sent**, and posts in private communities are counted in the totals but never described.
+
+Nothing is sent until **all three** of `ANALYTICS_INGEST_URL`, `ANALYTICS_INGEST_SECRET` and `ANALYTICS_COMPANY_UUID` are set. The secret must be the same value as `ANALYTICS_INGEST_SECRET_PULSE` in Dot.Analytics' `.env`. Requests are signed with `X-InfoDot-Timestamp` and `X-InfoDot-Signature: sha256=` + HMAC-SHA256 of `"{timestamp}.{raw body}"`, computed at send time.
+
+It cannot hurt Pulse: the send is a queued job (5 second timeout, 3 tries with backoff) that never throws, and a circuit breaker leaves Dot.Analytics alone for 5 minutes after 3 failed deliveries in a row. A Dot.Analytics outage or a wrong setting only means the day's snapshot is not delivered.
+
+To run it you need the scheduler (`* * * * * php artisan schedule:run`) and a queue worker (`php artisan queue:work`). Check what would be sent with `php artisan pulse:publish-metrics --dry-run`; it prints the payload and sends nothing.
 
 ## License
 
