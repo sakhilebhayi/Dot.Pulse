@@ -28,6 +28,7 @@
 
     {{-- Create Post --}}
     <livewire:pulse.create-post />
+    <livewire:pulse.my-post-status />
 
     <div style="display:grid;grid-template-columns:1fr 260px;gap:1.25rem;margin-top:1.25rem;align-items:start;">
         <div>

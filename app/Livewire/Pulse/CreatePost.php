@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Pulse;
 
+use App\Jobs\ModeratePost;
 use App\Models\Community;
 use App\Models\PulsePost;
-use App\Services\AiModerationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -67,7 +67,15 @@ class CreatePost extends Component
             'status' => 'pending',
         ]);
 
-        app(AiModerationService::class)->enrichPost($post);
+        // The check runs in a queue worker, never in this request. Until it
+        // decides, the post is 'pending': visible only to its author (see
+        // MyPostStatus). If the queue is unreachable it simply stays pending
+        // and pulse:sweep-pending hands it to the human queue.
+        try {
+            ModeratePost::dispatch($post)->afterCommit();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $this->reset(['type', 'title', 'body', 'communityId', 'showForm']);
         $this->dispatch('post-created');

@@ -6,6 +6,7 @@ use App\Models\PulseComment;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -16,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  * enforces the identical rule for the channel), so a held/removed post's
  * comment stream is never broadcast to anyone but its own author.
  */
-class CommentPosted implements ShouldBroadcast
+class CommentPosted implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

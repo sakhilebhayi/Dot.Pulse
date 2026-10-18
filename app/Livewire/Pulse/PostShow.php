@@ -3,9 +3,10 @@
 namespace App\Livewire\Pulse;
 
 use App\Events\CommentPosted;
+use App\Jobs\ModeratePost;
 use App\Models\PulseComment;
-use App\Models\PulseModerationLog;
 use App\Models\PulsePost;
+use App\Services\ModerationActions;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -272,11 +273,28 @@ class PostShow extends Component
                 'editBody' => 'required|string|min:10|max:10000',
             ]);
 
-            $this->post->update([
-                'title' => $this->editTitle ?: null,
-                'body' => $this->editBody,
-                'edited_at' => now(),
-            ]);
+            $title = $this->editTitle ?: null;
+
+            if ($title !== $this->post->title || $this->editBody !== $this->post->body) {
+                $attributes = ['title' => $title, 'body' => $this->editBody, 'edited_at' => now()];
+
+                // New words on a live post get the same check a new post
+                // gets, otherwise editing would be a way around moderation.
+                // It is hidden again until the check decides.
+                if ($this->post->isPublished()) {
+                    $attributes['status'] = 'pending';
+                }
+
+                $this->post->update($attributes);
+            }
+
+            if ($this->post->status === 'pending') {
+                try {
+                    ModeratePost::dispatch($this->post)->afterCommit();
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         } else {
             return;
         }
@@ -328,10 +346,7 @@ class PostShow extends Component
         Gate::authorize('remove', $this->post);
         $this->validate(['removeReason' => ['required', 'string', 'regex:/\S/', 'max:1000']]);
 
-        DB::transaction(function () {
-            $this->post->update(['status' => 'removed']);
-            $this->logRemoval($this->post);
-        });
+        app(ModerationActions::class)->removePost($this->post, auth()->user(), $this->removeReason);
 
         $this->cancelRemove();
         $this->post->refresh();
@@ -344,26 +359,11 @@ class PostShow extends Component
         Gate::authorize('remove', $comment);
         $this->validate(['removeReason' => ['required', 'string', 'regex:/\S/', 'max:1000']]);
 
-        DB::transaction(function () use ($comment) {
-            $comment->remove();
-            $this->logRemoval($comment);
-        });
+        app(ModerationActions::class)->removeComment($comment, auth()->user(), $this->removeReason);
 
         $this->cancelRemove();
         $this->post->refresh();
         unset($this->comments);
-    }
-
-    private function logRemoval(PulsePost|PulseComment $target): void
-    {
-        PulseModerationLog::create([
-            'moderator_id' => auth()->id(),
-            'target_type' => $target::class,
-            'target_id' => $target->id,
-            'action' => 'remove',
-            'rationale' => trim($this->removeReason),
-            'is_ai_decision' => false,
-        ]);
     }
 
     public function render(): View

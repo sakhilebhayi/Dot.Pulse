@@ -32,7 +32,7 @@ class AiModerationServiceTest extends TestCase
         Event::fake([PostPublished::class]);
 
         $post = $this->pendingPost('Excited to launch #dotagents today.');
-        $service = new AiModerationService(mock: true);
+        $service = new AiModerationService;
 
         $service->upsertEnrichment($post, [
             'moderation_status' => 'approved',
@@ -58,7 +58,7 @@ class AiModerationServiceTest extends TestCase
         Event::fake([PostPublished::class]);
 
         $post = $this->pendingPost();
-        $service = new AiModerationService(mock: true);
+        $service = new AiModerationService;
 
         $service->upsertEnrichment($post, [
             'moderation_status' => 'rejected',
@@ -79,7 +79,7 @@ class AiModerationServiceTest extends TestCase
     public function test_flagged_classification_now_holds_for_review_instead_of_being_dropped(): void
     {
         $post = $this->pendingPost();
-        $service = new AiModerationService(mock: true);
+        $service = new AiModerationService;
 
         $service->upsertEnrichment($post, [
             'moderation_status' => 'flagged',

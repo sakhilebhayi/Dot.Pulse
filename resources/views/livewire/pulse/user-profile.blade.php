@@ -39,7 +39,12 @@
                 </div>
             </div>
 
-            <livewire:pulse.follow-button :user="$profileUser" wire:key="follow-{{ $profileUser->id }}" />
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                <livewire:pulse.follow-button :user="$profileUser" wire:key="follow-{{ $profileUser->id }}" />
+                @can('report', $profileUser)
+                    <livewire:pulse.report-button target-type="user" :target-id="$profileUser->id" wire:key="report-user-{{ $profileUser->id }}" />
+                @endcan
+            </div>
         </div>
 
         <div x-show="followersOpen" x-cloak @click.self="followersOpen = false" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:50;">

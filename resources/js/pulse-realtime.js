@@ -1,21 +1,16 @@
 /**
- * Live feed + comment delivery — README advertises "real-time feed updates
- * via Laravel Reverb" but nothing broadcast or listened for anything
- * before this pass (see App\Events\PostPublished / CommentPosted and
- * App\Providers\BroadcastServiceProvider).
+ * Live feed + comment delivery (see App\Events\PostPublished / CommentPosted
+ * and App\Providers\BroadcastServiceProvider).
  *
- * Three independent subscriptions:
- *  - pulse-feed (public): any authenticated page can receive it; only
- *    HomeFeed's own #[On('post-created')] listener does anything with it,
- *    so subscribing on a page without that component mounted is a no-op,
- *    not a bug (see docs/DOT_REALTIME_STANDARD.md §7's advice to
- *    initialize from a shell mounted on every authenticated page).
- *  - post.{id} (private): only subscribed when a [data-post-id] element
- *    is present (PostShow's own page) — this is a per-post channel, not
- *    something every page should join.
- *  - user.{id} (private): subscribed on every authenticated page, since
- *    NotificationBell is mounted in the shared topbar layout, not one
- *    specific page. App\Notifications\NewFollower broadcasts here.
+ * Every subscription is a PRIVATE channel, authorised by /broadcasting/auth
+ * with the session cookie. There is no public channel any more.
+ *  - pulse.feed: posts with no community or in a public one. Any signed-in
+ *    page may join; only HomeFeed's own #[On('post-created')] listener does
+ *    anything with it.
+ *  - community.{id}: posts in a private community, one per community the
+ *    viewer belongs to (ids come from <body data-community-channels>).
+ *  - post.{id}: only when a [data-post-id] element is present (PostShow).
+ *  - user.{id}: notifications; subscribed on every authenticated page.
  */
 function initPulseRealtime() {
     if (typeof window.Echo === 'undefined') {
@@ -23,12 +18,19 @@ function initPulseRealtime() {
         return;
     }
 
-    window.Echo.channel('pulse-feed').listen('.post.published', () => {
-        // HomeFeed's own #[On('post-created')] handler already busts its
-        // #[Computed] posts() cache and re-renders — the exact mechanism
-        // CreatePost::publish() dispatches after the viewer's own post.
-        window.Livewire.dispatch('post-created');
-    });
+    // HomeFeed's own #[On('post-created')] handler already busts its
+    // #[Computed] posts() cache and re-renders -- the exact mechanism
+    // CreatePost::publish() dispatches after the viewer's own post. The feed
+    // is re-queried server-side with the viewer's visibility rules, so the
+    // event payload is never rendered.
+    const refreshFeed = () => window.Livewire.dispatch('post-created');
+
+    window.Echo.private('pulse.feed').listen('.post.published', refreshFeed);
+
+    (document.body.dataset.communityChannels || '')
+        .split(',')
+        .filter(Boolean)
+        .forEach((id) => window.Echo.private(`community.${id}`).listen('.post.published', refreshFeed));
 
     const postId = document.querySelector('[data-post-id]')?.dataset.postId;
 

@@ -46,6 +46,9 @@
                     <button wire:click="deleteComment({{ $comment->id }})" wire:confirm="Delete this comment{{ $isReply ? '' : ' and its replies' }}?" style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Delete</button>
                 @endif
             @endcan
+            @can('report', $comment)
+                <livewire:pulse.report-button target-type="comment" :target-id="$comment->id" wire:key="report-comment-{{ $comment->id }}" />
+            @endcan
             @can('remove', $comment)
                 <button wire:click="promptRemove('comment:{{ $comment->id }}')" style="background:none;border:none;font-size:11.5px;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;">Remove as moderator</button>
             @endcan

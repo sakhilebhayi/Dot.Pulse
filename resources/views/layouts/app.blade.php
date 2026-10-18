@@ -100,7 +100,10 @@
          styling. --}}
     @vite(['resources/js/app.js'])
 </head>
-<body data-user-id="{{ auth()->id() }}">
+{{-- data-community-channels: the private communities this user belongs to,
+     one realtime channel each (resources/js/pulse-realtime.js). Public
+     communities need none: their posts ride the shared private feed channel. --}}
+<body data-user-id="{{ auth()->id() }}" data-community-channels="{{ auth()->check() ? auth()->user()->joinedCommunities()->where('visibility', '!=', 'public')->pluck('communities.id')->implode(',') : '' }}">
     <x-banner />
 
     <aside class="sidebar">
@@ -121,7 +124,7 @@
             </a>
 
             @auth
-                @if(in_array(auth()->user()->pulseProfile?->role, ['moderator', 'admin'], true))
+                @if(auth()->user()->canAccessModeration())
                     <a href="{{ route('moderation') }}" class="nav-item {{ request()->routeIs('moderation') ? 'active' : '' }}">
                         <span class="material-symbols-rounded nav-icon">gavel</span>
                         Moderation

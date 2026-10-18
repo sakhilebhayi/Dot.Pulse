@@ -1,4 +1,19 @@
 <div style="display:flex;flex-direction:column;gap:1rem;">
+    @if(! $post->isPublished())
+        @php
+            [$headline, $detail] = match ($post->status) {
+                'pending' => ['This post is being checked.', 'It is only visible to you until the automatic check finishes, usually within seconds.'],
+                'flagged' => ['This post is waiting for a moderator.', 'It is only visible to you and the moderators until a person approves it.'],
+                'removed' => ['This post was removed by a moderator.', 'It is only visible to you and the moderators.'],
+                default => ['This post is not live.', 'It is only visible to you.'],
+            };
+        @endphp
+        <div class="dot-card" style="padding:0.9rem 1.25rem;" role="status">
+            <p style="font-size:13px;font-weight:600;color:#f1c62e;margin:0;">{{ $headline }}</p>
+            <p style="font-size:12px;color:#a1a1aa;margin:3px 0 0;">{{ $detail }}</p>
+        </div>
+    @endif
+
     <div class="dot-card" style="padding:1.25rem 1.5rem;">
         <div style="display:flex;align-items:flex-start;gap:12px;">
             <a href="{{ route('users.show', $post->author) }}" class="dot-avatar" style="width:36px;height:36px;font-size:13px;">
@@ -65,6 +80,9 @@
                         @if($post->user_id === auth()->id())
                             <button wire:click="deletePost" wire:confirm="Delete this post? This also removes its comments from view." style="background:none;border:none;font-size:11.5px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Delete</button>
                         @endif
+                    @endcan
+                    @can('report', $post)
+                        <livewire:pulse.report-button target-type="post" :target-id="$post->id" wire:key="report-post-{{ $post->id }}" />
                     @endcan
                     @can('remove', $post)
                         @if($post->status !== 'removed')

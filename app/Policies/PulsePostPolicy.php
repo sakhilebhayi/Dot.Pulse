@@ -51,10 +51,13 @@ class PulsePostPolicy
         return $post->user_id === $user->id && $post->isPublished() && $this->view($user, $post);
     }
 
-    /** Authors only, inside the configured window, never once removed. */
+    /**
+     * Authors only, inside the configured window, and only while the post is
+     * live or waiting for a moderator (not mid-check, not once removed).
+     */
     public function update(User $user, PulsePost $post): bool
     {
-        if ($post->trashed() || $post->status === 'removed' || $post->user_id !== $user->id) {
+        if ($post->trashed() || ! in_array($post->status, ['published', 'flagged'], true) || $post->user_id !== $user->id) {
             return false;
         }
 

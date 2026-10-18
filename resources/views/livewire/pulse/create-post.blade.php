@@ -46,10 +46,10 @@
             <div style="display:flex;align-items:center;gap:14px;padding-top:2px;">
                 <button type="submit" class="dot-btn dot-btn-primary" wire:loading.attr="disabled" style="opacity:1;">
                     <span wire:loading.remove>Publish</span>
-                    <span wire:loading>Processing…</span>
+                    <span wire:loading>Posting…</span>
                 </button>
                 <button type="button" wire:click="$set('showForm', false)" style="background:none;border:none;font-size:13px;color:#71717a;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
-                <span style="font-size:11px;color:#3f3f46;margin-left:auto;">AI moderation runs automatically</span>
+                <span style="font-size:11px;color:#52525b;margin-left:auto;">Posts are checked automatically. Anything uncertain waits for a person.</span>
             </div>
         </form>
     @endif
