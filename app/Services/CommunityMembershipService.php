@@ -7,6 +7,7 @@ use App\Models\CommunityJoinRequest;
 use App\Models\User;
 use App\Notifications\CommunityJoinDecision;
 use App\Notifications\CommunityJoinRequested;
+use App\Support\PulseThrottle;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -43,6 +44,8 @@ class CommunityMembershipService
 
     public function request(User $user, Community $community): string
     {
+        PulseThrottle::hit('join_request');
+
         $existing = CommunityJoinRequest::where('community_id', $community->id)
             ->where('user_id', $user->id)
             ->first();

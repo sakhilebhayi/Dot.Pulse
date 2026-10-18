@@ -7,6 +7,7 @@ use App\Jobs\ModeratePost;
 use App\Models\PulseComment;
 use App\Models\PulsePost;
 use App\Services\ModerationActions;
+use App\Support\PulseThrottle;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -96,6 +97,7 @@ class PostShow extends Component
     {
         $this->authorizeView();
         Gate::authorize('comment', $this->post);
+        PulseThrottle::hit('comment');
         $this->validate(['newCommentBody' => 'required|string|min:1|max:5000']);
 
         $comment = DB::transaction(function () {
@@ -130,6 +132,7 @@ class PostShow extends Component
     {
         $this->authorizeView();
         Gate::authorize('comment', $this->post);
+        PulseThrottle::hit('comment');
         $this->validate(['replyBody' => 'required|string|min:1|max:5000']);
 
         $parent = $this->findComment($parentId);
@@ -186,6 +189,7 @@ class PostShow extends Component
 
         $comment = $this->findComment($commentId);
         Gate::authorize('react', $comment);
+        PulseThrottle::hit('react');
 
         $comment->toggleReaction(auth()->user(), $emoji);
 

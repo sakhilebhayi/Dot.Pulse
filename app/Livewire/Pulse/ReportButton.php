@@ -7,8 +7,10 @@ use App\Models\PulseComment;
 use App\Models\PulsePost;
 use App\Models\PulseReport;
 use App\Models\User;
+use App\Support\PulseThrottle;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -93,6 +95,8 @@ class ReportButton extends Component
     {
         $target = $this->target();
 
+        PulseThrottle::hit('report');
+
         $this->validate([
             'reason' => ['required', Rule::enum(ReportReason::class)],
             'note' => ['nullable', 'string', 'max:500', Rule::requiredIf($this->reason === ReportReason::Other->value)],
@@ -102,7 +106,8 @@ class ReportButton extends Component
         ]);
 
         try {
-            PulseReport::create([
+            // Savepoint when already inside a transaction (see PulsePost::toggleReaction).
+            DB::transaction(fn () => PulseReport::create([
                 'reporter_id' => auth()->id(),
                 'reportable_type' => $target::class,
                 'reportable_id' => $target->getKey(),
@@ -114,7 +119,7 @@ class ReportButton extends Component
                 'reason' => $this->reason,
                 'details' => $this->note !== '' ? $this->note : null,
                 'status' => PulseReport::OPEN,
-            ]);
+            ]));
         } catch (UniqueConstraintViolationException) {
             // Already reported: same end state as success, nothing new stored.
         }

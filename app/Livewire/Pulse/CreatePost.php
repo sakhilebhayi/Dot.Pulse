@@ -5,6 +5,7 @@ namespace App\Livewire\Pulse;
 use App\Jobs\ModeratePost;
 use App\Models\Community;
 use App\Models\PulsePost;
+use App\Support\PulseThrottle;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +41,7 @@ class CreatePost extends Component
 
     public function publish(): void
     {
+        PulseThrottle::hit('post');
         $this->validate();
 
         $community = null;

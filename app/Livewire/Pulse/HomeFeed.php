@@ -3,6 +3,7 @@
 namespace App\Livewire\Pulse;
 
 use App\Models\PulsePost;
+use App\Support\PulseThrottle;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -80,6 +81,7 @@ class HomeFeed extends Component
     {
         $user = auth()->user();
 
+        PulseThrottle::hit('react');
         abort_unless(in_array($emoji, config('pulse.reaction_emojis'), true), 422, 'Unsupported reaction.');
 
         $post = PulsePost::published()->visibleTo($user)->find($postId);

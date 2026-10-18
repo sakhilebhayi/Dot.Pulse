@@ -88,7 +88,9 @@ class PulseComment extends Model
             }
 
             try {
-                $this->reactions()->create(['user_id' => $user->id, 'emoji' => $emoji]);
+                // A nested transaction is a savepoint: on Postgres a failed
+                // insert would otherwise abort the whole outer transaction.
+                DB::transaction(fn () => $this->reactions()->create(['user_id' => $user->id, 'emoji' => $emoji]));
             } catch (UniqueConstraintViolationException) {
                 return true;
             }
