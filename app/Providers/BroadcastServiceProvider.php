@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\PulsePost;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class BroadcastServiceProvider extends ServiceProvider
@@ -50,7 +51,10 @@ class BroadcastServiceProvider extends ServiceProvider
                 return false;
             }
 
-            return $post->isPublished() || $post->user_id === $user->id;
+            // The same rule the page itself enforces (PulsePostPolicy::view):
+            // live posts to anyone who can see the community, held or
+            // removed posts to their author and responsible moderators.
+            return Gate::forUser($user)->allows('view', $post);
         });
 
         /**

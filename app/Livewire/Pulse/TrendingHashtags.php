@@ -21,9 +21,15 @@ class TrendingHashtags extends Component
     #[Computed]
     public function trending(): Collection
     {
-        $recentWindow = function ($query) {
+        // Counts only posts this viewer can see, so a private community's
+        // hashtags neither appear nor inflate a public tag's number.
+        $viewer = auth()->user();
+
+        $recentWindow = function ($query) use ($viewer) {
             $query->where('status', 'published')
-                ->where('pulse_posts.created_at', '>=', now()->subDays(7));
+                ->whereNull('pulse_posts.deleted_at')
+                ->where('pulse_posts.created_at', '>=', now()->subDays(7))
+                ->visibleTo($viewer);
         };
 
         return PulseHashtag::query()

@@ -25,7 +25,7 @@ Route::middleware([
         );
 
         return view('dashboard', [
-            'totalPosts' => PulsePost::published()->count(),
+            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
             'totalCommunities' => Community::count(),
             'myPoints' => $profile->community_points ?? 0,
         ]);

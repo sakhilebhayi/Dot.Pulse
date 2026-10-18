@@ -4,6 +4,7 @@ namespace App\Livewire\Pulse;
 
 use App\Models\PulsePost;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -22,6 +23,9 @@ class HomeFeed extends Component
     {
         return PulsePost::with(['author', 'community', 'enrichment'])
             ->published()
+            // The viewer's own view of the world: public posts, posts with
+            // no community, and posts from communities they belong to.
+            ->visibleTo(auth()->user())
             ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
             ->when($this->followingOnly, function ($q) {
                 $followingIds = auth()->user()->following()->pluck('users.id');
@@ -38,6 +42,7 @@ class HomeFeed extends Component
             ))
             ->orderByDesc('ai_relevance_score')
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->limit(30)
             ->get();
     }
@@ -66,20 +71,22 @@ class HomeFeed extends Component
         unset($this->posts);
     }
 
+    /**
+     * Only a published post the viewer can see can be reacted to; anything
+     * else (held, removed, pending, in a private community they are not in)
+     * is indistinguishable from a post that does not exist.
+     */
     public function react(int $postId, string $emoji = '👍'): void
     {
         $user = auth()->user();
-        $post = PulsePost::findOrFail($postId);
 
-        $existing = $post->reactions()->where('user_id', $user->id)->first();
+        abort_unless(in_array($emoji, config('pulse.reaction_emojis'), true), 422, 'Unsupported reaction.');
 
-        if ($existing) {
-            $existing->delete();
-            $post->decrement('reactions_count');
-        } else {
-            $post->reactions()->create(['user_id' => $user->id, 'emoji' => $emoji]);
-            $post->increment('reactions_count');
-        }
+        $post = PulsePost::published()->visibleTo($user)->find($postId);
+        abort_if($post === null, 404);
+        Gate::authorize('react', $post);
+
+        $post->toggleReaction($user, $emoji);
 
         unset($this->posts);
     }

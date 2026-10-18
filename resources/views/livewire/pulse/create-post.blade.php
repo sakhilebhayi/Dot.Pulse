@@ -24,9 +24,10 @@
                     <select wire:model="communityId" class="dot-input">
                         <option value="">No community</option>
                         @foreach($this->communities as $community)
-                            <option value="{{ $community->id }}">{{ $community->name }}</option>
+                            <option value="{{ $community->id }}">{{ $community->name }}{{ $community->isPrivate() ? ' (private)' : '' }}</option>
                         @endforeach
                     </select>
+                    @error('communityId') <p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p> @enderror
                 </div>
             </div>
 
