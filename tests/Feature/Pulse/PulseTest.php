@@ -76,7 +76,7 @@ class PulseTest extends TestCase
 
     public function test_ecosystem_auth_rejects_missing_token(): void
     {
-        $this->get('/auth/ecosystem')->assertStatus(403);
+        $this->get('/auth/ecosystem')->assertStatus(303)->assertRedirect('/login');
     }
 
     public function test_pulse_profile_belongs_to_user(): void
