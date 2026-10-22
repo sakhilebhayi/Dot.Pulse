@@ -253,6 +253,38 @@ jobs:
           # first adopt died on `git checkout` AFTER maintenance mode started.
           export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null
 
+          # ---- application-folder guard (tolerant; runs BEFORE maintenance mode)
+          # 2026-10-20: platforms whose app folder (~/<host>/<key>/, next to the docroot) had no
+          # .htaccess served their live database, laravel.log, composer files and vendor/autoload.php
+          # over HTTP. Make sure this folder always carries `Require all denied`: written new when
+          # missing, appended (original kept as .htaccess.before-guard) when it lacks the directive,
+          # left alone when it has it. Same behaviour as app-folder-guard.yml in InfoDot. This block
+          # can never fail the release (set +e inside a subshell, `|| true` outside), so it cannot
+          # leave the site in maintenance mode. The file is untracked, so neither `git reset --hard`
+          # nor the takeover touches it. The folder is skipped if it is directly under $HOME (that
+          # would be the docroot itself, where a deny file would take the site down).
+          (
+            set +e
+            GFILE="$DEPLOY_PATH/.htaccess"
+            if [ ! -f "$DEPLOY_PATH/artisan" ] || [ ! -d "$DEPLOY_PATH/public" ] || [ "$(dirname "$DEPLOY_PATH")" = "$HOME" ]; then
+              echo "== app-folder guard: skipped ($DEPLOY_PATH does not look like an app folder below a docroot)"
+            elif [ -f "$GFILE" ] && grep -q 'Require all denied' "$GFILE"; then
+              echo "== app-folder guard: already present in $APPDIR/.htaccess"
+            elif [ -f "$GFILE" ]; then
+              if cp "$GFILE" "$GFILE.before-guard" && printf '\n# Dot: the application folder is never served.\nRequire all denied\n' >> "$GFILE"; then
+                echo "== app-folder guard: appended to $APPDIR/.htaccess (original kept as .htaccess.before-guard)"
+              else
+                echo "::warning::app-folder guard: could not append to $APPDIR/.htaccess; deploy continues"
+              fi
+            else
+              if printf '# Dot: the application folder is never served.\nRequire all denied\n' > "$GFILE"; then
+                echo "== app-folder guard: written $APPDIR/.htaccess (new file)"
+              else
+                echo "::warning::app-folder guard: could not write $APPDIR/.htaccess; deploy continues"
+              fi
+            fi
+          ) || true
+
           # ---- code
           if [ ! -d .git ]; then
             if [ "$MODE" != "adopt" ]; then
@@ -497,3 +529,22 @@ jobs:
           rm -rf "$WORK"
           [ "$FAILED" -eq 0 ] || { echo "::error::Smoke check failed: the deploy is NOT healthy."; exit 1; }
           echo "== Smoke check passed."
+
+      # Public probe, from the runner, after `artisan up` and the smoke check: the application folder
+      # (~/<host>/<key>/, key = last segment of APP_PATH) must not answer over HTTP. Only status codes are
+      # logged and nothing is read. 200 = served = red run; 301/302/403/404 are fine. It runs after the site
+      # is back up, so it can only turn the run red, never leave the site down. Same path list as
+      # tools/probe-exposure.sh in InfoDot (kept inline: no cross-repo dependency).
+      - name: Probe the application folder from outside
+        run: |
+          set -uo pipefail
+          if [ -z "${APP_PATH:-}" ] || [ -z "${SITE_URL:-}" ]; then echo "::error::APP_PATH or SITE_URL is not set; cannot probe the application folder."; exit 1; fi
+          KEY="$(basename "$APP_PATH")"
+          sleep 5   # the web server re-reads .htaccess lazily
+          BAD=0
+          for P in .env .env.bak-secrets artisan composer.json composer.lock database/database.sqlite storage/logs/laravel.log vendor/autoload.php phpunit.xml; do
+            CODE=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "$SITE_URL/$KEY/$P" || true)
+            if [ "$CODE" = "200" ]; then echo "::error::$KEY/$P answered 200: the application folder is readable over HTTP"; BAD=1; else echo "$KEY/$P $CODE"; fi
+          done
+          [ "$BAD" = 0 ] || { echo "::error::An application-folder path is served over HTTP. Put 'Require all denied' in the app folder's .htaccess (app-folder-guard.yml in InfoDot) and re-run."; exit 1; }
+          echo "== Application folder not readable over HTTP."
