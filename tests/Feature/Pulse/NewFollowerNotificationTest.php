@@ -19,9 +19,9 @@ class NewFollowerNotificationTest extends TestCase
         $target->notify(new NewFollower($follower));
 
         $this->assertDatabaseHas('notifications', [
-            'notifiable_id'   => $target->id,
+            'notifiable_id' => $target->id,
             'notifiable_type' => User::class,
-            'type'            => NewFollower::class,
+            'type' => NewFollower::class,
         ]);
 
         $notification = $target->notifications()->first();
