@@ -17,7 +17,22 @@ class PulseTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** InfoDot's launch page, as the browser reports it. */
+    private function fromInfodot(): array
+    {
+        $infodot = parse_url((string) config('ecosystem.infodot.redeem_url', ''), PHP_URL_HOST);
+
+        if (is_string($infodot) && $infodot !== '') {
+            return ['Origin' => 'https://'.$infodot];
+        }
+
+        $host = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        return ['Origin' => 'https://'.(str_contains($host, '.') ? substr($host, strpos($host, '.') + 1) : $host)];
+    }
+
     private User $user;
+
     private Team $team;
 
     protected function setUp(): void
@@ -48,9 +63,9 @@ class PulseTest extends TestCase
         PulsePost::create([
             'user_id' => $author->id,
             'team_id' => $author->currentTeam->id,
-            'type'    => 'discussion',
-            'body'    => 'A post from someone else',
-            'status'  => 'published',
+            'type' => 'discussion',
+            'body' => 'A post from someone else',
+            'status' => 'published',
         ]);
 
         $this->actingAs($this->user)
@@ -76,14 +91,14 @@ class PulseTest extends TestCase
 
     public function test_ecosystem_auth_rejects_missing_token(): void
     {
-        $this->get('/auth/ecosystem')->assertStatus(303)->assertRedirect('/login');
+        $this->post('/auth/ecosystem', [], $this->fromInfodot())->assertStatus(303)->assertRedirect('/login');
     }
 
     public function test_pulse_profile_belongs_to_user(): void
     {
         $profile = PulseProfile::create([
             'user_id' => $this->user->id,
-            'role'    => 'developer',
+            'role' => 'developer',
         ]);
 
         $this->assertTrue($profile->user->is($this->user));
@@ -93,7 +108,7 @@ class PulseTest extends TestCase
     public function test_profile_add_points(): void
     {
         $profile = PulseProfile::create([
-            'user_id'          => $this->user->id,
+            'user_id' => $this->user->id,
             'community_points' => 10,
         ]);
 
@@ -105,12 +120,12 @@ class PulseTest extends TestCase
     public function test_community_can_be_created(): void
     {
         $community = Community::create([
-            'created_by'  => $this->user->id,
-            'name'        => 'Fleet Management',
-            'slug'        => 'fleet-management',
+            'created_by' => $this->user->id,
+            'name' => 'Fleet Management',
+            'slug' => 'fleet-management',
             'description' => 'For fleet operators',
-            'industry'    => 'Logistics',
-            'visibility'  => 'public',
+            'industry' => 'Logistics',
+            'visibility' => 'public',
         ]);
 
         $this->assertDatabaseHas('communities', ['slug' => 'fleet-management']);
@@ -121,15 +136,15 @@ class PulseTest extends TestCase
     {
         $community = Community::create([
             'created_by' => $this->user->id,
-            'name'       => 'Mining',
-            'slug'       => 'mining',
+            'name' => 'Mining',
+            'slug' => 'mining',
             'visibility' => 'public',
         ]);
 
         CommunityMembership::create([
             'community_id' => $community->id,
-            'user_id'      => $this->user->id,
-            'role'         => 'member',
+            'user_id' => $this->user->id,
+            'role' => 'member',
         ]);
 
         $this->assertTrue($community->hasMember($this->user));
@@ -139,15 +154,15 @@ class PulseTest extends TestCase
     {
         $community = Community::create([
             'created_by' => $this->user->id,
-            'name'       => 'Mining Ops',
-            'slug'       => 'mining-ops',
+            'name' => 'Mining Ops',
+            'slug' => 'mining-ops',
             'visibility' => 'public',
         ]);
 
         CommunityMembership::create([
             'community_id' => $community->id,
-            'user_id'      => $this->user->id,
-            'role'         => 'member',
+            'user_id' => $this->user->id,
+            'role' => 'member',
         ]);
 
         $this->assertTrue($this->user->joinedCommunities->contains($community));
@@ -163,9 +178,9 @@ class PulseTest extends TestCase
         $post = PulsePost::create([
             'user_id' => $this->user->id,
             'team_id' => $this->team->id,
-            'type'    => 'discussion',
-            'body'    => 'Has anyone tried using Dot.Agents for invoice automation?',
-            'status'  => 'pending',
+            'type' => 'discussion',
+            'body' => 'Has anyone tried using Dot.Agents for invoice automation?',
+            'status' => 'pending',
         ]);
 
         $this->assertDatabaseHas('pulse_posts', ['type' => 'discussion', 'status' => 'pending']);
@@ -177,17 +192,17 @@ class PulseTest extends TestCase
         PulsePost::create([
             'user_id' => $this->user->id,
             'team_id' => $this->team->id,
-            'type'    => 'announcement',
-            'body'    => 'Published post',
-            'status'  => 'published',
+            'type' => 'announcement',
+            'body' => 'Published post',
+            'status' => 'published',
         ]);
 
         PulsePost::create([
             'user_id' => $this->user->id,
             'team_id' => $this->team->id,
-            'type'    => 'announcement',
-            'body'    => 'Pending post',
-            'status'  => 'pending',
+            'type' => 'announcement',
+            'body' => 'Pending post',
+            'status' => 'pending',
         ]);
 
         $this->assertCount(1, PulsePost::published()->get());
@@ -198,9 +213,9 @@ class PulseTest extends TestCase
         $post = PulsePost::create([
             'user_id' => $this->user->id,
             'team_id' => $this->team->id,
-            'type'    => 'idea',
-            'body'    => 'An idea post',
-            'status'  => 'published',
+            'type' => 'idea',
+            'body' => 'An idea post',
+            'status' => 'published',
         ]);
 
         $this->assertTrue($post->isPublished());
@@ -209,10 +224,10 @@ class PulseTest extends TestCase
     public function test_team_has_communities_relationship(): void
     {
         Community::create([
-            'team_id'    => $this->team->id,
+            'team_id' => $this->team->id,
             'created_by' => $this->user->id,
-            'name'       => 'Team Community',
-            'slug'       => 'team-community',
+            'name' => 'Team Community',
+            'slug' => 'team-community',
             'visibility' => 'enterprise',
         ]);
 
@@ -224,9 +239,9 @@ class PulseTest extends TestCase
         PulsePost::create([
             'user_id' => $this->user->id,
             'team_id' => $this->team->id,
-            'type'    => 'discussion',
-            'body'    => 'Team post',
-            'status'  => 'published',
+            'type' => 'discussion',
+            'body' => 'Team post',
+            'status' => 'published',
         ]);
 
         $this->assertCount(1, $this->team->posts);

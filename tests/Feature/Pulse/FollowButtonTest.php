@@ -24,7 +24,7 @@ class FollowButtonTest extends TestCase
             ->call('toggleFollow');
 
         $this->assertDatabaseHas('pulse_followers', [
-            'follower_id'  => $follower->id,
+            'follower_id' => $follower->id,
             'following_id' => $target->id,
         ]);
         $this->assertTrue($follower->fresh()->isFollowing($target));

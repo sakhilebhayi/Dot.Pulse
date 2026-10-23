@@ -111,14 +111,14 @@ class UserProfileTest extends TestCase
 
         $community = Community::create([
             'created_by' => $viewer->id,
-            'name'       => 'Fleet Ops',
-            'slug'       => 'fleet-ops',
+            'name' => 'Fleet Ops',
+            'slug' => 'fleet-ops',
             'visibility' => 'public',
         ]);
         CommunityMembership::create([
             'community_id' => $community->id,
-            'user_id'      => $viewer->id,
-            'role'         => 'member',
+            'user_id' => $viewer->id,
+            'role' => 'member',
         ]);
 
         $communityPoster = User::factory()->withPersonalTeam()->create();
