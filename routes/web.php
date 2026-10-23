@@ -6,6 +6,7 @@ use App\Models\PulsePost;
 use App\Models\PulseProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Features;
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
@@ -45,3 +46,9 @@ Route::middleware([
 
     Route::get('/c/{community:slug}', fn (Community $community) => view('pulse.community-show', ['community' => $community]))->name('communities.show');
 });
+
+// Public sign-up is closed (accounts are created by InfoDot at first sign-in). Keep the named route so any link or
+// invitation email that points at it lands on the login page instead of failing.
+if (! Features::enabled(Features::registration())) {
+    Route::redirect('/register', '/login')->name('register');
+}
