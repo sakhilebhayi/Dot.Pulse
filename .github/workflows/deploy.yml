@@ -266,7 +266,14 @@ jobs:
           (
             set +e
             GFILE="$DEPLOY_PATH/.htaccess"
-            if [ ! -f "$DEPLOY_PATH/artisan" ] || [ ! -d "$DEPLOY_PATH/public" ] || [ "$(dirname "$DEPLOY_PATH")" = "$HOME" ]; then
+            # Once the subdomain's document root is <app>/public (the docroot move, InfoDot docs S-2e) the app
+            # folder is not served at all, and a deny file in it would block the whole site: do not write one.
+            # The host's own answer decides; a marker file is the fallback if the lookup fails.
+            APP_REAL="$(cd "$DEPLOY_PATH" 2>/dev/null && pwd -P)" || APP_REAL=""
+            CURRENT_DOCROOT="$(uapi --output=json DomainInfo single_domain_data domain=pulse.infodot.co.za 2>/dev/null | sed -n 's/.*"documentroot" *: *"\([^"]*\)".*/\1/p' | head -1)"
+            if [ -n "$APP_REAL" ] && { [ "$CURRENT_DOCROOT" = "$APP_REAL/public" ] || [ -f "$DEPLOY_PATH/.docroot-is-public" ]; }; then
+              echo "== app-folder guard: skipped (the document root is $APP_REAL/public; the app folder is not served)"
+            elif [ ! -f "$DEPLOY_PATH/artisan" ] || [ ! -d "$DEPLOY_PATH/public" ] || [ "$(dirname "$DEPLOY_PATH")" = "$HOME" ]; then
               echo "== app-folder guard: skipped ($DEPLOY_PATH does not look like an app folder below a docroot)"
             elif [ -f "$GFILE" ] && grep -q 'Require all denied' "$GFILE"; then
               echo "== app-folder guard: already present in $APPDIR/.htaccess"
