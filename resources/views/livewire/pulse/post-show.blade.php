@@ -34,9 +34,9 @@
 
                 @if($editingPost)
                     <form wire:submit="saveEdit" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
-                        <input wire:model="editTitle" type="text" placeholder="Title (optional)" class="dot-input" />
+                        <input aria-label="Title" wire:model="editTitle" type="text" placeholder="Title (optional)" class="dot-input" />
                         @error('editTitle')<p style="color:#f87171;font-size:11px;margin:0;">{{ $message }}</p>@enderror
-                        <textarea wire:model="editBody" rows="5" class="dot-input"></textarea>
+                        <textarea aria-label="Editbody" wire:model="editBody" rows="5" class="dot-input"></textarea>
                         @error('editBody')<p style="color:#f87171;font-size:11px;margin:0;">{{ $message }}</p>@enderror
                         <div style="display:flex;gap:10px;">
                             <button type="submit" class="dot-btn dot-btn-primary tap" style="padding:5px 12px;font-size:12px;">Save</button>
@@ -108,7 +108,7 @@
 
         @can('comment', $post)
             <form wire:submit="postComment" style="margin-bottom:1.5rem;">
-                <textarea wire:model="newCommentBody" rows="3" placeholder="Write a comment…" class="dot-input"></textarea>
+                <textarea aria-label="Write a comment" wire:model="newCommentBody" rows="3" placeholder="Write a comment…" class="dot-input"></textarea>
                 @error('newCommentBody')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
                 <button type="submit" class="dot-btn dot-btn-primary tap" style="margin-top:8px;">
                     Post comment
@@ -137,7 +137,7 @@
                         @if($replyingToId === $comment->id)
                             <div class="reply-form">
                                 <form wire:submit="postReply({{ $comment->id }})">
-                                    <textarea wire:model="replyBody" rows="2" placeholder="Write a reply…" class="dot-input"></textarea>
+                                    <textarea aria-label="Write a reply" wire:model="replyBody" rows="2" placeholder="Write a reply…" class="dot-input"></textarea>
                                     @error('replyBody')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
                                     <div style="display:flex;gap:10px;margin-top:8px;">
                                         <button type="submit" class="dot-btn dot-btn-primary tap" style="padding:5px 12px;font-size:12px;">Reply</button>

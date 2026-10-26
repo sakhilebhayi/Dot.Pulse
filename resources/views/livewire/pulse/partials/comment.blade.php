@@ -16,7 +16,7 @@
         </div>
         @if($editingCommentId === $comment->id)
             <form wire:submit="saveEdit" style="margin-top:6px;">
-                <textarea wire:model="editBody" rows="3" class="dot-input"></textarea>
+                <textarea aria-label="Editbody" wire:model="editBody" rows="3" class="dot-input"></textarea>
                 @error('editBody')<p style="color:#f87171;font-size:11px;margin:4px 0 0;">{{ $message }}</p>@enderror
                 <div style="display:flex;gap:10px;margin-top:8px;">
                     <button type="submit" class="dot-btn dot-btn-primary tap" style="padding:5px 12px;font-size:12px;">Save</button>
