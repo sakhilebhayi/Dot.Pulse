@@ -42,7 +42,7 @@ class HiringSignalTest extends EntitiesTestCase
         $this->assertSame('none', $fresh->hiring_signal);
         $this->assertNull($fresh->hiring_signal_until);
         $this->assertSame([], $this->signalSkills($fresh), 'the page is no longer findable by hiring skills');
-        $this->assertSame(1, $owner->notifications()->where('data->type', 'hiring_signal_lapsed')->count());
+        $this->assertSame(1, $owner->notifications()->where('data', 'like', '%hiring_signal_lapsed%')->count());
     }
 
     public function test_switching_it_off_stops_the_clock_and_only_owners_and_admins_renew(): void
