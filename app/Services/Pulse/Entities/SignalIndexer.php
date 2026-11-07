@@ -518,7 +518,10 @@ class SignalIndexer
             return 'national';
         }
 
+        // A signal that names no place cannot be local or regional: nobody could be near a place that is not there,
+        // and the matcher would never show it to anyone. Without a place it is as wide as the country.
         return match ($place?->level) {
+            null => 'national',
             'city' => 'local',
             'country' => 'national',
             default => 'region',
