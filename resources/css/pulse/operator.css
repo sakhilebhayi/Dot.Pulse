@@ -76,6 +76,109 @@
     gap: var(--s-md);
 }
 
+.op-grid--lead,
+.op-grid--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 1100px) {
+    .op-grid--lead {
+        grid-template-columns: 2fr 1fr 1fr;
+    }
+}
+
+@media (max-width: 859.98px) {
+    .op-grid--lead,
+    .op-grid--three {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.op-metric--lead {
+    border-width: 2px;
+    border-color: var(--c-ink);
+}
+
+.op-metric--lead .op-metric__value {
+    font-size: 2.5rem;
+}
+
+.op-grid--three > .op-metric--lead {
+    grid-column: span 2;
+}
+
+@media (max-width: 859.98px) {
+    .op-grid--three > .op-metric--lead {
+        grid-column: auto;
+    }
+}
+
+.op-section__scope {
+    margin-top: -8px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+/* The stock: a ledger of rows, one line each, definitions underneath. */
+.op-ledger {
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+}
+
+.op-ledger__row {
+    display: grid;
+    grid-template-columns: 11rem 5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px var(--s-md);
+    padding: 12px 16px;
+}
+
+.op-ledger__row + .op-ledger__row {
+    border-top: 1px solid var(--c-line);
+}
+
+.op-ledger__row h3 {
+    font-size: var(--t-ui);
+    font-stretch: 100%;
+    letter-spacing: 0;
+}
+
+.op-ledger__n {
+    font-family: var(--f-mono);
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.op-ledger__n--none {
+    grid-column: 2 / 4;
+    color: var(--c-muted);
+    font-family: var(--f-ui);
+    font-size: var(--t-ui);
+}
+
+.op-ledger__split {
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+}
+
+.op-ledger__def {
+    grid-column: 1 / -1;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+@media (max-width: 559.98px) {
+    .op-ledger__row {
+        grid-template-columns: 1fr auto;
+    }
+
+    .op-ledger__split {
+        grid-column: 1 / -1;
+    }
+}
+
 .op-metric {
     display: grid;
     align-content: start;
@@ -104,7 +207,7 @@
     flex: none;
     color: var(--c-muted);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
 }
 
 .op-metric__value {

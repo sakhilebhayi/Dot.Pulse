@@ -47,8 +47,9 @@
 
             <dl class="bz-facts">
                 @if ($need->budget_text)<div><dt>Budget</dt><dd>{{ $need->budget_text }}</dd></div>@endif
-                @if ($need->needed_by)<div><dt>Needed by</dt><dd>{{ $need->needed_by->format('j M Y') }}</dd></div>@endif
-                <div><dt>Reach</dt><dd>{{ ['local' => 'Near them', 'region' => 'In their region', 'national' => 'Anywhere in the country', 'global' => 'Anywhere', 'remote' => 'Online', 'city' => 'Near them', 'country' => 'Anywhere in the country'][$need->reach] ?? $need->reach }}</dd></div>
+                @if ($need->needed_by)<div><dt>Needed by</dt><dd>{{ \App\Support\Moment::date($need->needed_by) }}</dd></div>@endif
+                @php $near = $this->isOwner ? ['near you', 'in your region'] : ['near them', 'in their region']; @endphp
+                <div><dt>Who it reaches</dt><dd>{{ ['local' => ucfirst($near[0]), 'region' => ucfirst($near[1]), 'national' => 'Anywhere in the country', 'global' => 'Anywhere', 'remote' => 'Online', 'city' => ucfirst($near[0]), 'country' => 'Anywhere in the country'][$need->reach] ?? ucfirst(str_replace('_', ' ', (string) $need->reach)) }}</dd></div>
                 @if ($this->isOwner)<div><dt>Who can open it</dt><dd>{{ $need->visibility === 'matched' ? 'Matched people only' : 'Any signed-in person, and people it fits' }}</dd></div>@endif
                 @if ($need->tags)<div><dt>About</dt><dd class="pk-cluster">@foreach ($need->tags as $tag)<x-pulse.pill>{{ $tag }}</x-pulse.pill>@endforeach</dd></div>@endif
             </dl>
@@ -79,16 +80,27 @@
                         @if ($need->status === 'open' && ! $expired)
                             @if ($need->moderation === 'approved')
                                 <livewire:pulse.lines.quote-request :need-id="$need->id" :key="'quotes-need-'.$need->id" />
+                            @else
+                                <x-pulse.button variant="signal" wire:click="fulfil">It worked out</x-pulse.button>
                             @endif
-                            <x-pulse.button variant="signal" wire:click="fulfil">It worked out</x-pulse.button>
-                            <x-pulse.button variant="quiet" wire:click="close" wire:confirm="Close this need? Nobody will be shown it any more.">Close it</x-pulse.button>
+                            @if ($need->moderation === 'approved')
+                                <x-pulse.button variant="quiet" wire:click="fulfil">It worked out</x-pulse.button>
+                            @endif
                         @elseif ($need->moderation !== 'removed' && $need->status !== 'removed')
                             <x-pulse.button variant="signal" wire:click="reopen">Open it again</x-pulse.button>
                         @endif
-                        @if ($need->moderation !== 'removed')
-                            <x-pulse.button variant="quiet" :href="route('needs.edit', ['need' => $need->id])">Edit</x-pulse.button>
-                        @endif
-                        <x-pulse.button variant="danger" wire:click="delete" wire:confirm="Delete this need for good?">Delete</x-pulse.button>
+                        <div class="pk-cluster">
+                            @if ($need->moderation !== 'removed')
+                                <x-pulse.button variant="quiet" size="sm" :href="route('needs.edit', ['need' => $need->id])">Edit</x-pulse.button>
+                            @endif
+                            <x-pulse.more>
+                                @if ($need->status === 'open' && ! $expired)
+                                    <button type="button" class="pk-more__item" wire:click="close" wire:confirm="Close this need? Nobody will be shown it any more.">Close it</button>
+                                @endif
+                                <button type="button" class="pk-more__item pk-more__item--danger" data-pk-dialog="del-need-{{ $need->id }}">Delete this need</button>
+                            </x-pulse.more>
+                        </div>
+                        <x-pulse.confirm id="del-need-{{ $need->id }}" :title="'Delete '.$need->title.'?'" text="This cannot be undone. Lines it started stay in Lines." label="Delete need" wire:click="delete" />
                     </div>
                 </section>
 

@@ -85,10 +85,6 @@ class VerificationService
                 $outcomes.' result'.($outcomes === 1 ? '' : 's').' that both sides confirmed.')
             : $this->rung('outcomes', 'Confirmed results', 'missing', null, 'pulse_conversations', 'No result confirmed by both sides yet.');
 
-        $days = (int) $e->created_at->diffInDays(now());
-        $rungs[] = $this->rung('time_on_pulse', 'Time on Pulse', 'checked', $e->created_at->toIso8601String(), 'pulse_records',
-            'On Pulse since '.$e->created_at->toFormattedDateString().' ('.$days.' day'.($days === 1 ? '' : 's').').');
-
         return $rungs;
     }
 

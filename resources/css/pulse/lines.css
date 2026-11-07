@@ -320,7 +320,7 @@
     border: 1px solid var(--c-line-strong);
     border-radius: 999px;
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 16px;
 }
@@ -530,6 +530,27 @@
 
 .ln-context {
     margin-bottom: var(--s-md);
+    padding-block: 12px;
+}
+
+.ln-context__line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ln-context__line .ln-title {
+    margin-top: 0;
+    font-size: 1.125rem;
+    font-stretch: 108%;
+    letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
+}
+
+/* The newest message scrolls into view above the composer, not under it. */
+.ln-messages [data-latest] {
+    scroll-margin-bottom: 160px;
 }
 
 .ln-sub {
@@ -750,41 +771,55 @@
     color: var(--c-muted);
 }
 
-/* Composer: stays in reach at the foot of the viewport, above the phone bar. */
+/* Composer: one compact row that stays in reach at the foot of the viewport, above the phone bar (about 64px on a phone). */
 .ln-composer {
     position: sticky;
     bottom: 0;
     z-index: 5;
     display: grid;
-    gap: 8px;
-    padding: 12px 0 var(--s-sm);
+    gap: 6px;
+    padding: 10px 0 var(--s-sm);
     border-top: 1px solid var(--c-line);
     background: var(--c-ground);
+}
+
+.ln-composer__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.ln-composer__field {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ln-composer__send {
+    flex: none;
 }
 
 @media (max-width: 859.98px) {
     .ln-composer {
         bottom: calc(60px + env(safe-area-inset-bottom));
+        padding: 8px 0;
     }
 
-    .ln-composer__text {
-        min-height: var(--tap);
-    }
-
-    .ln-composer__bar .pk-btn[type="submit"] {
-        margin-left: auto;
-    }
-
+    /* The rules read as the placeholder here; the line stays for screen readers (aria-describedby). */
     .ln-composer__hint {
-        order: 3;
-        flex-basis: 100%;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 }
 
-/* The shell's floating Compose button would sit on the Send button, so a line page leaves it out. */
-body:has(.ln-thread) .sh-fab,
-body:has(.ln-compare-page) .sh-fab {
-    display: none;
+/* Touch has no Ctrl or Cmd. */
+@media (hover: none), (pointer: coarse) {
+    .ln-composer__keys {
+        display: none;
+    }
 }
 
 .ln-composer .pk-field > label {
@@ -796,32 +831,30 @@ body:has(.ln-compare-page) .sh-fab {
     white-space: nowrap;
 }
 
-.ln-composer__text {
-    min-height: 56px;
-    max-height: 200px;
+textarea.ln-composer__text {
+    min-height: var(--tap);
+    max-height: 160px;
     resize: none;
 }
 
-.ln-composer__bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-}
-
 .ln-composer__hint {
-    flex: 1 1 180px;
     min-width: 0;
+    margin: 0;
     color: var(--c-muted);
     font-size: var(--t-small);
     line-height: 1.35;
 }
 
 .ln-composer__count {
+    margin-left: 8px;
     color: var(--c-muted);
 }
 
 .ln-attach {
+    flex: none;
+    width: var(--tap);
+    padding: 0;
+    justify-content: center;
     cursor: pointer;
 }
 
@@ -1136,7 +1169,7 @@ body:has(.ln-compare-page) .sh-fab {
 
 .ln-rate small {
     color: var(--c-muted);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.1;
 }

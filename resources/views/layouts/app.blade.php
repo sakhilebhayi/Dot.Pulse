@@ -5,24 +5,49 @@
     $showDial = $dial ?? array_key_exists((string) $routeName, $floorRoutes);
     $selectedMode = $floorRoutes[$routeName] ?? 'all';
     $isFloor = $width === 'floor';
+    $focus = $focus ?? false;
     $hasContext = isset($context) && trim((string) $context) !== '';
     $pageTitle = $title ? $title.' | Dot.Pulse' : 'Dot.Pulse';
 
+    $businesses = pulse_my_businesses();
+    $manageSlug = pulse_route_is('entities.manage*') ? optional(request()->route('entity'))->slug : null;
+
     // Rail: the five verbs. Hrefs fall back to '#' until the screen behind them is built.
+    // Exactly one item is active. The specific places (Search, Saved, Open door, a business you run) are checked first and
+    // claim their own pages; the verbs keep the rest. On the phone bar only the five verbs exist, so a specific place lights
+    // the verb it belongs to ('parent').
     $verbs = [
-        ['key' => 'floor', 'label' => 'Floor', 'icon' => 'floor', 'href' => pulse_route_first(['floor', 'dashboard']), 'match' => ['floor', 'dashboard', 'search', 'saved', 'posts.*', 'communities.*', 'needs.*', 'offers.*', 'roles.*', 'entities.show']],
+        ['key' => 'floor', 'label' => 'Floor', 'icon' => 'floor', 'href' => pulse_route_first(['floor', 'dashboard']), 'match' => ['floor', 'dashboard', 'posts.*', 'communities.*', 'community.*', 'needs.*', 'offers.*', 'roles.*', 'entities.show', 'signals.*']],
         ['key' => 'trade', 'label' => 'Trade', 'icon' => 'trade', 'href' => pulse_route('trade'), 'match' => ['trade']],
         ['key' => 'work', 'label' => 'Work', 'icon' => 'work', 'href' => pulse_route('work'), 'match' => ['work']],
         ['key' => 'lines', 'label' => 'Lines', 'icon' => 'lines', 'href' => pulse_route('lines'), 'match' => ['lines', 'lines.*'], 'badge' => 'lines'],
-        ['key' => 'you', 'label' => 'You', 'icon' => 'you', 'href' => pulse_route_first(['me', 'profile.show']), 'match' => ['me', 'me.*', 'profile.*', 'teams.*', 'api-tokens.*', 'users.show', 'entities.manage*', 'entities.create', 'door']],
+        ['key' => 'you', 'label' => 'You', 'icon' => 'you', 'href' => pulse_route_first(['me', 'profile.show']), 'match' => ['me', 'me.*', 'profile.*', 'teams.*', 'api-tokens.*', 'users.show', 'entities.create']],
     ];
     $more = array_values(array_filter([
-        ['label' => 'Search', 'icon' => 'search', 'href' => pulse_route('search'), 'match' => ['search'], 'show' => Route::has('search')],
-        ['label' => 'Saved', 'icon' => 'bookmark', 'href' => pulse_route('saved'), 'match' => ['saved'], 'show' => Route::has('saved')],
-        ['label' => 'Open door', 'icon' => 'door', 'href' => pulse_route('door'), 'match' => ['door'], 'show' => Route::has('door')],
-        ['label' => 'Moderation', 'icon' => 'shield', 'href' => pulse_route('moderation'), 'match' => ['moderation'], 'show' => $user && Route::has('moderation') && $user->canAccessModeration()],
-        ['label' => 'Operator', 'icon' => 'chart', 'href' => pulse_route('operator'), 'match' => ['operator'], 'show' => $user && Route::has('operator') && $user->isPlatformModerator()],
+        ['key' => 'search', 'parent' => 'floor', 'label' => 'Search', 'icon' => 'search', 'href' => pulse_route('search'), 'match' => ['search'], 'show' => Route::has('search')],
+        ['key' => 'saved', 'parent' => 'floor', 'label' => 'Saved', 'icon' => 'bookmark', 'href' => pulse_route('saved'), 'match' => ['saved'], 'show' => Route::has('saved')],
+        ['key' => 'door', 'parent' => 'you', 'label' => 'Open door', 'icon' => 'door', 'href' => pulse_route('door'), 'match' => ['door'], 'show' => Route::has('door')],
+        ['key' => 'moderation', 'parent' => 'floor', 'label' => 'Moderation', 'icon' => 'shield', 'href' => pulse_route('moderation'), 'match' => ['moderation'], 'show' => $user && Route::has('moderation') && $user->canAccessModeration()],
+        ['key' => 'operator', 'parent' => 'floor', 'label' => 'Operator', 'icon' => 'chart', 'href' => pulse_route('operator'), 'match' => ['operator'], 'show' => $user && Route::has('operator') && $user->isPlatformModerator()],
     ], fn ($i) => $i['show']));
+    $biz = array_map(fn ($b) => [
+        'key' => 'biz:'.$b['slug'], 'parent' => 'you', 'label' => $b['name'], 'role' => $b['role'], 'icon' => 'work',
+        'href' => pulse_route('entities.manage', ['entity' => $b['slug']]), 'slug' => $b['slug'],
+    ], $businesses);
+
+    $activeKey = null;
+    foreach ($more as $item) {
+        if (pulse_route_is(...$item['match'])) { $activeKey = $item['key']; break; }
+    }
+    if ($activeKey === null && $manageSlug !== null) {
+        $activeKey = in_array($manageSlug, array_column($businesses, 'slug'), true) ? 'biz:'.$manageSlug : 'you';
+    }
+    if ($activeKey === null) {
+        foreach ($verbs as $verb) {
+            if (pulse_route_is(...$verb['match'])) { $activeKey = $verb['key']; break; }
+        }
+    }
+    $activeParent = collect(array_merge($more, $biz))->firstWhere('key', $activeKey)['parent'] ?? $activeKey;
     $bellRoute = Route::has('me.notifications');
 @endphp
 <!DOCTYPE html>
@@ -42,11 +67,12 @@
         @if ($showDial)
             <div class="sh-mast__dial"><x-pulse.mode-dial :selected="$selectedMode" /></div>
         @else
-            <div class="sh-mast__page">{{ $title }}</div>
+            {{-- A spacer: the page already says its own name in its h1, so the masthead does not say it twice. --}}
+            <div class="sh-mast__page" aria-hidden="true"></div>
         @endif
 
         <div class="sh-mast__tools">
-            @if (Route::has('search'))
+            @if (Route::has('search') && ! request()->routeIs('search') && ! $focus)
                 <form class="sh-search" role="search" action="{{ route('search') }}" method="get">
                     <label for="mast-q" class="sr-only">Search the floor</label>
                     <x-pulse.icon name="search" :size="16" />
@@ -65,6 +91,8 @@
                     <livewire:pulse.notification-bell />
                 @endauth
             @endif
+
+            @unless ($focus)<button type="button" class="sh-iconbtn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>@endunless
 
             <button type="button" class="sh-iconbtn sh-theme sh-hide-phone" data-pk-theme aria-pressed="false" aria-label="Switch theme">
                 <x-pulse.icon name="moon" class="sh-theme__moon" />
@@ -88,7 +116,14 @@
                             <strong>{{ $user->name }}</strong>
                             <span>{{ $user->currentTeam->name ?? 'Personal' }}</span>
                         </div>
-                        <a href="{{ route('profile.show') }}">Profile and settings</a>
+                        <a href="{{ pulse_route('me.profile') }}">Profile and settings</a>
+                        <a href="{{ pulse_route('me.account') }}">Account and security</a>
+                        @if (count($biz))
+                            <div class="sh-menu__label">{{ count($biz) === 1 ? 'Your business' : 'Your businesses' }}</div>
+                            @foreach ($biz as $b)
+                                <a href="{{ $b['href'] }}">Manage {{ $b['label'] }}</a>
+                            @endforeach
+                        @endif
                         @if (Laravel\Jetstream\Jetstream::hasTeamFeatures() && $user->currentTeam)
                             <div class="sh-menu__label">Team</div>
                             <a href="{{ route('teams.show', $user->currentTeam->id) }}">Team settings</a>
@@ -123,11 +158,12 @@
         </div>
     </header>
 
-    <div class="sh-body content-wrap">
+    <div class="sh-body content-wrap{{ $focus ? ' sh-body--focus' : '' }}">
+        @unless ($focus)
         <nav class="sh-rail" aria-label="Main">
             <ul class="sh-rail__verbs">
                 @foreach ($verbs as $verb)
-                    @php $current = pulse_route_is(...$verb['match']); @endphp
+                    @php $current = $activeParent === $verb['key'] && ! in_array($activeKey, array_column(array_merge($more, $biz), 'key'), true); @endphp
                     <li>
                         <a class="sh-verb" href="{{ $verb['href'] }}" @if ($current) aria-current="page" @endif>
                             <x-pulse.icon :name="$verb['icon']" />
@@ -145,7 +181,18 @@
                     <div class="sh-rail__sub">More</div>
                     <ul class="sh-rail__more">
                         @foreach ($more as $item)
-                            <li><a class="sh-verb" href="{{ $item['href'] }}" @if (pulse_route_is(...$item['match'])) aria-current="page" @endif><x-pulse.icon :name="$item['icon']" :size="18" /><span>{{ $item['label'] }}</span></a></li>
+                            <li><a class="sh-verb" href="{{ $item['href'] }}" @if ($activeKey === $item['key']) aria-current="page" @endif><x-pulse.icon :name="$item['icon']" :size="18" /><span>{{ $item['label'] }}</span></a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (count($biz))
+                <div>
+                    <div class="sh-rail__sub">{{ count($biz) === 1 ? 'Your business' : 'Your businesses' }}</div>
+                    <ul class="sh-rail__more">
+                        @foreach ($biz as $b)
+                            <li><a class="sh-verb" href="{{ $b['href'] }}" @if ($activeKey === $b['key']) aria-current="page" @endif><x-pulse.icon name="{{ $b['icon'] }}" :size="18" /><span class="sh-verb__text">{{ $b['label'] }}</span></a></li>
                         @endforeach
                     </ul>
                 </div>
@@ -153,6 +200,7 @@
 
             <p class="sh-rail__foot">Part of the Dot ecosystem. Signed in with InfoDot.</p>
         </nav>
+        @endunless
 
         <main id="main" tabindex="-1" class="sh-stage {{ $isFloor ? 'sh-stage--floor' : 'sh-stage--wide' }}{{ $isFloor && $hasContext ? ' has-context' : '' }}">
             @if ($isFloor)
@@ -175,16 +223,17 @@
         </main>
     </div>
 
+    @unless ($focus)
     <nav class="sh-bar" aria-label="Main, phone">
         @foreach ($verbs as $verb)
-            <a href="{{ $verb['href'] }}" @if (pulse_route_is(...$verb['match'])) aria-current="page" @endif>
+            <a href="{{ $verb['href'] }}" @if ($activeParent === $verb['key']) aria-current="page" @endif>
                 <x-pulse.icon :name="$verb['icon']" :size="22" />
                 <span>{{ $verb['label'] }}</span>
                 @if (! empty($verb['badge']))<span class="sh-badge" data-pulse-badge="{{ $verb['badge'] }}" data-label="{{ $verb['label'] }}" hidden>0</span>@endif
             </a>
         @endforeach
     </nav>
-    <x-pulse.button variant="signal" class="sh-fab pk-btn--float" data-pk-dialog="compose" icon="plus" aria-label="Compose">Compose</x-pulse.button>
+    @endunless
 
     <x-pulse.drawer id="compose" title="Say what you want" side="bottom" description="Pick the thing that is true. Pulse does the introducing.">
         <div class="pk-stack" style="gap: 8px">

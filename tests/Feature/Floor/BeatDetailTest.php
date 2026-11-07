@@ -93,7 +93,7 @@ class BeatDetailTest extends FloorTestCase
             ->assertSee('Who it comes from')
             ->assertSee('Registration number')
             ->assertSee('Claimed by them, not checked')
-            ->assertSee('Time on Pulse')
+            ->assertDontSee('Time on Pulse')
             ->assertDontSee('Verified business');
     }
 
@@ -108,9 +108,10 @@ class BeatDetailTest extends FloorTestCase
             BeatDetail::answerLine(['received' => 4, 'answered' => 3, 'response_rate' => 0.75, 'median_first_response_seconds' => 7200, 'window_days' => 90]),
         );
         $this->assertSame(
-            'Answered 1 of 1 first messages in the last 90 days (100 percent). Usually within 20 minutes.',
+            'Answered 1 of 1 first message in the last 90 days (100 percent). Usually within 20 minutes.',
             BeatDetail::answerLine(['received' => 1, 'answered' => 1, 'response_rate' => 1.0, 'median_first_response_seconds' => 1200, 'window_days' => 90]),
         );
+        $this->assertSame('Answered 1 of 1 first message in the last 1 day (100 percent). Usually under a minute.', BeatDetail::answerLine(['received' => 1, 'answered' => 1, 'response_rate' => 1.0, 'median_first_response_seconds' => 20, 'window_days' => 1]));
         $this->assertStringContainsString('2 days', BeatDetail::answerLine(['received' => 2, 'answered' => 2, 'response_rate' => 1.0, 'median_first_response_seconds' => 172800, 'window_days' => 90]));
     }
 

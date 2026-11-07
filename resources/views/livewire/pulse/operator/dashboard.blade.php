@@ -31,51 +31,57 @@
         Figures marked <strong>Right now</strong> are counted at {{ $range['to']->format('H:i') }} on {{ $to }} and ignore the range.
     </p>
 
-    <section class="op-section" aria-labelledby="op-who">
-        <h2 id="op-who">Who is here</h2>
-        <div class="op-grid">
+    {{-- Grouped by what an operator does, in the order they do it: what needs a person, what came of it, whether the floor is working, then the stock. --}}
+    <section class="op-section" aria-labelledby="op-attn">
+        <h2 id="op-attn">Needs a person</h2>
+        <div class="op-grid op-grid--lead">
+            <div class="op-metric op-metric--lead">
+                <div class="op-metric__head">
+                    <h3 class="op-metric__label">Moderation queue</h3>
+                    <span class="op-metric__scope">Right now</span>
+                </div>
+                @if ($queue['waiting'] === 0)
+                    <p class="op-metric__none">Nothing waiting</p>
+                @else
+                    <p class="op-metric__value">{{ D::count($queue['waiting']) }}</p>
+                    <dl class="op-metric__rows">
+                        <div><dt>Oldest has waited</dt><dd>{{ D::duration($queue['oldest_seconds']) }}</dd></div>
+                        <div><dt>Middle wait</dt><dd>{{ D::duration($queue['median_seconds']) }}</dd></div>
+                    </dl>
+                @endif
+                <p class="op-metric__def">Held posts, held listings, open reports and held reviews.</p>
+                <div><x-pulse.button size="sm" :variant="$queue['waiting'] === 0 ? 'quiet' : 'signal'" :href="route('moderation')">Open the queue</x-pulse.button></div>
+            </div>
             @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'People', 'scope' => 'now', 'value' => D::count($people['total']),
-                'rows' => $named($people['by_kind']),
-                'definition' => 'People who finished onboarding, split by the kind of profile they chose.',
+                'label' => 'Reports opened', 'value' => D::count($rep['opened']),
+                'rows' => $rep['opened'] !== null ? ['Resolved' => D::count($rep['resolved']), 'Dismissed' => D::count($rep['dismissed'])] : [],
+                'definition' => 'Reports filed in the range. Resolved and dismissed are the ones a moderator closed in the range, whenever they were filed.',
             ])
             @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'How findable they are', 'scope' => 'now', 'value' => D::count($people['total']),
-                'rows' => $named($people['by_discoverability']),
-                'note' => 'people in total',
-                'definition' => 'The same people by what they allow: off, anonymous (skills and region only) or open (name shown).',
-            ])
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Business pages', 'scope' => 'now', 'value' => D::count($m['entities']),
-                'definition' => 'Pages that are live and approved, by the rules or by a person.',
+                'label' => 'Blocks', 'value' => D::count($m['blocks']),
+                'definition' => 'Blocks made in the range, between people and from a person to a page.',
             ])
         </div>
     </section>
 
-    <section class="op-section" aria-labelledby="op-on">
-        <h2 id="op-on">What is on the floor</h2>
-        <div class="op-grid">
+    <section class="op-section" aria-labelledby="op-results">
+        <h2 id="op-results">What came of it</h2>
+        <div class="op-grid op-grid--three">
             @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Offers', 'scope' => 'now', 'value' => D::count($listings['offers']['total']),
-                'rows' => $named($listings['offers']['by_kind']),
-                'definition' => 'Offers that are live and approved, by product or service.',
-            ])
+                    'lead' => true, 'label' => 'Confirmed results', 'value' => D::count($out['total']),
+                    'rows' => $out['total'] !== null ? collect($out['by_outcome'])->mapWithKeys(fn ($n, $k) => [['won' => 'Won', 'hired' => 'Hired', 'partnered' => 'Partnered'][$k] ?? $label($k) => number_format($n)])->all() : [],
+                    'definition' => 'Won, hired or partnered, confirmed by both sides in the range. One side saying so is not counted, and neither is "not this time".',
+                ])
             @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Roles', 'scope' => 'now', 'value' => D::count($listings['roles']['total']),
-                'rows' => $named($listings['roles']['by_kind']),
-                'definition' => 'Roles that are live and approved, by type of work.',
-            ])
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Needs', 'scope' => 'now', 'value' => D::count($listings['needs']['total']),
-                'rows' => $named($listings['needs']['by_kind']),
-                'definition' => 'Needs that are open and approved, by what the person is after.',
+                'label' => 'Reviews revealed', 'value' => D::count($m['reviews']),
+                'definition' => 'Reviews that became public in the range: both sides wrote one, or 14 days passed. Removed reviews are left out.',
             ])
         </div>
     </section>
 
     <section class="op-section" aria-labelledby="op-lines">
-        <h2 id="op-lines">Floor and lines</h2>
-        <div class="op-grid">
+        <h2 id="op-lines">Is the floor working</h2>
+        <div class="op-grid op-grid--three">
             @include('livewire.pulse.operator.partials.metric', [
                 'label' => 'Floor rounds served', 'value' => D::count($m['floor']['seen']),
                 'note' => $m['floor']['people'] !== null ? 'seen by '.D::count($m['floor']['people']).' '.\Illuminate\Support\Str::plural('person', $m['floor']['people']) : null,
@@ -93,6 +99,15 @@
             @include('livewire.pulse.operator.partials.metric', [
                 'label' => 'Median time to answer', 'value' => D::duration($res['median_seconds']),
                 'definition' => 'The middle time from a request starting to its first answer, among those answered.',
+            ])
+            @include('livewire.pulse.operator.partials.metric', [
+                'label' => 'Out of first contacts', 'scope' => 'now', 'showScope' => true, 'value' => D::count($m['exhausted']),
+                'note' => 'people with none left this week',
+                'definition' => 'People who have used this week\'s allowance of first contacts to strangers, refills and shrinks included.',
+            ])
+            @include('livewire.pulse.operator.partials.metric', [
+                'label' => 'Digests sent', 'value' => D::count($m['digests']),
+                'definition' => 'Digest emails sent in the range. One is sent only when it holds something real.',
             ])
         </div>
 
@@ -117,58 +132,30 @@
         </div>
     </section>
 
-    <section class="op-section" aria-labelledby="op-results">
-        <h2 id="op-results">Results</h2>
-        <div class="op-grid">
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Confirmed results', 'value' => D::count($out['total']),
-                'rows' => $out['total'] !== null ? collect($out['by_outcome'])->mapWithKeys(fn ($n, $k) => [['won' => 'Won', 'hired' => 'Hired', 'partnered' => 'Partnered'][$k] ?? $label($k) => number_format($n)])->all() : [],
-                'definition' => 'Won, hired or partnered, confirmed by both sides in the range. One side saying so is not counted, and neither is "not this time".',
-            ])
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Reviews revealed', 'value' => D::count($m['reviews']),
-                'definition' => 'Reviews that became public in the range: both sides wrote one, or 14 days passed. Removed reviews are left out.',
-            ])
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Digests sent', 'value' => D::count($m['digests']),
-                'definition' => 'Digest emails sent in the range. One is sent only when it holds something real.',
-            ])
-        </div>
-    </section>
-
-    <section class="op-section" aria-labelledby="op-safety">
-        <h2 id="op-safety">Safety</h2>
-        <div class="op-grid">
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Reports opened', 'value' => D::count($rep['opened']),
-                'rows' => $rep['opened'] !== null ? ['Resolved' => D::count($rep['resolved']), 'Dismissed' => D::count($rep['dismissed'])] : [],
-                'definition' => 'Reports filed in the range. Resolved and dismissed are the ones a moderator closed in the range, whenever they were filed.',
-            ])
-            <div class="op-metric">
-                <div class="op-metric__head">
-                    <h3 class="op-metric__label">Moderation queue</h3>
-                    <span class="op-metric__scope">Right now</span>
+    {{-- The stock is a ledger, not a wall of cards: counted right now, whatever the range. --}}
+    <section class="op-section" aria-labelledby="op-who">
+        <h2 id="op-who">Who and what is here</h2>
+        <p class="op-section__scope">Counted right now. The range above does not change these.</p>
+        <div class="op-ledger">
+            @foreach ([
+                ['People', $people['total'], $named($people['by_kind']), 'People who finished onboarding, split by the kind of profile they chose.'],
+                ['How findable they are', $people['total'], $named($people['by_discoverability']), 'The same people by what they allow: off, anonymous (skills and region only) or open (name shown).'],
+                ['Business pages', $m['entities'], [], 'Pages that are live and approved, by the rules or by a person.'],
+                ['Offers', $listings['offers']['total'], $named($listings['offers']['by_kind']), 'Offers that are live and approved, by product or service.'],
+                ['Roles', $listings['roles']['total'], $named($listings['roles']['by_kind']), 'Roles that are live and approved, by type of work.'],
+                ['Needs', $listings['needs']['total'], $named($listings['needs']['by_kind']), 'Needs that are open and approved, by what the person is after.'],
+            ] as [$name, $total, $split, $def])
+                <div class="op-ledger__row">
+                    <h3>{{ $name }}</h3>
+                    @if ($total === null)
+                        <p class="op-ledger__n op-ledger__n--none">No data yet</p>
+                    @else
+                        <p class="op-ledger__n">{{ D::count($total) }}</p>
+                        <p class="op-ledger__split">{{ collect($split)->map(fn ($v, $k) => $k.' '.$v)->implode(', ') }}</p>
+                    @endif
+                    <p class="op-ledger__def">{{ $def }}</p>
                 </div>
-                @if ($queue['waiting'] === 0)
-                    <p class="op-metric__none">Nothing waiting</p>
-                @else
-                    <p class="op-metric__value">{{ D::count($queue['waiting']) }}</p>
-                    <dl class="op-metric__rows">
-                        <div><dt>Oldest has waited</dt><dd>{{ D::duration($queue['oldest_seconds']) }}</dd></div>
-                        <div><dt>Middle wait</dt><dd>{{ D::duration($queue['median_seconds']) }}</dd></div>
-                    </dl>
-                @endif
-                <p class="op-metric__def">Held posts, held listings, open reports and held reviews. <a href="{{ route('moderation') }}">Open the queue</a>.</p>
-            </div>
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Blocks', 'value' => D::count($m['blocks']),
-                'definition' => 'Blocks made in the range, between people and from a person to a page.',
-            ])
-            @include('livewire.pulse.operator.partials.metric', [
-                'label' => 'Out of first contacts', 'scope' => 'now', 'value' => D::count($m['exhausted']),
-                'note' => 'people with none left this week',
-                'definition' => 'People who have used this week\'s allowance of first contacts to strangers, refills and shrinks included.',
-            ])
+            @endforeach
         </div>
     </section>
 </div>

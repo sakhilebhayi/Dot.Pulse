@@ -6,6 +6,6 @@ What it creates: 14 people with distinct roles (three plumbers who each own a pa
 
 Everything is invented: names, businesses (every page says "A fictional demo business"), phone numbers in the 555 range, websites on `.example`, e-mail addresses on `demo.pulse.test`. The demo accounts have a random password nobody knows.
 
-Sign in as anyone with the local-only route `GET /dev/login/{id or email}` (optionally `?to=/lines`), and `GET /dev/logout`. The routes sit in the `// --- dev ---` block of `routes/web.php` and are registered only when the environment is `local` or `testing`; elsewhere they do not exist. The seed command prints a table of every person with their login address.
+Sign in as anyone with the local-only route `GET /dev/login/{id or email}` (optionally `?to=/lines`), `GET /dev/login/new` (a brand new person with no profile, to walk the welcome flow from the start) and `GET /dev/logout`. The routes sit in the `// --- dev ---` block of `routes/web.php` and are registered only when the environment is `local` or `testing`; elsewhere they do not exist. The seed command prints a table of every person with their login address.
 
 The end-to-end journeys in `tests/e2e/pulse/` run against a fresh SQLite database seeded this way (see its README).

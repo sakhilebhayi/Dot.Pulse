@@ -260,7 +260,13 @@
 }
 
 .pk-price--lg {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+}
+
+/* Words are not figures: mono is for digits only. */
+.pk-price__words {
+    font-family: var(--f-ui);
+    font-weight: 600;
 }
 
 /* ---------- Avatar ---------- */
@@ -293,7 +299,7 @@
 .pk-avatar--sm {
     width: 28px;
     height: 28px;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
 }
 
 .pk-avatar--lg {
@@ -967,7 +973,7 @@ select.pk-control {
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--f-mono);
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--c-muted);
 }
@@ -1038,6 +1044,13 @@ select.pk-control {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1.1;
+}
+
+.pk-stat__value--text {
+    font-family: var(--f-ui);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .pk-stat__note {
@@ -1149,7 +1162,7 @@ select.pk-control {
     background: var(--c-signal);
     color: var(--c-on-signal);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 18px;
 }
@@ -1284,6 +1297,19 @@ select.pk-control {
     transform: translateX(-50%);
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     animation-name: pk-panel-bottom;
+}
+
+/* On a wide screen the bottom sheet is a centred card with all four corners round, not a strip stuck to the floor. */
+@media (min-width: 860px) {
+    .pk-dialog--bottom .pk-dialog__panel {
+        top: 50%;
+        bottom: auto;
+        width: min(560px, calc(100% - 48px));
+        max-height: calc(100% - 48px);
+        transform: translate(-50%, -50%);
+        border-radius: var(--r-lg);
+        animation-name: pk-panel-in;
+    }
 }
 
 .pk-dialog--center .pk-dialog__panel {
@@ -1455,4 +1481,98 @@ select.pk-control {
 
 .pk-muted {
     color: var(--c-muted);
+}
+
+/* ---------- Overflow menu (pulse/more) ---------- */
+.pk-more {
+    position: relative;
+    display: inline-block;
+}
+
+.pk-more > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.pk-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+.pk-more__panel {
+    position: absolute;
+    z-index: 30;
+    right: 0;
+    top: calc(100% + 6px);
+    display: grid;
+    min-width: 200px;
+    padding: 6px;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    box-shadow: 0 14px 34px var(--c-shadow-float);
+}
+
+.pk-more__item {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    font-size: var(--t-ui);
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pk-more__item:hover,
+.pk-more__item:focus-visible {
+    background: var(--c-raised);
+}
+
+/* The destructive item is set apart, 24px of air from the rest, in the danger colour with a word, not by colour alone. */
+.pk-more__item--danger {
+    margin-top: 12px;
+    color: var(--c-bad);
+    box-shadow: 0 -12px 0 -11px var(--c-line);
+}
+
+/* An open sheet or drawer holds the page still behind it. */
+body:has(dialog.pk-dialog[open]) {
+    overflow: hidden;
+}
+
+/* Small controls keep their look and get a 44px hit area on touch: the invisible padding is the target. */
+@media (pointer: coarse), (max-width: 859.98px) {
+    .bz-tagx,
+    .me-chip button,
+    .bz-chosen button,
+    .ln-linkbtn,
+    .fl-link,
+    .bz-ladder summary,
+    .ln-msg__tools .ln-linkbtn {
+        position: relative;
+        min-height: 32px;
+    }
+
+    .bz-tagx::after,
+    .me-chip button::after,
+    .bz-chosen button::after,
+    .ln-linkbtn::after,
+    .fl-link::after,
+    .bz-ladder summary::after {
+        content: "";
+        position: absolute;
+        inset: -8px -6px;
+    }
+
+    .pk-ladder a,
+    .pk-rung a {
+        display: inline-block;
+        padding-block: 14px;
+    }
 }

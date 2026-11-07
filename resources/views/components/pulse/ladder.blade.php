@@ -10,15 +10,13 @@
 @props(['rungs' => [], 'summary' => false])
 @php
     $rows = collect($rungs)->map(function ($r) {
-        $at = data_get($r, 'at');
-        if ($at instanceof \DateTimeInterface) {
-            $at = \Illuminate\Support\Carbon::instance($at)->format('j M Y');
-        }
+        // Dates and sources arrive as services store them (ISO times, snake_case codes); the ladder says them in words.
+        $at = \App\Support\Moment::date(data_get($r, 'at')) ?: null;
         return [
             'label' => (string) data_get($r, 'label', ''),
             'state' => in_array(data_get($r, 'state'), ['checked', 'claimed', 'missing'], true) ? data_get($r, 'state') : 'missing',
             'at' => $at ?: null,
-            'source' => data_get($r, 'source'),
+            'source' => \App\Support\Moment::source(data_get($r, 'source')),
             'detail' => data_get($r, 'detail'),
         ];
     })->filter(fn ($r) => $r['label'] !== '')->values();

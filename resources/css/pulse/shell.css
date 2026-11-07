@@ -165,7 +165,7 @@
     background: var(--c-signal);
     color: var(--c-on-signal);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 20px;
     text-align: center;
@@ -384,6 +384,13 @@
     font-weight: 700;
 }
 
+.sh-verb__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .sh-rail__sub {
     padding: 0 12px 6px;
     color: var(--c-muted);
@@ -411,7 +418,7 @@
 .sh-stage--floor {
     display: grid;
     grid-template-columns: minmax(0, var(--floor-w));
-    justify-content: center;
+    justify-content: start; /* every screen's column starts at the same left edge, beside the rail */
     column-gap: var(--s-lg);
     align-items: start;
 }
@@ -542,9 +549,9 @@
     }
 }
 
-/* Phone: bottom bar of five, compose floats. */
+/* Phone: bottom bar of five; Compose is a yellow plus in the masthead, never a floating button over the cards. */
 .sh-bar,
-.sh-fab.pk-btn {
+.sh-compose-top {
     display: none;
 }
 
@@ -605,7 +612,7 @@
         min-height: 60px;
         padding: 6px 2px;
         color: var(--c-muted);
-        font-size: 0.6875rem;
+        font-size: 0.75rem;
         font-weight: 600;
         text-decoration: none;
     }
@@ -626,12 +633,10 @@
         right: calc(50% - 26px);
     }
 
-    .sh-fab.pk-btn {
-        position: fixed;
-        z-index: 75;
-        right: var(--s-md);
-        bottom: calc(76px + env(safe-area-inset-bottom));
+    .sh-compose-top {
         display: inline-flex;
+        background: var(--c-signal);
+        color: var(--c-on-signal);
     }
 }
 
@@ -669,4 +674,24 @@
         left: var(--s-md);
         max-width: none;
     }
+}
+
+/* A single-task page: one column, nothing to leave by. */
+.sh-body--focus {
+    display: block;
+}
+
+.sh-body--focus .sh-stage {
+    padding-top: var(--s-xl);
+}
+
+/* A long business name truncates inside the rail instead of running past it. */
+.sh-rail__more li,
+.sh-rail__verbs li {
+    min-width: 0;
+}
+
+.sh-rail__more .sh-verb {
+    min-width: 0;
+    max-width: 100%;
 }

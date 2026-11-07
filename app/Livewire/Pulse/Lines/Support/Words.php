@@ -50,12 +50,10 @@ class Words
         };
     }
 
-    /** A short relative time: "2h ago", "3d ago". */
+    /** A short relative time: "2 h ago", "Yesterday", "12 Nov". */
     public static function ago(mixed $when): string
     {
-        $when = self::carbon($when);
-
-        return $when ? $when->diffForHumans(['short' => true, 'parts' => 1]) : '';
+        return \App\Support\Moment::when($when);
     }
 
     /** A length of time with no direction: "3 days", "2 hours". */
@@ -74,16 +72,18 @@ class Words
 
     public static function date(mixed $when): string
     {
-        $when = self::carbon($when);
-
-        return $when ? $when->format('j M Y') : '';
+        return \App\Support\Moment::date($when);
     }
 
+    /** Relative within a week, "12 Nov" after. The exact time belongs in a title attribute (Moment::full). */
     public static function time(mixed $when): string
     {
-        $when = self::carbon($when);
+        return \App\Support\Moment::when($when);
+    }
 
-        return $when ? $when->format('j M, H:i') : '';
+    public static function full(mixed $when): string
+    {
+        return \App\Support\Moment::full($when);
     }
 
     /**

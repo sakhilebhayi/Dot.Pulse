@@ -77,8 +77,14 @@
                         @if ($offer->availability === 'sold_out')
                             <p class="pk-muted">This is sold out. You can still knock to ask when it is back.</p>
                         @endif
-                        <livewire:pulse.knock-sheet :target="['entity' => $entity->id]" kind="enquiry" context-type="offer" :context-id="$offer->id" label="Ask about this" :key="'knock-offer-'.$offer->id" />
-                        <livewire:pulse.business.quote-request :offer-id="$offer->id" :key="'quote-offer-'.$offer->id" />
+                        @if ($offer->accepts_quotes)
+                            {{-- One yellow thing leads: the quote. A plain question is a text link that opens the same sheet. --}}
+                            <livewire:pulse.business.quote-request :offer-id="$offer->id" :key="'quote-offer-'.$offer->id" />
+                            <livewire:pulse.knock-sheet :bare="true" :key="'knock-offer-'.$offer->id" />
+                            <button type="button" class="fl-link bz-askfirst" x-data x-on:click="Livewire.dispatch('pulse-knock', { spec: {{ \Illuminate\Support\Js::from(['target' => ['entity' => $entity->id], 'kind' => 'enquiry', 'contextType' => 'offer', 'contextId' => $offer->id, 'label' => 'Ask a question', 'title' => $offer->title]) }} })">Ask a question first</button>
+                        @else
+                            <livewire:pulse.knock-sheet :target="['entity' => $entity->id]" kind="enquiry" context-type="offer" :context-id="$offer->id" label="Ask about this" :key="'knock-offer-'.$offer->id" />
+                        @endif
                         <livewire:pulse.business.listing-actions type="offer" :id="$offer->id" :key="'actions-offer-'.$offer->id" />
                     @endif
                 </section>

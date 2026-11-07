@@ -67,13 +67,16 @@
                                     @elseif (in_array($role->status, ['draft', 'paused'], true))
                                         <x-pulse.button size="sm" variant="primary" wire:click="publish({{ $role->id }})">Publish</x-pulse.button>
                                     @endif
-                                    @if (in_array($role->status, ['live', 'paused'], true))
-                                        <x-pulse.button size="sm" variant="quiet" wire:click="markFilled({{ $role->id }})">Filled</x-pulse.button>
-                                        <x-pulse.button size="sm" variant="quiet" wire:click="close({{ $role->id }})">Close</x-pulse.button>
-                                    @endif
                                 @endif
-                                <x-pulse.button size="sm" variant="danger" wire:click="delete({{ $role->id }})" wire:confirm="Delete this role for good? Lines that started from it keep their own copy.">Delete</x-pulse.button>
+                                <x-pulse.more>
+                                    @if ($role->moderation !== 'removed' && in_array($role->status, ['live', 'paused'], true))
+                                        <button type="button" class="pk-more__item" wire:click="markFilled({{ $role->id }})">Mark as filled</button>
+                                        <button type="button" class="pk-more__item" wire:click="close({{ $role->id }})">Close this role</button>
+                                    @endif
+                                    <button type="button" class="pk-more__item pk-more__item--danger" data-pk-dialog="del-role-{{ $role->id }}">Delete this role</button>
+                                </x-pulse.more>
                             </div>
+                            <x-pulse.confirm id="del-role-{{ $role->id }}" :title="'Delete '.$role->title.'?'" text="This cannot be undone. Lines that started from it keep their own copy." label="Delete role" wire:click="delete({{ $role->id }})" />
                         </x-slot>
                     </x-pulse.row>
                 @endforeach

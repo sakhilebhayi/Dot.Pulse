@@ -24,15 +24,20 @@
 <x-public-layout title="Dot.Pulse: say what you want" description="Dot.Pulse introduces the people and businesses that fit what you want, shows the reasons for every match, and never contacts anyone without a yes.">
 
     <section class="lp-hero" aria-labelledby="hero-title">
-        <div class="pub-wrap">
-            <h1 id="hero-title">Say what you want.</h1>
-            <p class="lp-hero__lead">Pulse introduces people and businesses that fit, and always says why.</p>
-            <div class="lp-hero__actions">
-                <x-pulse.button variant="signal" :href="$doorHref">{{ $doorLabel }}</x-pulse.button>
-                <x-pulse.button variant="ghost" href="#match">See how a match works</x-pulse.button>
+        <div class="pub-wrap lp-hero__grid">
+            <div class="lp-hero__text">
+                <h1 id="hero-title">Say what you want.</h1>
+                <p class="lp-hero__lead">Pulse introduces people and businesses that fit, and always says why.</p>
+                <div class="lp-hero__actions">
+                    <x-pulse.button variant="signal" :href="$doorHref">{{ $doorLabel }}</x-pulse.button>
+                    <x-pulse.button variant="ghost" href="#match">See how a match works</x-pulse.button>
+                </div>
             </div>
-            <div class="lp-hero__stage pk-on-field">
-                <x-pulse.sync-meter :reasons="$heroReasons" you-label="You" them-label="Someone who needs you" />
+            {{-- The signature, on a sheet so both lines read at full contrast: cobalt is yours, ink is theirs. --}}
+            <div class="lp-hero__stage">
+                <div class="lp-hero__sheet">
+                    <x-pulse.sync-meter :reasons="$heroReasons" you-label="You" them-label="Someone who needs you" />
+                </div>
                 <span class="lp-example">Example only. Sample text, not a real match.</span>
             </div>
         </div>

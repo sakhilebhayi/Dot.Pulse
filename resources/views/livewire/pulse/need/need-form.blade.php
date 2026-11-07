@@ -65,10 +65,10 @@
                     @endif
                 </div>
             @endif
-            <fieldset class="pk-chips bz-radios">
-                <legend>Who can open it</legend>
-                <label class="bz-radio"><input type="radio" wire:model="visibility" value="open"><span><strong>Open</strong> Any signed-in person can read it, and it also goes to people it fits.</span></label>
-                <label class="bz-radio"><input type="radio" wire:model="visibility" value="matched"><span><strong>Matched only</strong> Only sellers and people it fits are shown it. It is not open to everyone.</span></label>
+            <fieldset class="me-choices">
+                <legend class="pk-field__label">Who can open it</legend>
+                @include('livewire.pulse.me.partials.choice', ['name' => 'visibility', 'value' => 'open', 'model' => 'visibility', 'title' => 'Open', 'text' => 'Any signed-in person can read it, and it also goes to people it fits.'])
+                @include('livewire.pulse.me.partials.choice', ['name' => 'visibility', 'value' => 'matched', 'model' => 'visibility', 'title' => 'Matched only', 'text' => 'Only sellers and people it fits are shown it. It is not open to everyone.'])
             </fieldset>
             @if ($this->pages)
                 <x-pulse.select name="entity_id" id="need-page" label="Post it for one of your pages" wire:model="entity_id" placeholder="No, post it as me" :options="$this->pages" optional />

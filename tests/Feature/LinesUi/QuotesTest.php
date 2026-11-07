@@ -239,8 +239,8 @@ class QuotesTest extends TestCase
 
         $html = $this->words(Livewire::actingAs($user)->test(QuoteCompare::class, ['group' => $lines[0]->quote_group]));
 
-        $this->assertStringContainsString('Answered 1 of 1 requests in the last 90 days, usually within', $html);
-        $this->assertStringContainsString('Answered 0 of 1 requests in the last 90 days.', $html);
+        $this->assertStringContainsString('Answered 1 of 1 request in the last 90 days, usually', $html);
+        $this->assertStringContainsString('Answered 0 of 1 request in the last 90 days.', $html);
         $this->assertStringNotContainsString('100%', $html);
         $this->assertStringNotContainsString('Top rated', $html);
     }
@@ -415,7 +415,7 @@ class QuotesTest extends TestCase
 
         $offerId = $page->offers()->value('id');
         $fromOffer = Blade::render('<livewire:pulse.lines.quote-request :offer-id="'.$offerId.'" />');
-        $this->assertStringContainsString('Ask for quotes', $fromOffer);
+        $this->assertStringContainsString('Ask for a quote', $fromOffer);
 
         $line = app(QuoteService::class)->request($user, ['need' => $need->id], [$page->id], $this->card())[0];
         $report = Blade::render('<livewire:pulse.lines.report subject-type="conversation" :subject-id="'.$line->id.'" />');

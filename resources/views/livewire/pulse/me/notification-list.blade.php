@@ -29,11 +29,11 @@
                                     {{ $row['lead'] }}{{ $row['text'] }}
                                 @endif
                             </div>
-                            <div class="pk-row__meta">{{ $words[$row['category']] ?? 'Pulse' }}, <time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->diffForHumans() }}</time></div>
+                            <div class="pk-row__meta">{{ $words[$row['category']] ?? 'Pulse' }}, <x-pulse.when :at="$n->created_at" /></div>
                         </div>
                         <div class="pk-row__end">
                             @if ($unread)
-                                <x-pulse.button variant="quiet" size="sm" wire:click="markRead('{{ $n->id }}')" type="button">Mark read</x-pulse.button>
+                                <x-pulse.button variant="ghost" size="sm" wire:click="markRead('{{ $n->id }}')" type="button">Mark read</x-pulse.button>
                             @else
                                 <x-pulse.button variant="quiet" size="sm" wire:click="markUnread('{{ $n->id }}')" type="button">Mark unread</x-pulse.button>
                             @endif

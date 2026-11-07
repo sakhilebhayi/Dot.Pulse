@@ -226,15 +226,11 @@ class BeatDetail extends Component
         }
 
         $rate = (int) round(((float) $s['response_rate']) * 100);
-        $line = "Answered {$s['answered']} of {$s['received']} first messages in the last {$s['window_days']} days ({$rate} percent).";
+        $line = "Answered {$s['answered']} of ".\App\Support\Moment::plural((int) $s['received'], 'first message').' in the last '.\App\Support\Moment::plural((int) $s['window_days'], 'day')." ({$rate} percent).";
 
         if (($s['median_first_response_seconds'] ?? null) !== null) {
             $sec = (int) $s['median_first_response_seconds'];
-            $line .= ' Usually within '.match (true) {
-                $sec < 3600 => max(1, (int) round($sec / 60)).' minutes',
-                $sec < 86400 => (int) round($sec / 3600).' hours',
-                default => (int) round($sec / 86400).' days',
-            }.'.';
+            $line .= ' Usually '.\App\Support\Moment::within($sec).'.';
         }
 
         return $line;

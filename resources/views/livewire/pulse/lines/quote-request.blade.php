@@ -1,5 +1,5 @@
 <div class="ln-qr">
-    <x-pulse.button :variant="$open ? 'quiet' : 'signal'" wire:click="openSheet" type="button" aria-expanded="{{ $open ? 'true' : 'false' }}">Ask for quotes</x-pulse.button>
+    <x-pulse.button :variant="$open ? 'quiet' : 'signal'" wire:click="openSheet" type="button" aria-expanded="{{ $open ? 'true' : 'false' }}">{{ $offerId !== null ? 'Ask for a quote' : 'Ask for quotes' }}</x-pulse.button>
 
     @if ($open)
         <section class="pk-card ln-sheet" role="group" aria-labelledby="qr-title-{{ $this->getId() }}">

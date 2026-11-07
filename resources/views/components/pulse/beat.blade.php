@@ -20,7 +20,7 @@
     </div>
     <h3 class="pk-beat__title">@if ($href)<a href="{{ $href }}">{{ $title }}</a>@else{{ $title }}@endif</h3>
     @if (trim((string) $slot) !== '')<div class="pk-beat__body">{{ $slot }}</div>@endif
-    @isset($from)<div class="pk-beat__from">{{ $from }}</div>@endisset
+    @if (isset($from) && trim((string) $from) !== '')<div class="pk-beat__from">{{ $from }}</div>@endif
     @if (isset($meter) && trim((string) $meter) !== '')<div class="pk-beat__meter">{{ $meter }}</div>@endif
     @if (isset($actions) || isset($aside))
         <div class="pk-beat__actions">

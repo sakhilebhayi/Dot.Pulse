@@ -35,7 +35,7 @@
                             <p class="ln-muted">{{ $state['label'] }}. There is no slip to compare.</p>
                         @endif
                         @if ($col['stats'] && $col['stats']['received'] > 0)
-                            <p class="ln-slip__stats">Answered {{ $col['stats']['answered'] }} of {{ $col['stats']['received'] }} requests in the last {{ $col['stats']['window_days'] }} days.</p>
+                            <p class="ln-slip__stats">Answered {{ $col['stats']['answered'] }} of {{ \App\Support\Moment::plural($col['stats']['received'], 'request') }} in the last {{ \App\Support\Moment::plural($col['stats']['window_days'], 'day') }}.</p>
                         @endif
                     </article>
                 @endif

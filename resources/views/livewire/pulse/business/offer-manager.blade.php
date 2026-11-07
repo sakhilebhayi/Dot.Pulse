@@ -48,12 +48,15 @@
                                     @elseif (in_array($offer->status, ['draft', 'paused', 'archived'], true))
                                         <x-pulse.button size="sm" variant="primary" wire:click="publish({{ $offer->id }})">Publish</x-pulse.button>
                                     @endif
-                                    @if ($offer->status !== 'archived')
-                                        <x-pulse.button size="sm" variant="quiet" wire:click="archive({{ $offer->id }})">Archive</x-pulse.button>
-                                    @endif
                                 @endif
-                                <x-pulse.button size="sm" variant="danger" wire:click="delete({{ $offer->id }})" wire:confirm="Delete this offer for good? Lines that started from it keep their own copy.">Delete</x-pulse.button>
+                                <x-pulse.more>
+                                    @if ($offer->moderation !== 'removed' && $offer->status !== 'archived')
+                                        <button type="button" class="pk-more__item" wire:click="archive({{ $offer->id }})">Archive</button>
+                                    @endif
+                                    <button type="button" class="pk-more__item pk-more__item--danger" data-pk-dialog="del-offer-{{ $offer->id }}">Delete this offer</button>
+                                </x-pulse.more>
                             </div>
+                            <x-pulse.confirm id="del-offer-{{ $offer->id }}" :title="'Delete '.$offer->title.'?'" text="This cannot be undone. Lines that started from it keep their own copy." label="Delete offer" wire:click="delete({{ $offer->id }})" />
                         </x-slot>
                     </x-pulse.row>
                 @endforeach

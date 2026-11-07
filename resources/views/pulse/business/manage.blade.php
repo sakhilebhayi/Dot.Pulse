@@ -89,7 +89,7 @@
                                     @if ($counts['offers'] > 0)<x-pulse.stat label="Offers on the floor" :value="$counts['offers']" />@endif
                                     @if ($counts['roles'] > 0)<x-pulse.stat label="Open roles" :value="$counts['roles']" />@endif
                                     @if ($counts['conversations'] > 0)<x-pulse.stat label="Lines started" :value="$counts['conversations']" />@endif
-                                    @if ($response)<x-pulse.stat label="Answered" :value="round($response['response_rate'] * 100).'%'" :note="'of '.$response['received'].' in '.$response['window_days'].' days'" />@endif
+                                    @if ($response)<x-pulse.stat label="First messages answered" :value="$response['answered'].' of '.$response['received']" :note="'in the last '.\App\Support\Moment::plural((int) $response['window_days'], 'day')" />@endif
                                     @if ($response && $response['median_first_response_seconds'] !== null)<x-pulse.stat label="Usually within" :value="EntityView::duration($response['median_first_response_seconds'])" />@endif
                                     @if ($counts['confirmed_outcomes'] > 0)<x-pulse.stat label="Results both sides confirmed" :value="$counts['confirmed_outcomes']" />@endif
                                 </div>

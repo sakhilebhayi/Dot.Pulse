@@ -103,10 +103,10 @@ components:
 
 | Decision | Rule |
 |---|---|
-| Layout | One floor. A left rail of verbs (Floor, Trade, Work, Lines, You) and a compose button; a centre column of beats at 680 px; a right column for context (filters, who is open, your door) from 1200 px. Phones: a bottom bar of the same verbs and a floating compose. |
+| Layout | One floor. A left rail of verbs (Floor, Trade, Work, Lines, You) and a compose button; a main column of 720 px that starts at the same left edge on every screen; a right column for context (filters, who is open, your door) from 1200 px. Phones: a bottom bar of the same verbs and a floating compose. |
 | The mode dial | A segmented control in the masthead: All, Trade, Work, Local, Learn. It changes the query, not the page. Its selected segment is yellow. |
-| Beats | A beat is a card with the kind (a mono word: OFFER, NEED, ROLE, TALENT, ASK, EVENT), a heading that states the thing, who it comes from with their honest verification, the sync meter when there is a match, and two actions: Knock (a contextual request) and Save. No like count, no follower count. |
-| Ending | The floor ends: "That's the round. You are caught up." with the time the next round is ready. |
+| Beats | A beat is a card with the kind (a mono word: OFFER, NEED, ROLE, TALENT, ASK, EVENT), a heading that states the thing, who it comes from with their honest verification, the sync meter when there is a match, and two actions: Knock (a contextual request) and Save. No like count, no follower count. The first beat of a round carries the full sync meter and says "Best match for you, N reasons"; every other beat shows up to three yellow-dot reason chips and opens the full thread on "Show how it fits" (on a phone the first beat is chips too). Search results are rows: tag, title, who, one line of why. |
+| Ending | The floor ends: "That's the round. You are caught up." with the time the next round is ready. Seen is not done: a beat that was seen and not acted on (saved, dismissed, knocked) stays for 24 hours in a quieter "Seen earlier" strip below the new ones, so a reload never empties the floor. "Caught up" is said only to someone who has been shown, dismissed or saved something in that mode; a first visit gets the honest empty state with three things to do (say a need, say what you are open to, follow a business). |
 | States | Colour never carries meaning alone. Verified is a ladder of named checks with dates; claimed is labelled claimed. Loading is a line drawing in, not a spinner. |
 | Voice | Short, bossy, kind. "Say what you want." "Knock." "They said yes." "Not now is a fine answer." Sentence case. No exclamation marks, no "supercharge", no "unlock". |
 | Empty states | Honest and actionable: "Nothing matches yet. Say what you need and the floor will find it." |
@@ -120,11 +120,11 @@ Dark theme keeps the roles: ground `#0B0E1A`, beat `#141A2E`, ink `#EEF0F5`, cob
 
 ## Typography
 
-Archivo, a variable grotesk with a width axis. Display and titles use width 112 to 125 and weight 700 to 800, set tight (-0.02 to -0.03em), used large and rarely. Interface text uses width 100 at 15 px, small labels 13 px at 600. JetBrains Mono at 12 px for kind words, numbers, times and prices with tabular figures; never for decoration. Fonts are self hosted in `public/fonts/` and mirrored to the docroot on deploy.
+Archivo, a variable grotesk with a width axis. Display and titles use width 112 to 125 and weight 700 to 800, set tight (-0.02 to -0.03em), used large and rarely. Interface text uses width 100 at 15 px, small labels 13 px at 600. JetBrains Mono at 12 px for kind words, numbers, times and prices with tabular figures; never for decoration, and never for words ("Market related", "under an hour" are set in Archivo). Large figures are 20 px, not jumbo. Fonts are self hosted in `public/fonts/` and mirrored to the docroot on deploy.
 
 ## Layout
 
-Rail 232 px, floor 680 px, context column 320 px, 24 px gutters; below 1200 px the context column folds into a drawer; below 860 px the rail becomes a bottom bar of five and the floor is full width with 16 px gutters. Masthead 64 px. Beats are 20 px padded with 12 px between. Tap targets at least 44 px on phones.
+Rail 232 px, main column 720 px (left aligned beside the rail on every screen; two-column pages such as a business page use up to 1100 px from the same edge), context column 320 px, 24 px gutters; below 1200 px the context column folds into a drawer; below 860 px the rail becomes a bottom bar of five and the floor is full width with 16 px gutters. Masthead 64 px. Beats are 20 px padded with 12 px between. Tap targets at least 44 px on phones (small controls keep their look and take an invisible 44 px hit area). Nothing is set below 12 px. The phone has no floating button: Compose is a yellow plus in the masthead. A single-task page (the welcome flow) drops the rail, the bar and Compose.
 
 ## Elevation
 
@@ -136,7 +136,7 @@ Radius 4 for chips, 10 for buttons and fields, 18 for beats. Lines in the meter 
 
 ## Components
 
-Button primary (cobalt), signal (yellow, for the one action that moves things forward), quiet. Mode dial. Beat. Sync meter. Verification ladder (named checks in order with dates, claimed items hollow). Door badge (open to knocks, until when). Knock sheet (the contextual request, at most four fields, no links). Line row (conversation with context title, state, last activity). Quote slip. Outcome bar (both sides confirm: Won, Hired, Partnered, Not this time). Notification row. Digest card. Consent row (plain sentence, one toggle).
+Button primary (cobalt), signal (yellow, for the one action that moves things forward: exactly one per screen), quiet. Overflow menu ("More") for archive, pause and delete; delete sits last, set apart, and opens a confirm dialog that names the thing. Mode dial. Beat. Sync meter. Verification ladder (named checks in order with dates, claimed items hollow). Door badge (open to knocks, until when). Knock sheet (the contextual request, at most four fields, no links). Line row (conversation with context title, state, last activity). Quote slip. Outcome bar (both sides confirm: Won, Hired, Partnered, Not this time). Notification row. Digest card. Consent row (plain sentence, one toggle).
 
 ## Do and do not
 

@@ -95,7 +95,7 @@
 .bz-form {
     display: grid;
     gap: var(--s-lg);
-    max-width: 760px;
+    max-width: var(--floor-w);
 }
 
 .bz-block {
@@ -689,4 +689,9 @@
     .bz * {
         scroll-behavior: auto;
     }
+}
+
+.bz-askfirst {
+    justify-self: start;
+    min-height: var(--tap);
 }

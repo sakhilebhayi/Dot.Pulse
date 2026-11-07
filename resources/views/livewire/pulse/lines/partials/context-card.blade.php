@@ -15,14 +15,14 @@
     $facts = collect($labels)->filter(fn ($l, $k) => ! empty($snap[$k]));
     $typeWord = $anonymous ? 'Talent' : ($ctx['type'] ? ucfirst($ctx['type']) : Words::kind($line['kind']));
 @endphp
+{{-- Folded by default: one line says what the line is about and the request opens on a tap. The conversation is the page. --}}
 <section class="pk-card ln-context" aria-labelledby="ln-context-title">
-    <div class="ln-meta">
+    <div class="ln-context__line">
         <x-pulse.kind-word :kind="$typeWord" />
-        <span>What this line is about</span>
+        <h1 id="ln-context-title" class="ln-title">{{ $ctx['title'] }}</h1>
     </div>
-    <h1 id="ln-context-title" class="ln-title">{{ $ctx['title'] }}</h1>
 
-    <details class="ln-details" wire:ignore.self @if (($open ?? true) || $anonymous) open @endif>
+    <details class="ln-details" wire:ignore.self @if ($open ?? false) open @endif>
     <summary>What was asked</summary>
     @if ($anonymous)
         @include('livewire.pulse.lines.partials.anon-card', ['snap' => $snap])

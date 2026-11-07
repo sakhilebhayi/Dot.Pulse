@@ -4,7 +4,6 @@ namespace App\Livewire\Pulse\Floor;
 
 use App\Livewire\Pulse\Floor\Concerns\ActsOnBeats;
 use App\Livewire\Pulse\Floor\Support\BeatPresenter;
-use App\Models\PulseMatch;
 use App\Services\Pulse\Discovery\Floor;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -18,8 +17,10 @@ use Livewire\Component;
  *
  * The round comes from Floor::round (matches, diversity, exclusions are all the service's). This component only
  * draws it and acts on it. Beats are marked seen when they have been on screen (the browser says which, through
- * markSeen) and when the next batch is asked for; a seen beat leaves the next round. Because seen beats leave the pool,
- * the next batch is always the first page of what is left, so no cursor is carried between batches.
+ * markSeen) and when the next batch is asked for. A seen beat leaves the pool of new beats, so the next batch is always
+ * the first page of what is left and no cursor is carried between batches. Seen is not done, though: a beat that was
+ * seen and not acted on (dismissed, saved, knocked) stays on the round for 24 hours in a quieter "Seen earlier" strip
+ * below the new ones (Floor::earlier), so a reload never empties the floor. Those carry `earlier => true`.
  */
 class Round extends Component
 {
@@ -43,19 +44,24 @@ class Round extends Component
     #[Locked]
     public int $waiting = 0;
 
-    /** The person has had matches before (so a finished round is "caught up", not "nothing yet"). */
+    /** The person has been shown (or dismissed, or saved) something in this mode before: a finished round is then "caught up", not "nothing yet". */
     #[Locked]
-    public bool $everMatched = false;
+    public bool $everShown = false;
 
     public function mount(Floor $floor, string $mode = 'all'): void
     {
         $this->mode = in_array($mode, Floor::MODES, true) ? $mode : 'all';
 
+        $presenter = app(BeatPresenter::class);
         $round = $floor->round(auth()->user(), $this->mode);
-        $this->beats = app(BeatPresenter::class)->many($round['beats'], auth()->user());
-        $this->absorb($round, count($round['beats']));
+        $new = $presenter->many($round['beats'], auth()->user());
 
-        $this->everMatched = $this->beats !== [] || PulseMatch::query()->where('user_id', auth()->id())->whereNull('dismissed_at')->exists();
+        $earlier = $floor->earlier(auth()->user(), $this->mode);
+        $seen = array_map(fn (array $b) => $b + ['earlier' => true], $presenter->many($earlier['beats'], auth()->user()));
+
+        $this->beats = array_merge($new, $seen);
+        $this->absorb($round, count($round['beats']));
+        $this->everShown = $new !== [] || $earlier['ever_shown'];
     }
 
     /** The next batch of the round. */
