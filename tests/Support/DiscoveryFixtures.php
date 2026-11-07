@@ -98,6 +98,7 @@ trait DiscoveryFixtures
             'is_seller' => true,
             'is_employer' => false,
             'status' => 'live',
+            'moderation' => 'approved',
             'contact_policy' => 'anyone',
             'hiring_signal' => 'none',
             'verification_status' => 'unverified',

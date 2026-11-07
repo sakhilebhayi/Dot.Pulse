@@ -80,7 +80,12 @@ class SearchService
         }
 
         if ($this->wantsEntities($filters)) {
-            foreach ($this->entityResults($ctx, $terms, $q, $viewerPlace) as $r) {
+            // A page found by name is listed once, as the page: its own business signal steps aside.
+            $entities = $this->entityResults($ctx, $terms, $q, $viewerPlace);
+            $named = array_flip(array_map(fn ($r) => (int) ($r['entity']['id'] ?? 0), $entities));
+            $results = array_values(array_filter($results, fn ($r) => ! (($r['signal']->kind ?? null) === 'business' && isset($named[(int) $r['signal']->entity_id]))));
+
+            foreach ($entities as $r) {
                 $results[] = $r;
             }
         }
@@ -124,7 +129,7 @@ class SearchService
         $ctx = $this->contexts->loadExclusions($u->id);
         $like = $this->like(Str::lower($q)).'%';
 
-        $entities = DB::table('pulse_entities')->where('status', 'live')->whereNull('deleted_at')
+        $entities = DB::table('pulse_entities')->where('status', 'live')->where('moderation', 'approved')->whereNull('deleted_at')
             ->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$like])->limit(5)->get(['id', 'name', 'slug', 'created_by']);
 
         foreach ($entities as $e) {
@@ -331,7 +336,7 @@ class SearchService
             return [];
         }
 
-        $rows = DB::table('pulse_entities')->where('status', 'live')->whereNull('deleted_at')
+        $rows = DB::table('pulse_entities')->where('status', 'live')->where('moderation', 'approved')->whereNull('deleted_at')
             ->where(function ($w) use ($terms) {
                 foreach ($terms as $t) {
                     $like = '%'.$this->like($t).'%';

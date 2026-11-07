@@ -60,7 +60,9 @@ class ContactGate
             return $this->no('unavailable', 'They cannot be contacted right now.');
         }
 
-        if ($targetEntity !== null && $targetEntity->status !== 'live') {
+        // Live and approved, the same test the public page uses: a page a moderator removed or is still holding has
+        // status "live" but is not there for anyone, so it cannot be contacted either.
+        if ($targetEntity !== null && ! $targetEntity->isLive()) {
             return $this->no('page_closed', 'This page is not taking messages right now.');
         }
 
