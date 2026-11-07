@@ -56,6 +56,25 @@ class MatcherTest extends TestCase
         $this->assertSame('bookkeeping', $reasons['need_offer']['ref']);
     }
 
+    public function test_a_professional_meets_an_employer_with_a_hiring_signal_before_any_role_exists(): void
+    {
+        $pro = $this->dUser(['place' => $this->geo->jhb, 'skills' => ['bookkeeping']]);
+        $employer = $this->dEntity($this->dUser(), ['name' => 'Wildfig', 'is_employer' => true, 'hiring_signal' => 'building']);
+        $signal = $this->dSignal([
+            'kind' => 'business', 'subject_type' => 'entity', 'subject_id' => $employer->id, 'entity_id' => $employer->id,
+            'owner_id' => $employer->created_by, 'title' => 'Wildfig', 'skills' => ['bookkeeping', 'payroll'], 'place' => $this->geo->jhb,
+        ]);
+
+        $reasons = $this->reasonsFor($pro, $signal);
+
+        $this->assertArrayHasKey('skill_role', $reasons);
+        $this->assertSame('They are building a team and want your skills: bookkeeping.', $reasons['skill_role']['text']);
+        $this->assertSame('bookkeeping', $reasons['skill_role']['ref']);
+
+        $other = $this->dUser(['place' => $this->geo->jhb, 'skills' => ['welding']]);
+        $this->assertArrayNotHasKey('skill_role', $this->reasonsFor($other, $signal));
+    }
+
     public function test_the_score_is_exactly_the_sum_of_the_reason_weights(): void
     {
         $buyer = $this->dUser(['place' => $this->geo->jhb]);

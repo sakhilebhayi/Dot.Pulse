@@ -1064,6 +1064,7 @@ select.pk-control {
     flex: 1 1 auto;
     min-width: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr); /* a long nowrap child (a snippet) must truncate, not push the row wider than its card */
     gap: 2px;
 }
 

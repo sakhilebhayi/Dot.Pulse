@@ -25,6 +25,7 @@ use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\VerificationService;
 use App\Services\Pulse\Lines\ResponseStats;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -91,6 +92,12 @@ class BeatDetail extends Component
         $open = $signal->status === 'live' && ($signal->expires_at === null || $signal->expires_at->isFuture());
 
         abort_unless($this->mine ? $open : $matcher->eligible($ctx, $signal, $pack), 404);
+
+        // A "matched" need opens only for the people it was matched to: PulseNeedPolicy::view is the one rule.
+        if (! $this->mine && $signal->kind === 'need') {
+            $need = PulseNeed::query()->find($signal->subject_id);
+            abort_unless($need !== null && Gate::forUser($user)->allows('view', $need), 404);
+        }
 
         $match = PulseMatch::query()->where('user_id', $user->id)->where('signal_id', $signal->id)->whereNull('dismissed_at')->first();
         $matches = $match ? [$signal->id => ['id' => $match->id, 'score' => $match->score, 'reasons' => (array) $match->reasons]] : [];

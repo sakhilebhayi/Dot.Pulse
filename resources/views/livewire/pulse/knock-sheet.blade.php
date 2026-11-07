@@ -19,7 +19,7 @@
 
     <x-pulse.drawer
         :id="$dialogId"
-        :title="$sent ? 'Sent.' : 'Say what you want.'"
+        :title="$sent ? 'Sent.' : ($kind === 'application' ? 'Say why you fit.' : ($kind === 'invite' ? 'Say why you are writing.' : 'Say what you want.'))"
         :description="$sent ? null : ($heading !== '' ? 'About: '.$heading : null)"
         side="bottom"
         wire:ignore.self
@@ -65,11 +65,18 @@
                     </p>
                 @endif
 
+                @if ($namesYou)
+                    <p class="fl-notice fl-notice--soft" role="status">
+                        <x-pulse.icon name="info" :size="18" />
+                        <span>You are anonymous to employers who browse. Applying shows this employer your name. Nobody else is told.</span>
+                    </p>
+                @endif
+
                 @if ($failure)
                     <p class="fl-notice fl-notice--bad" role="alert"><x-pulse.icon name="alert" :size="18" /><span>{{ $failure }}</span></p>
                 @endif
 
-                <x-pulse.field name="what" label="What do you want?" wire:model="what" maxlength="160" required autofocus autocomplete="off" />
+                <x-pulse.field name="what" :label="$kind === 'application' ? 'Why are you a fit?' : 'What do you want?'" wire:model="what" maxlength="160" required autofocus autocomplete="off" />
                 <div class="fl-sheet__pair">
                     <x-pulse.field name="whenOrQty" label="When, or how many" wire:model="whenOrQty" maxlength="120" optional autocomplete="off" />
                     <x-pulse.field name="where" label="Where" wire:model="where" maxlength="120" optional autocomplete="off" />

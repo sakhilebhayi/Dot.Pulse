@@ -37,6 +37,25 @@ class KnockSheetFloorTest extends FloorTestCase
             ->assertSee('Say what you want.');
     }
 
+    public function test_an_application_tells_an_anonymous_professional_that_it_shows_their_name(): void
+    {
+        [$signal, $entity] = $this->offerFor();
+        $spec = $this->spec(['entity' => $entity->id], ['kind' => 'application', 'contextType' => 'role', 'label' => 'Apply']);
+
+        $this->sheet()->dispatch('pulse-knock', spec: $spec)
+            ->assertSee('Say why you fit.')
+            ->assertSee('Why are you a fit?')
+            ->assertDontSee('Applying shows this employer your name');
+
+        \Illuminate\Support\Facades\DB::table('pulse_profiles')->where('user_id', $this->me->id)->update(['discoverability' => 'anonymous']);
+
+        $this->sheet()->dispatch('pulse-knock', spec: $spec)
+            ->assertSee('You are anonymous to employers who browse. Applying shows this employer your name.');
+
+        $this->sheet()->dispatch('pulse-knock', spec: $this->spec(['entity' => $entity->id]))
+            ->assertDontSee('Applying shows this employer your name');
+    }
+
     public function test_a_spec_from_the_browser_is_cleaned_before_it_is_used(): void
     {
         $this->sheet()

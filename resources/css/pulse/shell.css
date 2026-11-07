@@ -51,6 +51,13 @@
     letter-spacing: -0.01em;
 }
 
+/* On a phone the masthead has no room for the page name next to the brand and three icons; each page has its own h1. */
+@media (max-width: 440px) {
+    .sh-mast__page {
+        display: none;
+    }
+}
+
 .sh-mast__dial {
     flex: 1 1 auto;
     display: flex;

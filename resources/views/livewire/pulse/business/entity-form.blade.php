@@ -74,7 +74,7 @@
                 @if ($this->industryResults)
                     <ul class="bz-suggest" role="listbox" aria-label="Industry suggestions">
                         @foreach ($this->industryResults as $hit)
-                            <li><button type="button" role="option" wire:click="chooseIndustry({{ \Illuminate\Support\Js::from($hit['label']) }})">{{ $hit['label'] }}<span>{{ $hit['group'] }}</span></button></li>
+                            <li role="presentation"><button type="button" role="option" wire:click="chooseIndustry({{ \Illuminate\Support\Js::from($hit['label']) }})">{{ $hit['label'] }}<span>{{ $hit['group'] }}</span></button></li>
                         @endforeach
                     </ul>
                 @endif
@@ -91,7 +91,7 @@
                 @if ($this->placeResults)
                     <ul class="bz-suggest" role="listbox" aria-label="Places">
                         @foreach ($this->placeResults as $hit)
-                            <li><button type="button" role="option" wire:click="choosePlace({{ $hit['id'] }})">{{ $hit['label'] }}</button></li>
+                            <li role="presentation"><button type="button" role="option" wire:click="choosePlace({{ $hit['id'] }})">{{ $hit['label'] }}</button></li>
                         @endforeach
                     </ul>
                 @endif

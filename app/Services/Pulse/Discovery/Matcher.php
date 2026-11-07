@@ -393,6 +393,7 @@ class Matcher
 
             default: // business and anything new
                 $reason = $this->needOffer($ctx, $topics, $quality, 'You need %s, they are a business in %s.')[0]
+                    ?? ($kind === 'business' ? $this->hiringSignalReason($ctx, $skills) : null)
                     ?? $this->topicReason($ctx, $topics, $quality, self::W_TOPIC, 'A business in %s, which you work in or follow.');
         }
 
@@ -529,6 +530,26 @@ class Matcher
         }
 
         return $this->reason('topic', sprintf($template, $this->labels($hits)), $max * $cov + 4 * $quality, $hits[0]);
+    }
+
+    /**
+     * Passive career discovery (D5): an employer page with a hiring signal on carries the skills it wants (a business
+     * signal holds them only while the signal is live). A professional whose skills fit sees the page before any role
+     * exists. Same weight as a role without the experience nudge; names nobody.
+     *
+     * @param  list<string>  $wanted
+     */
+    private function hiringSignalReason(UserContext $ctx, array $wanted): ?array
+    {
+        $hits = array_values(array_intersect($this->cleanTopics($ctx, $ctx->skills), $wanted));
+
+        if ($hits === []) {
+            return null;
+        }
+
+        $cov = min(1.0, count($hits) / max(1, min(3, count($wanted))));
+
+        return $this->reason('skill_role', sprintf('They are building a team and want your skills: %s.', $this->labels($hits)), self::W_ROLE * $cov, $hits[0]);
     }
 
     /**
