@@ -73,7 +73,6 @@
 
     /* Type. */
     --f-ui: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --f-icons: "Material Symbols Rounded";
     --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
     --t-display: clamp(2.5rem, 1.35rem + 4.9vw, 4.75rem);

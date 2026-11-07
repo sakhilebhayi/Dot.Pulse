@@ -190,21 +190,6 @@
     background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
 }
 
-.material-symbols-rounded {
-    font-family: var(--f-icons);
-    font-weight: normal;
-    font-style: normal;
-    font-size: 22px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    white-space: nowrap;
-    -webkit-font-feature-settings: "liga";
-    font-feature-settings: "liga";
-    -webkit-font-smoothing: antialiased;
-    user-select: none;
-}
-
 @media (max-width: 859.98px) {
 
     .tap {

@@ -1,6 +1,6 @@
 {{--
     Document head shared by every layout: meta, self-hosted fonts (preloaded), the theme script that runs before first paint,
-    and the built assets. Variables: $title (string), $description (string|null), $csrf (bool), $legacyIcons (bool).
+    and the built assets. Variables: $title (string), $description (string|null), $csrf (bool).
 --}}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,10 +24,6 @@
         // ?theme=light|dark previews a theme for this page only (QA and screenshots).
     })();
 </script>
-@if (! empty($legacyIcons))
-    {{-- Three pre-R-41 views still use Material Symbols ligatures (lock, groups, notifications, add, close). Subset only; remove with the last of them. --}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add,close,groups,lock,notifications&display=block">
-@endif
 @php
     try {
         $__assets = (string) app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
