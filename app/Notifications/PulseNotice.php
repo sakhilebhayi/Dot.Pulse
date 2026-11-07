@@ -36,12 +36,15 @@ class PulseNotice extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        // Titles and bodies carry words other people wrote (a name, what an enquiry is about). In the subject they are
+        // one plain line; in the body they are plain text too: Markdown in them (a link, an image) must not become one.
+        $title = (string) ($this->payload['title'] ?? '');
         $mail = (new MailMessage)
-            ->subject((string) ($this->payload['title'] ?? 'Something on Dot.Pulse'))
-            ->line((string) ($this->payload['title'] ?? ''));
+            ->subject(self::oneLine($title) !== '' ? self::oneLine($title) : 'Something on Dot.Pulse')
+            ->line(self::literal($title));
 
         if (! empty($this->payload['body'])) {
-            $mail->line((string) $this->payload['body']);
+            $mail->line(self::literal((string) $this->payload['body']));
         }
 
         if (! empty($this->payload['url'])) {
@@ -49,5 +52,16 @@ class PulseNotice extends Notification implements ShouldQueue
         }
 
         return $mail->line('You are getting this because it is about something you are part of on Pulse. Change what Pulse emails you in Settings, Notifications.');
+    }
+
+    private static function oneLine(string $text): string
+    {
+        return trim(preg_replace('/[\x00-\x1F\x7F\x{2028}\x{2029}]+/u', ' ', $text) ?? '');
+    }
+
+    /** One line of text that Markdown will leave exactly as written. */
+    private static function literal(string $text): string
+    {
+        return preg_replace('/([\\\\`*_{}\[\]()<>#+!|~&])/', '\\\\$1', self::oneLine($text)) ?? '';
     }
 }

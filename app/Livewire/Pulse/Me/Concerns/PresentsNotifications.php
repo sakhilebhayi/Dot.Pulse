@@ -64,6 +64,11 @@ trait PresentsNotifications
             return null;
         }
 
+        // A backslash or a control character can turn "/\host" or "/<tab>/host" into another site in a browser.
+        if (preg_match('/[\\\\\x00-\x20\x7f]/', $url)) {
+            return null;
+        }
+
         if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
             return $url;
         }

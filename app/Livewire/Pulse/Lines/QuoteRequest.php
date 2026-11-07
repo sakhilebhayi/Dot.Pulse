@@ -178,7 +178,7 @@ class QuoteRequest extends Component
             ->whereNotIn('id', array_merge($mine, $hidden, $fixed ? [$fixed] : []))
             ->whereHas('offers', fn ($q) => $q->live()->where('accepts_quotes', true))
             ->with(['offers' => fn ($q) => $q->live()->where('accepts_quotes', true)->select('id', 'entity_id', 'title', 'category')])
-            ->when(trim($this->search) !== '', fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower(trim($this->search)).'%']))
+            ->when(trim($this->search) !== '', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", ['%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower(trim($this->search))).'%']))
             ->orderBy('name')->limit(30)->get();
 
         return $entities->map(function (PulseEntity $e) use ($words) {
