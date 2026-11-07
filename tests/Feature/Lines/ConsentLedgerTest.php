@@ -48,8 +48,43 @@ class ConsentLedgerTest extends TestCase
         $s = $this->sentences($pro);
         $this->assertStringContainsString('cannot see your name until you reveal it', $s['discoverability.off']);
         $this->assertStringContainsString('People can contact you only about something of yours', $s['contact_policy.nobody']);
-        $this->assertStringContainsString('07:30', $s['digest.off']);
+        $this->assertArrayNotHasKey('digest.off', $s, 'the digest is opt-in, so there is nothing to withdraw yet');
         $this->assertStringContainsString('You answer for Karoo Logistics as owner', $s['entity.leave:'.$page->id]);
+    }
+
+    public function test_reading_preferences_or_the_ledger_never_writes_a_row_or_opts_anyone_in(): void
+    {
+        $u = $this->person();
+        $prefs = app(NotificationPrefs::class);
+
+        $this->ledger()->entries($u);
+        $read = $prefs->get($u);
+
+        $this->assertSame(0, DB::table('pulse_notification_prefs')->where('user_id', $u->id)->count());
+        $this->assertFalse($read->digest);
+        $this->assertTrue($prefs->allowed($u, 'lines', 'email'));
+        $this->assertTrue($prefs->allowed($u, 'outcomes', 'email'));
+        $this->assertFalse($prefs->allowed($u, 'matches', 'email'));
+        $this->assertFalse($prefs->allowed($u, 'digest', 'email'));
+        $this->assertFalse($prefs->allowed($u, 'system', 'email'));
+        $this->assertTrue($prefs->allowed($u, 'matches', 'in_app'));
+    }
+
+    public function test_the_first_save_keeps_the_digest_off_and_existing_rows_keep_their_own_choices(): void
+    {
+        $new = $this->person();
+        $prefs = app(NotificationPrefs::class);
+        $prefs->update($new, ['frequency' => 'daily']);
+        $this->assertFalse((bool) DB::table('pulse_notification_prefs')->where('user_id', $new->id)->value('digest'));
+
+        $old = $this->person();
+        DB::table('pulse_notification_prefs')->insert([
+            'user_id' => $old->id, 'digest' => true, 'frequency' => 'daily', 'categories' => json_encode(['matches' => ['in_app' => true, 'email' => true]]),
+            'channels' => json_encode(['in_app' => true, 'email' => true]), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->assertTrue($prefs->get($old)->digest);
+        $this->assertTrue($prefs->allowed($old, 'matches', 'email'), 'a stored choice is never overridden');
+        $this->assertFalse($prefs->allowed($old, 'digest', 'email'), 'a category never stored takes the private default');
     }
 
     public function test_rows_follow_the_settings_as_they_change(): void

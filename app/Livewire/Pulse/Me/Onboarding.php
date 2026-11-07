@@ -4,7 +4,6 @@ namespace App\Livewire\Pulse\Me;
 
 use App\Livewire\Pulse\Me\Concerns\HasTags;
 use App\Livewire\Pulse\Me\Concerns\PicksPlace;
-use App\Models\PulseNotificationPref;
 use App\Models\PulseProfile;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Lines\NotificationPrefs;
@@ -237,11 +236,6 @@ class Onboarding extends Component
     {
         $user = auth()->user();
         $prefs = app(NotificationPrefs::class);
-
-        if (! PulseNotificationPref::query()->where('user_id', $user->id)->exists()) {
-            // NotificationPrefs::get() would seed the digest as on. Pulse's digest is opt-in, so the row starts off.
-            PulseNotificationPref::query()->create(['user_id' => $user->id] + array_replace($prefs->defaults(), ['digest' => false]));
-        }
 
         $prefs->update($user, [
             'channels' => ['in_app' => true, 'email' => true],

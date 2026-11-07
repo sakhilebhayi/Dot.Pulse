@@ -23,9 +23,14 @@ class NotificationPrefs
 
     public const FREQUENCIES = ['instant', 'daily', 'weekly', 'off'];
 
+    /**
+     * The person's stored preferences, or the private defaults as an unsaved model. Reading never writes a row, so
+     * looking at a settings page or the consent ledger can never opt anyone in to anything.
+     */
     public function get(User $u): PulseNotificationPref
     {
-        return PulseNotificationPref::query()->firstOrCreate(['user_id' => $u->id], $this->defaults());
+        return PulseNotificationPref::query()->where('user_id', $u->id)->first()
+            ?? new PulseNotificationPref(['user_id' => $u->id] + $this->defaults());
     }
 
     public function update(User $u, array $data): PulseNotificationPref
@@ -113,7 +118,7 @@ class NotificationPrefs
             return false;
         }
 
-        return (bool) ($categories[$category][$channel] ?? true);
+        return (bool) ($categories[$category][$channel] ?? false);
     }
 
     /** How email is delivered for this person: instant, daily, weekly or off. */
@@ -152,21 +157,44 @@ class NotificationPrefs
             'channels' => ['in_app' => true, 'email' => true],
             'categories' => $this->normaliseCategories([]),
             'frequency' => 'instant',
-            'digest' => true,
+            'digest' => false,
             'digest_hour' => '07:30',
             'timezone' => 'Africa/Johannesburg',
+        ];
+    }
+
+    /**
+     * What each category does when the person has not chosen. In app is on everywhere; email is on only for the
+     * transactional lines and outcomes. Matches and the digest never email until the person turns them on.
+     *
+     * @return array<string, array{in_app: bool, email: bool}>
+     */
+    public function categoryDefaults(): array
+    {
+        return [
+            'lines' => ['in_app' => true, 'email' => true],
+            'outcomes' => ['in_app' => true, 'email' => true],
+            'system' => ['in_app' => true, 'email' => false],
+            'matches' => ['in_app' => true, 'email' => false],
+            'digest' => ['in_app' => true, 'email' => false],
         ];
     }
 
     /** @return array<string, array{in_app: bool, email: bool}> */
     private function normaliseCategories(array $stored): array
     {
+        $defaults = $this->categoryDefaults();
         $out = [];
         foreach (self::CATEGORIES as $category) {
-            $value = $stored[$category] ?? true;
-            $out[$category] = is_array($value)
-                ? ['in_app' => (bool) ($value['in_app'] ?? true), 'email' => (bool) ($value['email'] ?? true)]
-                : ['in_app' => (bool) $value, 'email' => (bool) $value];
+            $value = $stored[$category] ?? null;
+            $out[$category] = match (true) {
+                is_array($value) => [
+                    'in_app' => (bool) ($value['in_app'] ?? $defaults[$category]['in_app']),
+                    'email' => (bool) ($value['email'] ?? $defaults[$category]['email']),
+                ],
+                $value === null => $defaults[$category],
+                default => ['in_app' => (bool) $value, 'email' => (bool) $value],
+            };
         }
 
         return $out;

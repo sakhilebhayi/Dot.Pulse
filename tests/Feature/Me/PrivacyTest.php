@@ -27,8 +27,7 @@ class PrivacyTest extends MeTestCase
 
         Livewire::actingAs($u)->test(Privacy::class)->assertDontSee('emails you a summary');
 
-        $pref = PulseNotificationPref::query()->where('user_id', $u->id)->firstOrFail();
-        $this->assertFalse($pref->digest, 'opt-in: viewing the page is not consent');
+        $this->assertSame(0, PulseNotificationPref::query()->where('user_id', $u->id)->count(), 'viewing the page writes nothing, so it cannot be consent');
     }
 
     public function test_the_ledger_lists_real_settings_and_one_tap_withdraws(): void

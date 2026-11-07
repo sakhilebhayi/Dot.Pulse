@@ -46,10 +46,10 @@ class NotificationSettings extends Component
         $service = app(NotificationPrefs::class);
         $pref = PulseNotificationPref::query()->where('user_id', auth()->id())->first();
         $defaults = $service->defaults();
-        $categories = $pref?->categories ?? $defaults['categories'];
+        $categories = array_replace($service->categoryDefaults(), $pref?->categories ?? []);
 
         foreach (NotificationPrefs::CATEGORIES as $category) {
-            $value = $categories[$category] ?? true;
+            $value = $categories[$category];
             $value = is_array($value) ? $value : ['in_app' => (bool) $value, 'email' => (bool) $value];
             $this->inApp[$category] = in_array($category, NotificationPrefs::TRANSACTIONAL, true) ? true : (bool) ($value['in_app'] ?? true);
             $this->email[$category] = (bool) ($value['email'] ?? true);

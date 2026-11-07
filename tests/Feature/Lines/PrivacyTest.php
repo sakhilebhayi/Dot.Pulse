@@ -101,7 +101,7 @@ class PrivacyTest extends TestCase
         $need = $this->need($me);
         app(MuteService::class)->mute($me, 'topic', 'x');
         PulseSave::create(['user_id' => $me->id, 'saveable_type' => 'signal', 'saveable_id' => 1]);
-        app(NotificationPrefs::class)->get($me);
+        app(NotificationPrefs::class)->update($me, ['frequency' => 'daily']);
         app(BlockService::class)->block($me, $this->person());
         $blockedMe = $this->person();
         app(BlockService::class)->block($blockedMe, $me);

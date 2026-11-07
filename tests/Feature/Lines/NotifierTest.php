@@ -96,7 +96,7 @@ class NotifierTest extends TestCase
     {
         Notification::fake();
         $u = $this->person();
-        $this->prefs()->update($u, ['frequency' => 'daily']);
+        $this->prefs()->update($u, ['frequency' => 'daily', 'categories' => ['system' => ['email' => true]]]);
 
         $this->notifier()->notify($u, 'lines', $this->payload());
         $this->assertSame([['database']], $this->sentChannels($u));
@@ -199,7 +199,7 @@ class NotifierTest extends TestCase
         $this->assertSame(1, $u->notifications()->count());
     }
 
-    public function test_preferences_defaults_are_created_on_first_read_and_validated_on_update(): void
+    public function test_preferences_defaults_are_private_and_validated_on_update(): void
     {
         $u = $this->person();
         $p = $this->prefs()->get($u);
@@ -221,7 +221,7 @@ class NotifierTest extends TestCase
         }
 
         $this->prefs()->update($u, ['digest' => false, 'digest_hour' => '06:15', 'categories' => ['matches' => false]]);
-        $p->refresh();
+        $p = $this->prefs()->get($u);
         $this->assertFalse($p->digest);
         $this->assertSame('06:15', $p->digest_hour);
         $this->assertFalse($this->prefs()->allowed($u, 'matches', 'in_app'));

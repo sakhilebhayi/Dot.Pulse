@@ -6,7 +6,6 @@ use App\Models\PulseBlock;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityBlock;
 use App\Models\PulseEntityMember;
-use App\Models\PulseNotificationPref;
 use App\Models\PulseProfile;
 use App\Models\User;
 use App\Services\Pulse\Discovery\Taxonomy;
@@ -14,7 +13,6 @@ use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\MuteService;
-use App\Services\Pulse\Lines\NotificationPrefs;
 use App\Services\Pulse\Lines\PrivacyEraser;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
@@ -129,13 +127,6 @@ class Privacy extends Component
     public function ledger(): array
     {
         $user = auth()->user();
-
-        // ConsentLedger reads preferences through NotificationPrefs::get(), which creates a row that has the digest
-        // switched on. Pulse's digest is opt-in, so make the row first, with it off, before the ledger looks.
-        if (! PulseNotificationPref::query()->where('user_id', $user->id)->exists()) {
-            $prefs = app(NotificationPrefs::class);
-            PulseNotificationPref::query()->create(['user_id' => $user->id] + array_replace($prefs->defaults(), ['digest' => false]));
-        }
 
         return app(ConsentLedger::class)->entries($user);
     }
