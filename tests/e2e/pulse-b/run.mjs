@@ -39,46 +39,57 @@ const sh = (cmd, args) => {
     return r.stdout;
 };
 
-if (!reuse) {
-    rmSync(db, { force: true });
-    rmSync(join(out, 'seed.json'), { force: true });
-    writeFileSync(db, '');
-    console.log('migrate…');
-    sh('php', ['artisan', 'migrate', '--force']);
-    console.log('places…');
-    sh('php', ['artisan', 'pulse:places:seed']);
-    console.log('seed…');
-    console.log(sh('php', [join(here, 'seed.php')]).trim());
-    if (!existsSync(join(out, 'seed.json'))) throw new Error('seed did not finish');
-}
-
-try { truncateSync(join(root, 'storage/logs/laravel.log'), 0); } catch { /* none yet */ }
-
-// stdout/stderr go to a file, not a pipe: the PHP dev server writes request lines to stdout and a closed pipe makes
-// those writes fail with a notice that ends up inside JSON responses.
 const logFd = openSync(join(out, 'server.log'), 'w');
-const server = spawn('php', ['artisan', 'serve', `--port=${PORT}`, '--no-reload'], { cwd: root, env, stdio: ['ignore', logFd, logFd], detached: true });
+let server = null;
 // artisan serve forks the real server: kill the whole process group, then whatever still listens on our port.
 const stop = () => {
-    try { process.kill(-server.pid, 'SIGTERM'); } catch { /* gone */ }
+    try { if (server) process.kill(-server.pid, 'SIGTERM'); } catch { /* gone */ }
     const r = spawnSync('lsof', ['-ti', `tcp:${PORT}`, '-sTCP:LISTEN'], { encoding: 'utf8' });
     for (const pid of r.stdout.split('\n').filter(Boolean)) { try { process.kill(Number(pid), 'SIGTERM'); } catch { /* gone */ } }
 };
 process.on('exit', stop);
 process.on('SIGINT', () => { stop(); process.exit(130); });
 
-for (let i = 0; i < 60; i++) {
-    try { const r = await fetch(`${BASE}/up`); if (r.ok) break; } catch { /* not yet */ }
-    await new Promise((r) => setTimeout(r, 500));
+// Every spec gets a fresh database and a fresh server, so no spec depends on what another did.
+async function boot(first) {
+    stop();
+    if (!reuse || !first) {
+        rmSync(db, { force: true });
+        rmSync(join(out, 'seed.json'), { force: true });
+        writeFileSync(db, '');
+        sh('php', ['artisan', 'migrate', '--force']);
+        sh('php', ['artisan', 'pulse:places:seed']);
+        sh('php', ['artisan', 'cache:clear']); // the file cache outlives the database: stale per-user counters would leak between runs
+        sh('php', [join(here, 'seed.php')]);
+        if (!existsSync(join(out, 'seed.json'))) throw new Error('seed did not finish');
+    }
+    try { truncateSync(join(root, 'storage/logs/laravel.log'), 0); } catch { /* none yet */ }
+    // stdout/stderr go to a file, not a pipe: a closed pipe makes the dev server's request-line writes fail with a
+    // notice that ends up inside JSON responses.
+    server = spawn('php', ['artisan', 'serve', `--port=${PORT}`, '--no-reload'], { cwd: root, env, stdio: ['ignore', logFd, logFd], detached: true });
+    for (let i = 0; i < 60; i++) {
+        try { const r = await fetch(`${BASE}/up`); if (r.ok) return; } catch { /* not yet */ }
+        await new Promise((r) => setTimeout(r, 300));
+    }
+    throw new Error('server did not start');
 }
 
 const wanted = process.argv.slice(2);
 const specs = readdirSync(join(here, 'specs')).filter((f) => f.endsWith('.mjs')).sort()
     .filter((f) => wanted.length === 0 || wanted.some((w) => f.startsWith(w)));
 
+if (process.env.SERVE === '1') {
+    await boot(true);
+    console.log(`serving ${BASE} (fresh seeded database). Ctrl-C to stop.`);
+    await new Promise(() => {});
+}
+
 const report = [];
+let firstSpec = true;
 for (const f of specs) {
     const t0 = Date.now();
+    await boot(firstSpec);
+    firstSpec = false;
     console.log(`\n=== ${f}`);
     try {
         const mod = await import(pathToFileURL(join(here, 'specs', f)).href);

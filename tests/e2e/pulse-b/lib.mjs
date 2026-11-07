@@ -68,7 +68,7 @@ export async function person(browser, base, o = {}) {
     return p;
 }
 
-export async function login(p, userId, to = '/floor') {
+export async function login(p, userId, to = '/lines') {
     await p.page.goto(`/dev/login-b/${userId}?to=${encodeURIComponent(to)}`);
 }
 

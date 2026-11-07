@@ -28,7 +28,8 @@
                                 @endif
                             </div>
                             <div class="pk-row__end">
-                                <x-pulse.button variant="quiet" size="sm" wire:click="withdraw(@js($row['key']))" wire:loading.attr="disabled" type="button">{{ $row['withdraw']['label'] }}</x-pulse.button>
+                                {{-- A plain button, not <x-pulse.button>: Blade directives such as @js are not compiled inside a component tag, so the click handler reached the browser as literal "@js(...)" and threw. --}}
+                                <button type="button" class="pk-btn pk-btn--quiet pk-btn--sm" wire:click="withdraw(@js($row['key']))" wire:loading.attr="disabled">{{ $row['withdraw']['label'] }}</button>
                             </div>
                         </div>
                     </li>
@@ -62,7 +63,7 @@
         @else
             <ul class="me-list">
                 @foreach ($mutes as $m)
-                    <li wire:key="mute-{{ $m['kind'] }}-{{ $m['target'] }}"><div class="pk-row"><div class="pk-row__main"><div class="pk-row__title">{{ $m['label'] }}</div><div class="pk-row__meta">{{ ['topic' => 'Topic', 'entity' => 'Business page', 'user' => 'Person'][$m['kind']] ?? $m['kind'] }}</div></div><div class="pk-row__end"><x-pulse.button variant="quiet" size="sm" wire:click="unmute(@js($m['kind']), @js($m['target']))" type="button">Unmute</x-pulse.button></div></div></li>
+                    <li wire:key="mute-{{ $m['kind'] }}-{{ $m['target'] }}"><div class="pk-row"><div class="pk-row__main"><div class="pk-row__title">{{ $m['label'] }}</div><div class="pk-row__meta">{{ ['topic' => 'Topic', 'entity' => 'Business page', 'user' => 'Person'][$m['kind']] ?? $m['kind'] }}</div></div><div class="pk-row__end"><button type="button" class="pk-btn pk-btn--quiet pk-btn--sm" wire:click="unmute(@js($m['kind']), @js($m['target']))">Unmute</button></div></div></li>
                 @endforeach
             </ul>
         @endif

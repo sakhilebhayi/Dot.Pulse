@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\PulseEntity;
 use App\Models\User;
 use App\Services\Pulse\Lines\Access;
+use App\Services\Pulse\Lines\BlockService;
 
 /**
  * Roles on a business page: owner (everything, including other owners), admin (page details, people below
@@ -16,6 +17,11 @@ class PulseEntityPolicy
     /** Anyone (even signed out) sees a live, approved page; members and platform moderators see their own pages in any state. */
     public function view(?User $user, PulseEntity $entity): bool
     {
+        // Hidden both ways: a person who blocked a page, or whom the page (or its owners) blocked, gets a 404, not a page.
+        if ($user !== null && ! $user->isPlatformModerator() && $entity->memberRole($user) === null && BlockService::pageHiddenFrom($user, $entity)) {
+            return false;
+        }
+
         if ($entity->isLive()) {
             return true;
         }

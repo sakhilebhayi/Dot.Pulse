@@ -6,6 +6,7 @@ use App\Models\PulseMatch;
 use App\Models\PulseNeed;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Lines\BlockService;
 
 class PulseNeedPolicy
 {
@@ -25,6 +26,11 @@ class PulseNeedPolicy
         }
 
         if (! $need->isLive()) {
+            return false;
+        }
+
+        // Hidden both ways: a person blocked in either direction cannot open this need.
+        if ($need->user !== null && BlockService::blocked($user, $need->user)) {
             return false;
         }
 

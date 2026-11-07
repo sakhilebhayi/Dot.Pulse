@@ -1,0 +1,12 @@
+import { launch, person, settle } from './lib.mjs';
+import { readFileSync } from 'node:fs';
+const seed = JSON.parse(readFileSync(new URL('./out/seed.json', import.meta.url), 'utf8'));
+const b = await launch(); const p = await person(b, 'http://127.0.0.1:8791', { userId: seed.users.spam.id });
+await p.page.goto('/b/moyo-books/o/monthly-bookkeeping-and-vat-for-small-shops'); await settle(p.page);
+await p.page.getByRole('button', { name: /^(Knock|Ask about this)/i }).first().click();
+await p.page.getByLabel('What do you want?').fill('Cheap geysers wholesale');
+await p.page.locator('dialog[open] form button[type=submit]').click();
+await p.page.waitForTimeout(2500);
+console.log(await p.page.locator('dialog[open]').innerText());
+await p.page.screenshot({path:'out/dbg.png'});
+console.log(p.errors); await b.close();
