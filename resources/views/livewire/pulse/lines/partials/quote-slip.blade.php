@@ -45,11 +45,8 @@
     </dl>
 
     @if ($stats && $stats['received'] > 0)
-        @php
-            $secs = $stats['median_first_response_seconds'];
-            $usually = $secs === null ? null : ($secs < 3600 ? max(1, intdiv($secs, 60)).' min' : ($secs < 172800 ? round($secs / 3600).' h' : round($secs / 86400).' days'));
-        @endphp
-        <p class="ln-slip__stats">Answered {{ $stats['answered'] }} of {{ $stats['received'] }} requests in the last {{ $stats['window_days'] }} days{{ $usually ? ', usually within '.$usually : '' }}.</p>
+        @php $secs = $stats['median_first_response_seconds']; @endphp
+        <p class="ln-slip__stats">Answered {{ $stats['answered'] }} of {{ \App\Support\Moment::plural($stats['received'], 'request') }} in the last {{ \App\Support\Moment::plural($stats['window_days'], 'day') }}{{ $secs === null ? '' : ', usually '.\App\Support\Moment::within((int) $secs) }}.</p>
     @endif
 
     @if ($canDecide && $status === 'sent')

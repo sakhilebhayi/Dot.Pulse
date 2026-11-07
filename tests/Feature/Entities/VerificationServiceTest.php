@@ -41,7 +41,7 @@ class VerificationServiceTest extends EntitiesTestCase
         $this->assertSame('missing', $rungs['registration']['state']);
         $this->assertSame('missing', $rungs['website']['state']);
         $this->assertSame('missing', $rungs['outcomes']['state']);
-        $this->assertSame('checked', $rungs['time_on_pulse']['state']);
+        $this->assertArrayNotHasKey('time_on_pulse', $rungs, 'time on the platform is information, not a check');
         $this->assertArrayNotHasKey('infodot_verified', $rungs);
         $this->assertSame('unverified', $entity->fresh()->verification_status);
     }
@@ -323,7 +323,7 @@ class VerificationServiceTest extends EntitiesTestCase
 
         $summary = $this->service()->summary($entity);
 
-        $this->assertSame(2, $summary['checked']); // owner email, time on Pulse
+        $this->assertSame(1, $summary['checked']); // owner email
         $this->assertSame(1, $summary['claimed']); // website
         $this->assertSame('Not verified', $summary['label']);
     }

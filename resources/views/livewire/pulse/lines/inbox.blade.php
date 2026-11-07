@@ -29,7 +29,7 @@
                     <button type="button" class="pk-tab" wire:click="setTab('{{ $key }}')" @if ($tab === $key) aria-current="page" @endif>
                         {{ $label }}
                         @if ($key === 'requests' && $pending > 0)<span class="pk-tab__count">{{ $pending }}<span class="sr-only"> waiting for you</span></span>@endif
-                        @if ($key === 'open' && $fresh > 0)<span class="ln-count">{{ $fresh }}<span class="sr-only"> lines with new messages</span></span>@endif
+                        @if ($key === 'open' && $fresh > 0)<span class="ln-count">{{ $fresh }}<span class="sr-only"> unread</span></span>@endif
                     </button>
                 </li>
             @endforeach

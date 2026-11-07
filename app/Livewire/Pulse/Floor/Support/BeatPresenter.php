@@ -209,21 +209,7 @@ final class BeatPresenter
     /** "2 h ago", "Yesterday", "3 Nov". Short, because it is set in mono. */
     public static function ago(?CarbonInterface $at): ?string
     {
-        if ($at === null) {
-            return null;
-        }
-
-        $at = Carbon::instance($at);
-        $minutes = (int) $at->diffInMinutes(now(), false);
-
-        return match (true) {
-            $minutes < 1 => 'Just now',
-            $minutes < 60 => $minutes.' min ago',
-            $minutes < 60 * 24 && $at->isToday() => (int) floor($minutes / 60).' h ago',
-            $at->isYesterday() => 'Yesterday',
-            $at->diffInDays(now()) < 7 => $at->format('l'),
-            default => $at->format($at->year === now()->year ? 'j M' : 'j M Y'),
-        };
+        return $at === null ? null : \App\Support\Moment::when($at);
     }
 
     /** "today 18:30", "tomorrow 07:00", "Sat 9 Nov, 18:30". */

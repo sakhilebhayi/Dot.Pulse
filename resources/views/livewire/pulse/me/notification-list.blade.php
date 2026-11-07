@@ -29,7 +29,7 @@
                                     {{ $row['lead'] }}{{ $row['text'] }}
                                 @endif
                             </div>
-                            <div class="pk-row__meta">{{ $words[$row['category']] ?? 'Pulse' }}, <time datetime="{{ $n->created_at->toIso8601String() }}">{{ $n->created_at->diffForHumans() }}</time></div>
+                            <div class="pk-row__meta">{{ $words[$row['category']] ?? 'Pulse' }}, <x-pulse.when :at="$n->created_at" /></div>
                         </div>
                         <div class="pk-row__end">
                             @if ($unread)
