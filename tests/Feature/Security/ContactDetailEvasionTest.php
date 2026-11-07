@@ -52,6 +52,8 @@ class ContactDetailEvasionTest extends TestCase
             'whatsapp zero width' => ["message me on whats{$zw}app"],
             'telegram homoglyph' => ["message me on t\u{0435}legram"],
             'gmail' => ['use my gmail'],
+            'less common tld' => ['send money to payhere.ru today'],
+            'less common tld two' => ['visit mysite.tk please'],
             'ip address' => ['go to 41.76.12.4'],
             'ip with port' => ['http-less 41.76.12.4:8080/pay'],
         ];
@@ -73,6 +75,7 @@ class ContactDetailEvasionTest extends TestCase
             'times and dates' => ['Thursday 14:30 or on 2026-11-12'],
             'price' => ['R1,500.00 for 3 sessions'],
             'ellipsis' => ['Not sure... maybe two weeks'],
+            'sentence no space after full stop' => ['Please come early.Thanks a lot for the quick reply.'],
             'short numbers' => ['2 bedroom flat, 120 m2, 3 geysers'],
             'abbreviation dots' => ['e.g. a leaking geyser, i.e. urgent'],
             'dot word' => ['The polka dot dress needs altering'],

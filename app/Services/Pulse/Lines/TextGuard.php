@@ -14,7 +14,7 @@ use Throwable;
  */
 class TextGuard
 {
-    private const TLDS = 'com|net|org|co\.za|org\.za|za|io|app|me|ly|link|xyz|info|biz|shop|store|online|site|dev|ai|tv|cc|gl|to|ws|us|uk|co|africa|cloud|click|page|website|tech|live|club|space|top|vip|fun';
+    private const TLDS = 'com|net|org|co\.za|org\.za|za|io|app|me|ly|link|xyz|info|biz|shop|store|online|site|dev|ai|tv|cc|gl|to|ws|us|uk|co|africa|cloud|click|page|website|tech|live|club|space|top|vip|fun|ru|tk|ml|ga|cf|gq|pw|cn|de|fr|nl|ng|ke|gh|zw|bw|na|mz|zm|ug|tz|ae|br|mx|es|ca|au|nz|ch|se|pl|ua|kz|su|ir|pk|bd|ph|vn|sg|hk|jp|kr|eu|asia|mobi|zip|casino|icu|monster|buzz|cyou|sbs';
 
     public const UNLOCK_MESSAGE = 'Links and contact details unlock once they reply. Tell them what you need and they can take it from there.';
 

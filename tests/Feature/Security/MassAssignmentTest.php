@@ -14,6 +14,7 @@ use App\Services\Pulse\Entities\OfferService;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /**
@@ -117,5 +118,38 @@ class MassAssignmentTest extends TestCase
             ->set('headline', 'Plain')->call('save');
 
         $this->assertFalse($me->fresh()->isPlatformModerator());
+    }
+
+    public function test_an_image_id_that_belongs_to_somebody_else_cannot_be_hung_on_my_page_profile_or_offer(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $image = fn () => \Illuminate\Http\UploadedFile::fake()->image('a.png', 64, 64);
+        $media = app(\App\Services\Pulse\Entities\MediaService::class);
+
+        // A private photo from someone else's conversation, and another page's logo.
+        $private = $media->store($this->w('stranger'), $image(), 'message', null, $this->w('line')->id);
+        $theirLogo = $media->store($this->w('sellerOwner'), $image(), 'logo', $this->w('seller'));
+
+        $me = $this->w('employerOwner');
+        $employer = $this->w('employer');
+
+        foreach ([$private, $theirLogo] as $id) {
+            try {
+                app(EntityService::class)->update($me, $employer, ['name' => 'Acme Works Pty', 'is_employer' => true, 'logo_media_id' => $id]);
+                $this->fail('hung a foreign image on a page');
+            } catch (ValidationException) {
+                $this->assertNull($employer->fresh()->logo_media_id);
+            }
+
+            try {
+                app(ProfileService::class)->setAvatar($me, $id);
+                $this->fail('hung a foreign image on a profile');
+            } catch (ValidationException) {
+                $this->assertNull(PulseProfile::query()->where('user_id', $me->id)->value('avatar_media_id'));
+            }
+        }
+
+        $this->expectException(ValidationException::class);
+        app(OfferService::class)->update($this->w('sellerOwner'), $this->w('offer'), ['media_ids' => [$private]]);
     }
 }
