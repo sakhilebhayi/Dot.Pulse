@@ -19,18 +19,24 @@ class TeamAndVerifyTest extends BusinessTestCase
         Livewire::actingAs($this->person())->test(TeamManager::class, ['entity' => $page])->assertForbidden();
     }
 
-    public function test_an_owner_adds_a_member_by_email_and_changes_and_removes_them(): void
+    public function test_an_owner_invites_by_email_the_person_accepts_and_the_owner_changes_and_removes_them(): void
     {
+        $this->withoutDefer();
         $page = $this->page();
         $owner = $page->members()->first()->user;
         $newcomer = $this->person(['email' => 'Thandi@Example.test']);
 
         $c = Livewire::actingAs($owner)->test(TeamManager::class, ['entity' => $page])
             ->set('email', 'thandi@example.test')->set('role', 'editor')
-            ->call('add')->assertHasNoErrors()->assertSee('is now editor');
+            ->call('add')->assertHasNoErrors()->assertSee('If that person is on Pulse they will see your invitation.');
 
+        $this->assertNull($page->memberRole($newcomer), 'an invitation is not a membership');
+
+        $invitation = \App\Models\PulseEntityInvitation::query()->firstOrFail();
+        Livewire::actingAs($newcomer)->test(\App\Livewire\Pulse\Me\Invitations::class)->call('accept', $invitation->id)->assertSee('You joined');
         $this->assertSame('editor', $page->memberRole($newcomer));
 
+        $c = Livewire::actingAs($owner)->test(TeamManager::class, ['entity' => $page]);
         $c->call('changeRole', $newcomer->id, 'responder');
         $this->assertSame('responder', $page->memberRole($newcomer));
 
@@ -38,13 +44,13 @@ class TeamAndVerifyTest extends BusinessTestCase
         $this->assertNull($page->memberRole($newcomer));
     }
 
-    public function test_an_unknown_email_is_explained_not_created(): void
+    public function test_an_unknown_email_gets_the_same_answer_and_no_account_is_created(): void
     {
         $page = $this->page();
 
         Livewire::actingAs($page->members()->first()->user)->test(TeamManager::class, ['entity' => $page])
             ->set('email', 'nobody@example.test')->call('add')
-            ->assertHasErrors(['email'])->assertSee('sign in to Pulse through InfoDot once');
+            ->assertHasNoErrors()->assertSee('If that person is on Pulse they will see your invitation.');
 
         $this->assertDatabaseMissing('users', ['email' => 'nobody@example.test']);
     }

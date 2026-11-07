@@ -207,4 +207,12 @@ return [
     ],
     // --- end privacy ---
 
+    // --- invitations (R-41 hardening) ---
+    'invitations' => [
+        'ttl_days' => (int) env('PULSE_INVITATION_TTL_DAYS', 14),
+        'per_person_hour' => (int) env('PULSE_LIMIT_INVITES_HOUR', 20),
+        'per_page_day' => (int) env('PULSE_LIMIT_INVITES_PAGE_DAY', 50),
+    ],
+    // --- end invitations ---
+
 ];

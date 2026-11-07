@@ -7,10 +7,11 @@ use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
 use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
+use App\Services\Pulse\Entities\InvitationService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -18,7 +19,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 /**
- * The Team tab: who can do what on this page. Members must already be Pulse users (they signed in through InfoDot once).
+ * The Team tab: who can do what on this page. People join by invitation: the owner or an admin invites an email address and the person says yes on their own hub.
  * The service enforces the rules: an admin can only manage editors and responders, and the last owner is never removed.
  */
 class TeamManager extends Component
@@ -69,7 +70,8 @@ class TeamManager extends Component
         return $this->myRole === 'owner' ? $all : array_intersect_key($all, array_flip(['editor', 'responder']));
     }
 
-    public function add(EntityService $entities): void
+    /** Invite by email. The answer is the same whether or not the address belongs to anyone on Pulse. */
+    public function add(InvitationService $invitations): void
     {
         $this->resetErrorBag();
         $this->notice = null;
@@ -77,26 +79,8 @@ class TeamManager extends Component
 
         $this->validate(['email' => ['required', 'email', 'max:255'], 'role' => ['required', 'in:owner,admin,editor,responder']], [], ['email' => 'email']);
 
-        $key = 'pulse-team-add:'.auth()->id();
-
-        if (RateLimiter::tooManyAttempts($key, 20)) {
-            $this->addError('email', 'That is a lot of people in an hour. Try again later.');
-
-            return;
-        }
-
-        RateLimiter::hit($key, 3600);
-
-        $person = User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($this->email))])->first();
-
-        if ($person === null) {
-            $this->addError('email', 'Nobody on Pulse has that email yet. Ask them to sign in to Pulse through InfoDot once, then add them.');
-
-            return;
-        }
-
         try {
-            $entities->addMember(auth()->user(), $this->entity, $person, $this->role);
+            $this->notice = $invitations->invite(auth()->user(), $this->entity, $this->email, $this->role);
         } catch (AuthorizationException) {
             $this->addError('role', 'You cannot give that role. Owners can give any role; admins can give editor or responder.');
 
@@ -107,9 +91,31 @@ class TeamManager extends Component
             return;
         }
 
-        unset($this->members);
-        $this->notice = $person->name.' is now '.$this->role.'.';
+        unset($this->invitations);
         $this->email = '';
+    }
+
+    public function revoke(int $invitationId, InvitationService $invitations): void
+    {
+        $this->resetErrorBag();
+
+        try {
+            $invitations->revoke(auth()->user(), $this->entity, $invitationId);
+        } catch (AuthorizationException|ModelNotFoundException) {
+            $this->notice = 'You cannot take that invitation back.';
+
+            return;
+        }
+
+        unset($this->invitations);
+        $this->notice = 'Invitation taken back.';
+    }
+
+    /** @return Collection<int, \App\Models\PulseEntityInvitation> waiting for an answer */
+    #[Computed]
+    public function invitations()
+    {
+        return app(InvitationService::class)->pendingForEntity($this->entity);
     }
 
     public function changeRole(int $userId, string $role, EntityService $entities): void
