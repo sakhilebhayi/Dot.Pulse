@@ -188,6 +188,19 @@ class Floor
             ->each(fn (PulseMatch $other) => $this->rejudge($u, $other));
     }
 
+    /**
+     * Re-judges these matches of the person's with their current mutes. Used for the beats still on screen after a
+     * reason was switched off: they were shown, so removeReason leaves them alone, but the page must not keep drawing
+     * a reason the person just turned off.
+     *
+     * @param  list<int>  $matchIds
+     */
+    public function rejudgeShown(User $u, array $matchIds): void
+    {
+        PulseMatch::query()->where('user_id', $u->id)->whereNull('dismissed_at')->whereIn('id', $matchIds)->get()
+            ->each(fn (PulseMatch $m) => $this->rejudge($u, $m));
+    }
+
     private function rejudge(User $u, PulseMatch $m): void
     {
         $signal = PulseSignal::find($m->signal_id);

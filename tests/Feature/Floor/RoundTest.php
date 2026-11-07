@@ -184,6 +184,26 @@ class RoundTest extends FloorTestCase
         $this->assertContains('place_city', $texts, 'the reasons that are left are re-judged, not blanked');
     }
 
+    public function test_removing_a_reason_redraws_every_beat_on_screen_that_used_the_same_input(): void
+    {
+        $reasons = fn () => [
+            ['code' => 'topic', 'text' => 'They are into cycling, which you follow.', 'weight' => 24, 'ref' => 'cycling'],
+            ['code' => 'place_city', 'text' => 'Both in Johannesburg', 'weight' => 14, 'ref' => (string) $this->geo->jhb->id],
+        ];
+        [, , $first] = $this->offerFor('First beat', $reasons());
+        [, , $second] = $this->offerFor('Second beat', $reasons());
+
+        $c = $this->round()->assertSee('First beat')->assertSee('Second beat');
+        $this->assertGreaterThanOrEqual(2, substr_count($c->html(), 'They are into cycling, which you follow.'));
+
+        $c->call('removeReason', $first->id, 'topic');
+
+        // Both were shown (so both are "seen"); the one that was not tapped must not keep drawing the removed reason.
+        $this->assertStringNotContainsString('They are into cycling, which you follow.', $c->html());
+        $c->assertSee('First beat')->assertSee('Second beat');
+        $this->assertNotContains('topic', array_column((array) $second->fresh()->reasons, 'code'));
+    }
+
     public function test_removing_the_only_reason_takes_the_beat_off_the_floor(): void
     {
         $s = $this->matched(['title' => 'Only reason', 'kind' => 'ask', 'topics' => ['cycling'], 'subject_type' => 'post'], 40, [

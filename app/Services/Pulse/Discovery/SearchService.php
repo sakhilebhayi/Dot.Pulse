@@ -61,9 +61,25 @@ class SearchService
         $pack = SignalPack::build($signals);
         $results = [];
 
+        // A "matched" need is shown only to the people Pulse matched it to (PulseNeedPolicy::view), in search as on the Floor.
+        // The two lookups run only when the results hold such a need, so an ordinary search costs no extra query.
+        $matchedNeeds = null;
+        $seesAllNeeds = null;
+
         foreach ($signals as $signal) {
             if (! $this->matcher->eligible($ctx, $signal, $pack)) {
                 continue;
+            }
+
+            if ($signal->kind === 'need' && (int) $signal->owner_id !== $u->id
+                && ($pack->needs[(int) $signal->subject_id]->visibility ?? 'open') === 'matched') {
+                $matchedNeeds ??= PulseMatch::query()->where('user_id', $u->id)->whereNull('dismissed_at')
+                    ->whereIn('signal_id', $signals->where('kind', 'need')->pluck('id')->all())->pluck('signal_id')->flip();
+                $seesAllNeeds ??= $u->isPlatformModerator();
+
+                if (! $seesAllNeeds && ! isset($matchedNeeds[$signal->id])) {
+                    continue;
+                }
             }
 
             [$score, $why] = $this->scoreSignal($signal, $terms, $q, $pack, $viewerPlace);

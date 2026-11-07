@@ -45,6 +45,24 @@ class BeatDetailTest extends FloorTestCase
         $this->actingAs($this->me)->get('/s/abc')->assertNotFound();
     }
 
+    public function test_a_matched_only_need_opens_only_for_the_people_it_was_matched_to(): void
+    {
+        $owner = $this->person();
+        $need = $this->dNeed($owner, ['title' => 'Private geyser need', 'visibility' => 'matched', 'details' => 'Budget details only matched people may read']);
+        $signal = $this->dSignal(['kind' => 'need', 'subject_type' => 'need', 'subject_id' => $need->id, 'owner_id' => $owner->id, 'title' => $need->title, 'topics' => ['plumbing'], 'place' => $this->geo->jhb]);
+
+        // Not matched to $this->me: a 404, exactly like a need that does not exist.
+        $this->actingAs($this->me)->get(route('signals.show', $signal))->assertNotFound();
+
+        $this->dMatch($this->me, $signal, 60, [['code' => 'offer_need', 'text' => 'You offer plumbing, they need plumbing.', 'weight' => 40, 'ref' => 'plumbing']]);
+        $this->actingAs($this->me)->get(route('signals.show', $signal))->assertOk()->assertSee('Private geyser need');
+
+        // An open need stays readable by any signed-in person who passes the ordinary checks.
+        $need->forceFill(['visibility' => 'open'])->save();
+        $stranger = $this->person(['place' => $this->geo->jhb]);
+        $this->actingAs($stranger)->get(route('signals.show', $signal))->assertOk();
+    }
+
     public function test_an_offer_is_shown_in_full_with_every_reason_and_why_it_is_here(): void
     {
         [$signal, $entity] = $this->offerFor('Bookkeeping for small shops');

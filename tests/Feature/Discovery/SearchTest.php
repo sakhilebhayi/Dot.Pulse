@@ -84,6 +84,20 @@ class SearchTest extends TestCase
         $this->assertSame('signal', $res['results'][0]['type']);
     }
 
+    public function test_a_matched_only_need_is_found_only_by_the_people_it_was_matched_to(): void
+    {
+        $owner = $this->dUser();
+        $need = $this->dNeed($owner, ['title' => 'Welding for a gate', 'visibility' => 'matched']);
+        $signal = $this->dSignal(['kind' => 'need', 'subject_type' => 'need', 'subject_id' => $need->id, 'owner_id' => $owner->id, 'title' => $need->title, 'topics' => ['welding']]);
+        $open = $this->dNeed($owner, ['title' => 'Welding for a fence', 'visibility' => 'open']);
+        $this->dSignal(['kind' => 'need', 'subject_type' => 'need', 'subject_id' => $open->id, 'owner_id' => $owner->id, 'title' => $open->title, 'topics' => ['welding']]);
+
+        $this->assertSame(['Welding for a fence'], $this->titles($this->search('welding')));
+
+        $this->dMatch($this->me, $signal, 50);
+        $this->assertEqualsCanonicalizing(['Welding for a fence', 'Welding for a gate'], $this->titles($this->search('welding')));
+    }
+
     public function test_held_removed_expired_and_paused_never_appear(): void
     {
         $owner = $this->dUser();

@@ -91,21 +91,28 @@ trait ActsOnBeats
             return;
         }
 
+        // The input is off for every beat, so every beat on screen is re-judged and redrawn, not only the one tapped.
+        $onScreen = array_values(array_filter(array_map(fn (array $b) => (int) ($b['match_id'] ?? 0), $this->beats)));
+        $floor->rejudgeShown(auth()->user(), $onScreen);
+
+        $fresh = PulseMatch::query()->where('user_id', auth()->id())->whereIn('id', $onScreen)->get()->keyBy('id');
+        $this->beats = array_values(array_filter(array_map(function (array $b) use ($fresh) {
+            $m = $fresh->get((int) ($b['match_id'] ?? 0));
+
+            if ($m === null) {
+                return $b;
+            }
+
+            return $m->dismissed_at !== null ? null : array_merge($b, ['reasons' => BeatReasons::fromMatch((array) $m->reasons), 'score' => (float) $m->score]);
+        }, $this->beats)));
+
         $match->refresh();
 
         if ($match->dismissed_at !== null) {
-            $this->forgetMatch($matchId);
             $this->say('Removed. That beat no longer fits, so it is gone.', 'good');
 
             return;
         }
-
-        $reasons = BeatReasons::fromMatch((array) $match->reasons);
-
-        $this->beats = array_map(
-            fn (array $b) => ((int) ($b['match_id'] ?? 0)) === $matchId ? array_merge($b, ['reasons' => $reasons, 'score' => (float) $match->score]) : $b,
-            $this->beats,
-        );
 
         $this->say('Removed. We will stop using that.', 'good');
     }
