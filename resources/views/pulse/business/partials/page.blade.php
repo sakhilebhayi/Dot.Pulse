@@ -104,6 +104,21 @@
                 </section>
             @endif
 
+            @if ($d['reviews']->isNotEmpty())
+                <section aria-labelledby="bz-reviews">
+                    <h2 id="bz-reviews">Reviews</h2>
+                    <p class="pk-muted">{{ $d['reviewSummary']['count'] }} {{ $d['reviewSummary']['count'] === 1 ? 'review' : 'reviews' }}, {{ number_format($d['reviewSummary']['average'], 1) }} out of 5 on average. Each one was written after both sides confirmed a result, and shown only once both sides had written theirs.</p>
+                    <ul class="pk-stack" role="list" style="margin-top: 12px; list-style: none; padding: 0">
+                        @foreach ($d['reviews'] as $review)
+                            <li class="pk-card" style="padding: 14px 16px">
+                                <p><strong>{{ $review['rating'] }} out of 5</strong> <span class="pk-muted">from {{ $review['author'] }}, {{ $review['created_at']?->format('j M Y') }}</span></p>
+                                @if ($review['body'])<p class="bz-prose">{{ $review['body'] }}</p>@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             @if ($member && $entity->hasHiringSignal())
                 <section aria-labelledby="bz-hiring">
                     <h2 id="bz-hiring">{{ $entity->hiring_signal === 'active' ? 'Hiring now' : 'Building a team' }}</h2>

@@ -28,6 +28,29 @@ class PublicPageTest extends BusinessTestCase
             ->assertDontSee('Manage this page')->assertDontSee('Acme Holdings');
     }
 
+    public function test_earned_reviews_show_on_the_page_only_once_revealed_and_approved(): void
+    {
+        $owner = $this->infodotPerson();
+        $page = $this->page($owner, ['name' => 'Moyo Books']);
+        $a = $this->person();
+        $b = $this->person();
+        $make = fn ($user, $body, array $extra = []) => \App\Models\PulseReview::create(array_merge([
+            'user_id' => $user->id, 'reviewable_type' => $page->getMorphClass(), 'reviewable_id' => $page->id, 'rating' => 5, 'body' => $body,
+            'is_verified' => true, 'reviewer_side' => 'initiator', 'outcome' => 'won', 'pseudonymous' => false, 'moderation' => 'approved',
+        ], $extra));
+
+        $make($a, 'Revealed and clean review', ['revealed_at' => now(), 'conversation_id' => null]);
+        $make($b, 'Still blind review', ['revealed_at' => null]);
+        $make($this->person(), 'Held review', ['revealed_at' => now(), 'moderation' => 'held']);
+
+        $this->get(route('entities.show', ['entity' => $page->slug]))->assertOk()
+            ->assertSee('Revealed and clean review')->assertSee('1 review')->assertSee('5 out of 5')
+            ->assertSee('written after both sides confirmed a result')
+            ->assertDontSee('Still blind review')->assertDontSee('Held review');
+
+        $this->actingAs($this->person())->get(route('entities.show', ['entity' => $page->slug]))->assertOk()->assertSee('Revealed and clean review');
+    }
+
     public function test_a_guest_gets_a_404_for_a_page_that_is_not_live_and_for_a_held_page(): void
     {
         $draft = $this->page(null, ['status' => 'archived']);

@@ -126,6 +126,19 @@ class NeedTest extends BusinessTestCase
             ->assertDontSee('Who it was shown to')->assertDontSee('Delete');
     }
 
+    public function test_the_owner_of_an_open_need_can_ask_up_to_three_businesses_for_quotes_from_the_need_page(): void
+    {
+        $owner = $this->infodotPerson();
+        $need = PulseNeed::factory()->create(['user_id' => $owner->id, 'status' => 'open', 'moderation' => 'approved']);
+
+        $this->actingAs($owner)->get(route('needs.show', ['need' => $need->id]))
+            ->assertOk()->assertSeeLivewire('pulse.lines.quote-request')->assertSee('Ask for quotes');
+
+        // Other people never get the owner's request-a-quote control.
+        $this->actingAs($this->person())->get(route('needs.show', ['need' => $need->id]))
+            ->assertOk()->assertDontSeeLivewire('pulse.lines.quote-request');
+    }
+
     public function test_a_matched_need_is_only_open_to_matched_people(): void
     {
         $owner = $this->infodotPerson();

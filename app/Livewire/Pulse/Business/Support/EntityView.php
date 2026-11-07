@@ -13,6 +13,7 @@ use App\Services\Pulse\Entities\MediaService;
 use App\Services\Pulse\Entities\VerificationService;
 use App\Services\Pulse\Lines\Access;
 use App\Services\Pulse\Lines\ResponseStats;
+use App\Services\Pulse\Lines\ReviewService;
 use Illuminate\Support\Carbon;
 
 /**
@@ -33,6 +34,7 @@ class EntityView
         $roles = $entity->roles()->live()->latest('published_at')->limit(24)->get();
 
         $response = ResponseStats::for($entity);
+        $reviews = app(ReviewService::class);
 
         return [
             'entity' => $entity,
@@ -45,6 +47,9 @@ class EntityView
             'status' => $verification->summary($entity),
             'response' => $response['response_rate'] === null ? null : $response,
             'stats' => app(EntityService::class)->stats($entity),
+            // Earned reviews only: written after a result both sides confirmed, shown once both sides have written theirs.
+            'reviews' => $reviews->forSubject($entity, 10),
+            'reviewSummary' => $reviews->summary($entity),
             'isMember' => $viewer !== null && $entity->memberRole($viewer) !== null,
         ];
     }

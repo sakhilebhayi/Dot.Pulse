@@ -77,6 +77,9 @@
                     <h2>Your need</h2>
                     <div class="pk-stack" style="gap: 8px">
                         @if ($need->status === 'open' && ! $expired)
+                            @if ($need->moderation === 'approved')
+                                <livewire:pulse.lines.quote-request :need-id="$need->id" :key="'quotes-need-'.$need->id" />
+                            @endif
                             <x-pulse.button variant="signal" wire:click="fulfil">It worked out</x-pulse.button>
                             <x-pulse.button variant="quiet" wire:click="close" wire:confirm="Close this need? Nobody will be shown it any more.">Close it</x-pulse.button>
                         @elseif ($need->moderation !== 'removed' && $need->status !== 'removed')
