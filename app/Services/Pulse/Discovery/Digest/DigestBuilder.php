@@ -9,7 +9,9 @@ use App\Services\Pulse\Discovery\BeatBuilder;
 use App\Services\Pulse\Discovery\ContextLoader;
 use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\SignalPack;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 
@@ -32,6 +34,35 @@ class DigestBuilder
         private readonly Matcher $matcher,
         private readonly BeatBuilder $beats,
     ) {}
+
+    /**
+     * Which of these people have at least one match that could make a digest: unseen, undismissed, strong enough, on a
+     * live signal published since their last digest (or the default look-back). One statement for the whole batch, so
+     * the run does not build a digest, with a dozen queries, for everyone only to find nothing for most of them.
+     * This is a pre-filter only: build() still applies every rule and may still say there is nothing to send.
+     *
+     * @param  list<int>  $userIds
+     * @param  array<int, CarbonInterface>  $since  user id => the moment their digest looks back to
+     * @return list<int>
+     */
+    public function usersWithNews(array $userIds, array $since): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        $earliest = min(array_map(fn (CarbonInterface $c) => $c->getTimestamp(), $since) ?: [now()->subDays(7)->getTimestamp()]);
+
+        return DB::table('pulse_matches as m')
+            ->join('pulse_signals as s', 's.id', '=', 'm.signal_id')
+            ->whereIn('m.user_id', $userIds)
+            ->whereNull('m.dismissed_at')
+            ->whereNull('m.seen_at')
+            ->where('m.score', '>=', self::MIN_SCORE)
+            ->where('s.status', 'live')
+            ->where('s.published_at', '>=', Carbon::createFromTimestamp($earliest))
+            ->distinct()->pluck('m.user_id')->map(fn ($v) => (int) $v)->all();
+    }
 
     /**
      * @return array{subject: string, intro: string, items: list<array<string, mixed>>, count: int, more: int, since: CarbonInterface, floor_url: string, manage_url: string, unsubscribe_url: string}|null

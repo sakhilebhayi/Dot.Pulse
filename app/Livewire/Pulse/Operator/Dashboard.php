@@ -43,7 +43,7 @@ class Dashboard extends Component
     {
         $this->authorizeOperator();
 
-        return app(Metrics::class)->snapshot($this->days);
+        return app(Metrics::class)->cachedSnapshot($this->days);
     }
 
     public function render(): View
