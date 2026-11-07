@@ -72,6 +72,18 @@ class SearchTest extends TestCase
         $this->assertSame('Claims', substr((string) ($res['results'][0]['entity']['verification'] ?? 'Claims'), 0, 6));
     }
 
+    public function test_a_business_with_its_own_signal_is_one_result_not_two(): void
+    {
+        $owner = $this->dUser();
+        $entity = $this->dEntity($owner, ['name' => 'Karoo Bakery', 'tagline' => 'Bread and rusks']);
+        $this->dSignal(['kind' => 'business', 'subject_type' => 'entity', 'subject_id' => $entity->id, 'entity_id' => $entity->id, 'owner_id' => $owner->id, 'title' => 'Karoo Bakery', 'topics' => ['baking']]);
+
+        $res = $this->search('bakery');
+
+        $this->assertSame(['Karoo Bakery'], $this->titles($res));
+        $this->assertSame('signal', $res['results'][0]['type']);
+    }
+
     public function test_held_removed_expired_and_paused_never_appear(): void
     {
         $owner = $this->dUser();

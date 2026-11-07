@@ -76,8 +76,19 @@ class SearchService
         }
 
         if ($this->wantsEntities($filters)) {
+            // A business already found as its own "business" signal is one result, not two (the signal carries the
+            // match reasons and the trust label; the plain page row would repeat it with a different label).
+            $listed = [];
+            foreach ($results as $r) {
+                if ($r['type'] === 'signal' && $r['signal']->kind === 'business' && $r['signal']->entity_id) {
+                    $listed[(int) $r['signal']->entity_id] = true;
+                }
+            }
+
             foreach ($this->entityResults($ctx, $terms, $q, $viewerPlace) as $r) {
-                $results[] = $r;
+                if (! isset($listed[$r['entity']['id']])) {
+                    $results[] = $r;
+                }
             }
         }
 
