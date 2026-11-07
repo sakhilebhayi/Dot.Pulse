@@ -69,4 +69,16 @@ class ShellNavTest extends FloorTestCase
         $this->actingAs($this->me)->get('/me/account')->assertOk()->assertSee('Account and security')->assertSee('Go to Privacy');
         $this->assertSame(1, substr_count($this->actingAs($this->me)->get('/me/profile')->getContent(), 'Headline'), 'one profile editor, not two');
     }
+
+    public function test_the_welcome_flow_is_a_single_task_page_with_no_rail_bar_or_compose(): void
+    {
+        $fresh = \App\Models\User::factory()->withPersonalTeam()->create();
+
+        $html = $this->actingAs($fresh)->get('/welcome-in')->assertOk()->getContent();
+
+        $this->assertStringContainsString('sh-body--focus', $html);
+        $this->assertStringNotContainsString('class="sh-rail"', $html);
+        $this->assertStringNotContainsString('class="sh-bar"', $html);
+        $this->assertStringNotContainsString('sh-compose-top', $html);
+    }
 }

@@ -675,3 +675,12 @@
         max-width: none;
     }
 }
+
+/* A single-task page: one column, nothing to leave by. */
+.sh-body--focus {
+    display: block;
+}
+
+.sh-body--focus .sh-stage {
+    padding-top: var(--s-xl);
+}

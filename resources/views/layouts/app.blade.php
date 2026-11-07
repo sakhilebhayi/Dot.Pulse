@@ -5,6 +5,7 @@
     $showDial = $dial ?? array_key_exists((string) $routeName, $floorRoutes);
     $selectedMode = $floorRoutes[$routeName] ?? 'all';
     $isFloor = $width === 'floor';
+    $focus = $focus ?? false;
     $hasContext = isset($context) && trim((string) $context) !== '';
     $pageTitle = $title ? $title.' | Dot.Pulse' : 'Dot.Pulse';
 
@@ -71,7 +72,7 @@
         @endif
 
         <div class="sh-mast__tools">
-            @if (Route::has('search') && ! request()->routeIs('search'))
+            @if (Route::has('search') && ! request()->routeIs('search') && ! $focus)
                 <form class="sh-search" role="search" action="{{ route('search') }}" method="get">
                     <label for="mast-q" class="sr-only">Search the floor</label>
                     <x-pulse.icon name="search" :size="16" />
@@ -91,7 +92,7 @@
                 @endauth
             @endif
 
-            <button type="button" class="sh-iconbtn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>
+            @unless ($focus)<button type="button" class="sh-iconbtn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>@endunless
 
             <button type="button" class="sh-iconbtn sh-theme sh-hide-phone" data-pk-theme aria-pressed="false" aria-label="Switch theme">
                 <x-pulse.icon name="moon" class="sh-theme__moon" />
@@ -157,7 +158,8 @@
         </div>
     </header>
 
-    <div class="sh-body content-wrap">
+    <div class="sh-body content-wrap{{ $focus ? ' sh-body--focus' : '' }}">
+        @unless ($focus)
         <nav class="sh-rail" aria-label="Main">
             <ul class="sh-rail__verbs">
                 @foreach ($verbs as $verb)
@@ -198,6 +200,7 @@
 
             <p class="sh-rail__foot">Part of the Dot ecosystem. Signed in with InfoDot.</p>
         </nav>
+        @endunless
 
         <main id="main" tabindex="-1" class="sh-stage {{ $isFloor ? 'sh-stage--floor' : 'sh-stage--wide' }}{{ $isFloor && $hasContext ? ' has-context' : '' }}">
             @if ($isFloor)
@@ -220,6 +223,7 @@
         </main>
     </div>
 
+    @unless ($focus)
     <nav class="sh-bar" aria-label="Main, phone">
         @foreach ($verbs as $verb)
             <a href="{{ $verb['href'] }}" @if ($activeParent === $verb['key']) aria-current="page" @endif>
@@ -229,6 +233,7 @@
             </a>
         @endforeach
     </nav>
+    @endunless
 
     <x-pulse.drawer id="compose" title="Say what you want" side="bottom" description="Pick the thing that is true. Pulse does the introducing.">
         <div class="pk-stack" style="gap: 8px">
