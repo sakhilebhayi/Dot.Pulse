@@ -36,6 +36,8 @@ class PulseRole extends Model
         'apply_url',
         'status',
         'moderation',
+        'moderation_reason',
+        'moderation_flags',
         'published_at',
         'closes_at',
     ];
@@ -43,6 +45,7 @@ class PulseRole extends Model
     protected function casts(): array
     {
         return [
+            'moderation_flags' => 'array',
             'skills' => 'array',
             'published_at' => 'datetime',
             'closes_at' => 'datetime',

@@ -83,7 +83,7 @@ class OfferManagerTest extends BusinessTestCase
             ->call('newOffer')->set('title', 'Needs a look')->set('summary', 'A summary.')->set('price_mode', 'quote')
             ->call('savePublish')
             ->assertSee('Waiting for a human')
-            ->assertSee('Pulse needs a person to look at this');
+            ->assertSee('No automatic check ran');
 
         $this->assertSame('pending', PulseOffer::where('title', 'Needs a look')->value('moderation'));
     }

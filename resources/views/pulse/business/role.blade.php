@@ -25,7 +25,7 @@
 
         @if ($manager && ! $open && ! $ended)
             @if ($role->moderation === 'removed' || ($role->status === 'live' && in_array($role->moderation, ['pending', 'held'], true)))
-                @include('livewire.pulse.business.partials.held', ['state' => $role->moderation, 'what' => 'role'])
+                @include('livewire.pulse.business.partials.held', ['state' => $role->moderation, 'what' => 'role', 'reason' => $role->moderation_reason])
             @else
                 <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This role is {{ $role->status === 'draft' ? 'a draft' : $role->status }}. Only your team can see it. <a href="{{ route('entities.manage.roles', ['entity' => $entity->slug]) }}">Edit it</a>.</p></div>
             @endif

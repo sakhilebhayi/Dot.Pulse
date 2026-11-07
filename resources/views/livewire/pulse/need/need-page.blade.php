@@ -15,7 +15,7 @@
     @endif
 
     @if ($this->isOwner && $need->moderation !== 'approved')
-        @include('livewire.pulse.business.partials.held', ['state' => $need->moderation, 'what' => 'need'])
+        @include('livewire.pulse.business.partials.held', ['state' => $need->moderation, 'what' => 'need', 'reason' => $need->moderation_reason])
     @endif
 
     <div class="bz-cols">

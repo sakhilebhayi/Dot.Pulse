@@ -50,7 +50,7 @@ class EntityService
                 'slug' => Slugger::unique($clean['name'], fn (string $s) => PulseEntity::withTrashed()->where('slug', $s)->exists()),
                 'created_by' => $by->id,
                 'status' => 'live',
-                'moderation' => $decision['moderation'],
+                ...$this->gate->stamp($decision),
                 'verification_status' => 'unverified',
                 'claims' => $this->claimsFor($clean, []),
             ])->save();
@@ -86,7 +86,7 @@ class EntityService
 
         if ($textChanged) {
             $decision = $this->gate->decide($by, $this->publicText($e->only(['name', 'tagline', 'about'])), ['kind' => 'entity']);
-            $e->moderation = $decision['moderation'];
+            $e->forceFill($this->gate->stamp($decision));
         }
 
         $changed = array_keys($e->getDirty());

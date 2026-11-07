@@ -134,11 +134,13 @@ class ModerationDesk
     public function why(Model $subject, ?User $author): array
     {
         $source = $this->sourceOf($subject);
-        $flags = [];
 
         $class = (string) (config('pulse.entities.rules_class') ?: ContentGate::LOCAL_RULES);
 
-        if ($author !== null && class_exists($class)) {
+        // What the gate stored when it held this text is what the author was told; show that before re-running.
+        $flags = (array) ($subject->moderation_flags ?? []);
+
+        if ($flags === [] && $author !== null && class_exists($class)) {
             try {
                 $flags = (array) (app($class)->assess(ListingText::of($subject), $author, ['kind' => ListingText::kind($subject)])['flags'] ?? []);
             } catch (Throwable $e) {

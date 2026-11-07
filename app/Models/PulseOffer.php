@@ -39,6 +39,8 @@ class PulseOffer extends Model
         'accepts_quotes',
         'status',
         'moderation',
+        'moderation_reason',
+        'moderation_flags',
         'media_ids',
         'published_at',
         'expires_at',
@@ -47,6 +49,7 @@ class PulseOffer extends Model
     protected function casts(): array
     {
         return [
+            'moderation_flags' => 'array',
             'tags' => 'array',
             'service_area' => 'array',
             'media_ids' => 'array',

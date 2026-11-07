@@ -43,7 +43,7 @@
                             @if ($role->closes_at)<span class="pk-muted">{{ $role->closes_at->isPast() ? 'Closed on' : 'Closes on' }} {{ $role->closes_at->format('j M Y') }}</span>@endif
                         </div>
                         @if ($role->status === 'live' && in_array($role->moderation, ['pending', 'held'], true))
-                            <p class="pk-muted" style="margin-top: 6px">{{ $role->moderation === 'held' ? 'The automatic check flagged something in the text. A person will look at it.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.' }}</p>
+                            <p class="pk-muted" style="margin-top: 6px">Waiting for a human: {{ $role->moderation_reason ?: ($role->moderation === 'held' ? 'The automatic check flagged something in the text.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.') }}</p>
                         @endif
                         <x-slot name="end">
                             <div class="pk-cluster">

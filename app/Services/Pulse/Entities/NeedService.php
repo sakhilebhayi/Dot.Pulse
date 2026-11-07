@@ -35,7 +35,7 @@ class NeedService
         $need->forceFill([
             'user_id' => $by->id,
             'status' => 'open',
-            'moderation' => $decision['moderation'],
+            ...$this->gate->stamp($decision),
             'published_at' => now(),
             'expires_at' => $clean['expires_at'] ?? now()->addDays((int) config('pulse.entities.need_ttl_days', 30)),
         ])->save();
@@ -55,7 +55,7 @@ class NeedService
         $changed = array_keys($n->getDirty());
 
         if ($n->isDirty(['title', 'details', 'tags', 'budget_text'])) {
-            $n->moderation = $this->gate->decide($by, $this->text($n->only(['title', 'details', 'tags', 'budget_text'])), ['kind' => 'need'])['moderation'];
+            $n->forceFill($this->gate->stamp($this->gate->decide($by, $this->text($n->only(['title', 'details', 'tags', 'budget_text'])), ['kind' => 'need'])));
         }
 
         $n->save();

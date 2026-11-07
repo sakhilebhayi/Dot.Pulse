@@ -1,4 +1,4 @@
-{{-- Waiting for a human: why a listing is not on the floor. Props: state (pending|held|removed), what (page|offer|role|need). --}}
+{{-- Waiting for a human: why a listing is not on the floor. Props: state (pending|held|removed), what (page|offer|role|need), reason (optional: the stored sentence). --}}
 @php
     $why = match ($state) {
         'removed' => 'A moderator removed this '.$what.'. It cannot be put back by you. Contact support if you think it was a mistake.',
@@ -9,7 +9,7 @@
 <div class="bz-notice bz-notice--warn" role="status">
     <x-pulse.icon name="alert" :size="18" />
     <div>
-        <strong>{{ $state === 'removed' ? 'Removed' : 'Waiting for a human' }}</strong>
+        <strong>{{ $state === 'removed' ? 'Removed' : 'Waiting for a human' }}@if (! empty($reason)): {{ $reason }}@endif</strong>
         <p>Only your team can see this {{ $what }} for now. {{ $why }}</p>
     </div>
 </div>

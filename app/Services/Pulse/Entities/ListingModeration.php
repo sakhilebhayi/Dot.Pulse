@@ -32,7 +32,16 @@ class ListingModeration
             throw ValidationException::withMessages(['subject' => 'Only pages, offers, roles and needs are decided here.']);
         }
 
-        $subject->forceFill(['moderation' => $decision])->save();
+        $subject->forceFill([
+            'moderation' => $decision,
+            'moderation_reason' => match ($decision) {
+                'approved' => null,
+                'held' => filled($rationale) ? $rationale : 'A moderator wants to look at this before it shows.',
+                'removed' => filled($rationale) ? $rationale : 'A moderator removed this.',
+            },
+            // The rule flags that first held it stay for the moderator until it is approved.
+            'moderation_flags' => $decision === 'approved' ? null : $subject->moderation_flags,
+        ])->save();
 
         PulseModerationLog::create([
             'moderator_id' => $moderator->id,

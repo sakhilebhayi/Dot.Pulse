@@ -16,7 +16,7 @@
 
         @if ($manager && ! $offer->isLive())
             @if ($offer->moderation === 'removed' || ($offer->status === 'live' && in_array($offer->moderation, ['pending', 'held'], true)))
-                @include('livewire.pulse.business.partials.held', ['state' => $offer->moderation, 'what' => 'offer'])
+                @include('livewire.pulse.business.partials.held', ['state' => $offer->moderation, 'what' => 'offer', 'reason' => $offer->moderation_reason])
             @else
                 <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This offer is {{ $offer->status === 'draft' ? 'a draft' : $offer->status }}. Only your team can see it. <a href="{{ route('entities.manage.offers', ['entity' => $entity->slug]) }}">Edit it</a>.</p></div>
             @endif

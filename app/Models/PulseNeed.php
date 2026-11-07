@@ -34,6 +34,8 @@ class PulseNeed extends Model
         'visibility',
         'status',
         'moderation',
+        'moderation_reason',
+        'moderation_flags',
         'published_at',
         'expires_at',
     ];
@@ -41,6 +43,7 @@ class PulseNeed extends Model
     protected function casts(): array
     {
         return [
+            'moderation_flags' => 'array',
             'tags' => 'array',
             'needed_by' => 'date',
             'published_at' => 'datetime',

@@ -63,7 +63,7 @@ class OfferService
         $changed = array_keys($o->getDirty());
 
         if ($o->status === 'live' && $o->isDirty(['title', 'summary', 'description', 'category', 'tags'])) {
-            $o->moderation = $this->gate->decide($by, $this->text($o), ['kind' => 'offer'])['moderation'];
+            $o->forceFill($this->gate->stamp($this->gate->decide($by, $this->text($o), ['kind' => 'offer'])));
         }
 
         $o->save();
@@ -99,7 +99,7 @@ class OfferService
 
         $o->forceFill([
             'status' => 'live',
-            'moderation' => $decision['moderation'],
+            ...$this->gate->stamp($decision),
             'published_at' => $o->published_at ?? now(),
         ])->save();
 

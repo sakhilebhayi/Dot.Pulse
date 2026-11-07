@@ -48,7 +48,7 @@
             @endcan
         </div>
         @if ($this->entity->moderation !== 'approved')
-            @include('livewire.pulse.business.partials.held', ['state' => $this->entity->moderation, 'what' => 'page'])
+            @include('livewire.pulse.business.partials.held', ['state' => $this->entity->moderation, 'what' => 'page', 'reason' => $this->entity->moderation_reason])
         @endif
     @endif
 

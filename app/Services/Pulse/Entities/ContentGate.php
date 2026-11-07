@@ -29,7 +29,7 @@ class ContentGate
 
     /**
      * @param  array<string, mixed>  $context
-     * @return array{moderation: string, source: string, flags: list<string>}
+     * @return array{moderation: string, source: string, flags: list<string>, reason: ?string, details: list<array{code: string, severity: string, text: string}>}
      *
      * @throws ValidationException when the rules block the text
      */
@@ -38,7 +38,7 @@ class ContentGate
         $text = trim($text);
 
         if ($text === '') {
-            return ['moderation' => 'approved', 'source' => 'empty', 'flags' => []];
+            return ['moderation' => 'approved', 'source' => 'empty', 'flags' => [], 'reason' => null, 'details' => []];
         }
 
         $verdict = $this->localRules($author, $text, $context);
@@ -50,20 +50,46 @@ class ContentGate
                 (array) ($verdict['flags'] ?? []),
             ));
 
+            $details = array_values(array_map(
+                fn ($f) => is_array($f)
+                    ? ['code' => (string) ($f['code'] ?? 'flag'), 'severity' => (string) ($f['severity'] ?? 'hold'), 'text' => (string) ($f['text'] ?? '')]
+                    : ['code' => (string) $f, 'severity' => 'hold', 'text' => ucfirst(str_replace('_', ' ', (string) $f))],
+                (array) ($verdict['flags'] ?? []),
+            ));
+            $reason = isset($verdict['reason']) && filled($verdict['reason']) ? (string) $verdict['reason'] : ($details[0]['text'] ?? null);
+
             return match ($verdict['verdict'] ?? null) {
-                'allow' => ['moderation' => 'approved', 'source' => 'local_rules', 'flags' => $flags],
+                'allow' => ['moderation' => 'approved', 'source' => 'local_rules', 'flags' => $flags, 'reason' => null, 'details' => []],
                 'block' => throw ValidationException::withMessages([
                     'content' => 'This cannot be published'.($flags ? ' ('.implode(', ', $flags).')' : '').'. Edit it and try again.',
                 ]),
-                default => ['moderation' => 'held', 'source' => 'local_rules', 'flags' => $flags],
+                default => ['moderation' => 'held', 'source' => 'local_rules', 'flags' => $flags, 'reason' => $reason, 'details' => $details],
             };
         }
 
         if (InfoDotLink::has($author) && $this->cleanHistory($author)) {
-            return ['moderation' => 'approved', 'source' => 'infodot_member', 'flags' => []];
+            return ['moderation' => 'approved', 'source' => 'infodot_member', 'flags' => [], 'reason' => null, 'details' => []];
         }
 
-        return ['moderation' => 'pending', 'source' => 'no_rules', 'flags' => []];
+        return ['moderation' => 'pending', 'source' => 'no_rules', 'flags' => [], 'reason' => 'No automatic check ran, so a person looks first. Linking an InfoDot company you belong to helps next time.', 'details' => []];
+    }
+
+    /**
+     * The columns that record a decision, so a service stores the state and the reason together. Approved clears
+     * any earlier reason: the author is never shown a stale "waiting for a human".
+     *
+     * @param  array<string, mixed>  $decision  from decide()
+     * @return array{moderation: string, moderation_reason: ?string, moderation_flags: ?array}
+     */
+    public function stamp(array $decision): array
+    {
+        $approved = ($decision['moderation'] ?? null) === 'approved';
+
+        return [
+            'moderation' => $decision['moderation'],
+            'moderation_reason' => $approved ? null : ($decision['reason'] ?? null),
+            'moderation_flags' => $approved || empty($decision['details']) ? null : $decision['details'],
+        ];
     }
 
     /** @return array<string, mixed>|null */

@@ -60,7 +60,7 @@ class RoleService
         $changed = array_keys($r->getDirty());
 
         if ($r->status === 'live' && $r->isDirty(['title', 'summary', 'description', 'pay_text'])) {
-            $r->moderation = $this->gate->decide($by, $this->text($r), ['kind' => 'role'])['moderation'];
+            $r->forceFill($this->gate->stamp($this->gate->decide($by, $this->text($r), ['kind' => 'role'])));
         }
 
         $r->save();
@@ -95,7 +95,7 @@ class RoleService
 
         $r->forceFill([
             'status' => 'live',
-            'moderation' => $decision['moderation'],
+            ...$this->gate->stamp($decision),
             'published_at' => $r->published_at ?? now(),
         ])->save();
 

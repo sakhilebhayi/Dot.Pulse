@@ -48,9 +48,13 @@ class PulseEntity extends Model
         'founded_year',
         'registration_number',
         'status',
+        'moderation',
+        'moderation_reason',
+        'moderation_flags',
         'contact_policy',
         'hiring_signal',
         'hiring_skills',
+        'hiring_signal_until',
         'created_by',
     ];
 
@@ -59,6 +63,8 @@ class PulseEntity extends Model
         return [
             'is_seller' => 'boolean',
             'is_employer' => 'boolean',
+            'moderation_flags' => 'array',
+            'hiring_signal_until' => 'datetime',
             'service_area' => 'array',
             'culture' => 'array',
             'hiring_skills' => 'array',

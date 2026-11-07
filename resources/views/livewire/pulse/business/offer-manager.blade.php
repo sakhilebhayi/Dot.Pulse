@@ -33,8 +33,11 @@
                             @if ($offer->moderation === 'removed')<x-pulse.pill tone="bad">Removed by a moderator</x-pulse.pill>@endif
                             <x-pulse.price :amount="EntityView::rand($offer->amount_cents)" :currency="$offer->currency" :unit="$offer->unit ? 'per '.$offer->unit : null" />
                         </div>
+                        @if ($offer->moderation === 'removed' && $offer->moderation_reason)
+                            <p class="pk-muted" style="margin-top: 6px">Removed: {{ $offer->moderation_reason }}</p>
+                        @endif
                         @if ($offer->status !== 'draft' && in_array($offer->moderation, ['pending', 'held'], true))
-                            <p class="pk-muted" style="margin-top: 6px">{{ $offer->moderation === 'held' ? 'The automatic check flagged something in the text. A person will look at it.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.' }}</p>
+                            <p class="pk-muted" style="margin-top: 6px">Waiting for a human: {{ $offer->moderation_reason ?: ($offer->moderation === 'held' ? 'The automatic check flagged something in the text.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.') }}</p>
                         @endif
                         <x-slot name="end">
                             <div class="pk-cluster">
