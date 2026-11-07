@@ -1,5 +1,5 @@
 <div class="bz">
-    @if ($atQuota)
+    @if ($this->atQuota)
         <div class="bz-notice bz-notice--warn" role="status">
             <x-pulse.icon name="alert" :size="18" />
             <div>
@@ -180,8 +180,8 @@
             @if ($editing)
                 <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="save,logo,cover">Save changes</x-pulse.button>
             @else
-                <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="save,logo,cover" :disabled="$atQuota">Publish page</x-pulse.button>
-                <x-pulse.button variant="quiet" wire:click="saveDraft" wire:loading.attr="disabled" wire:target="saveDraft,logo,cover" :disabled="$atQuota">Save as draft</x-pulse.button>
+                <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="save,logo,cover" :disabled="$this->atQuota">Publish page</x-pulse.button>
+                <x-pulse.button variant="quiet" wire:click="saveDraft" wire:loading.attr="disabled" wire:target="saveDraft,logo,cover" :disabled="$this->atQuota">Save as draft</x-pulse.button>
                 <p class="pk-muted">A draft stays off the floor until you put it on.</p>
             @endif
         </div>
