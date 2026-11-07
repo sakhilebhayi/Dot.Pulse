@@ -6,6 +6,7 @@ use App\Models\PulseEntity;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
 use App\Models\PulseRole;
+use App\Services\Pulse\Lines\Access;
 use Illuminate\Support\Facades\Gate;
 
 class PolicyTest extends EntitiesTestCase
@@ -24,10 +25,10 @@ class PolicyTest extends EntitiesTestCase
         ];
 
         $matrix = [
-            //            update manageListings manageMembers respond archive moderate
+            //            update manageListings manageMembers respond archive moderate (respond = Access::RESPONDER_ROLES)
             'owner' => [true, true, true, true, true, false],
             'admin' => [true, true, true, true, false, false],
-            'editor' => [false, true, false, true, false, false],
+            'editor' => [false, true, false, false, false, false], // editors edit listings, they do not read lines
             'responder' => [false, false, false, true, false, false],
             'stranger' => [false, false, false, false, false, false],
             'moderator' => [false, false, false, false, false, true],
@@ -166,5 +167,21 @@ class PolicyTest extends EntitiesTestCase
         $mine = PulseNeed::factory()->create(['user_id' => $owner->id, 'visibility' => 'matched']);
         $this->assertNotContains($mine->id, PulseNeed::forViewer($stranger)->pluck('id')->all());
         $this->assertContains($mine->id, PulseNeed::forViewer($owner)->pluck('id')->all());
+    }
+
+    public function test_the_respond_policy_and_the_lines_access_agree_for_every_role(): void
+    {
+        $entity = $this->page();
+
+        foreach (['owner', 'admin', 'editor', 'responder'] as $role) {
+            $user = $role === 'owner' ? $entity->members()->where('role', 'owner')->first()->user : $this->member($entity, $role);
+
+            $this->assertSame(
+                Access::canRespondFor($user, $entity),
+                Gate::forUser($user)->allows('respond', $entity),
+                $role,
+            );
+            $this->assertSame($role !== 'editor', Gate::forUser($user)->allows('respond', $entity), $role);
+        }
     }
 }
