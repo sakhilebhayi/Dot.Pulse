@@ -64,7 +64,7 @@ class PulseConversationPolicy
     /** Only the invited professional can show who they are. */
     public function reveal(User $user, PulseConversation $c): bool
     {
-        return $c->identity_hidden && $c->recipient_id === $user->id && $c->status === PulseConversation::OPEN;
+        return $c->recipient_id === $user->id && $c->status === PulseConversation::OPEN;
     }
 
     public function report(User $user, PulseConversation $c): bool

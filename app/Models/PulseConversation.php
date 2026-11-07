@@ -65,6 +65,18 @@ class PulseConversation extends Model
         ];
     }
 
+    /** An anonymous line also drops the pointer to the signal it came from: the signal row names its owner. */
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+
+        if ($this->identity_hidden) {
+            unset($array['context_id']);
+        }
+
+        return $array;
+    }
+
     public function initiator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'initiator_id');

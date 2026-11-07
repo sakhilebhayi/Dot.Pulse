@@ -82,7 +82,7 @@ class LinePresenter
 
         $messages = PulseMessage::query()
             ->where('pulse_conversation_id', $c->id)
-            ->with('author:id,name')
+            ->when(! $c->identity_hidden, fn ($q) => $q->with('author:id,name'))
             ->when($afterId, fn ($q) => $q->where('id', '>', $afterId))
             ->orderBy('id')
             ->limit($limit)
@@ -112,7 +112,7 @@ class LinePresenter
             'mine' => $mine,
             'side' => $messageSide,
             'from' => $label,
-            'teammate' => ! $mine && $viewerSide !== null && $viewerSide === $messageSide && $m->kind !== 'system'
+            'teammate' => ! $mine && ! $c->identity_hidden && $viewerSide !== null && $viewerSide === $messageSide && $m->kind !== 'system'
                 ? $m->author?->name
                 : null,
             'body' => $m->erased_at ? 'This message was deleted.' : $m->body,

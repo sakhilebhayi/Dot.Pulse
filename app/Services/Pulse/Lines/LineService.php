@@ -120,7 +120,7 @@ class LineService
             return $c;
         });
 
-        $conversation->loadMissing(['initiator', 'recipient', 'entity', 'initiatorEntity']);
+        $this->loadParties($conversation);
         $this->notifyRequest($conversation, $from);
 
         return $conversation;
@@ -374,7 +374,8 @@ class LineService
             return;
         }
 
-        $c->refresh()->loadMissing(['recipient']);
+        $c->refresh();
+        $c->loadMissing(['recipient']);
         $this->writeMessage($c, $by, 'recipient', 'They revealed who they are.', 'system', ['event' => 'revealed']);
         AuditLog::record($by, 'line.reveal', $c);
 
@@ -402,7 +403,7 @@ class LineService
         $initiatorSide = fn ($q) => $q->where(fn ($w) => $w->where('initiator_id', $u->id)->orWhereIn('initiator_entity_id', $entityIds));
 
         $query = PulseConversation::query()->visibleTo($u)
-            ->with(['initiator:id,name,profile_photo_path', 'recipient:id,name,profile_photo_path', 'entity:id,slug,name,logo_media_id', 'initiatorEntity:id,slug,name,logo_media_id']);
+            ->with(['initiator:id,name,profile_photo_path', 'entity:id,slug,name,logo_media_id', 'initiatorEntity:id,slug,name,logo_media_id']);
 
         match ($tab) {
             'requests' => $query->where('status', PulseConversation::REQUESTED)->whereNull('ignored_at')->where($recipientSide),
@@ -429,6 +430,9 @@ class LineService
         $page = $query->orderByRaw('COALESCE(last_message_at, created_at) DESC')->orderByDesc('id')
             ->paginate((int) ($filters['per_page'] ?? 20));
 
+        // The person contacted is loaded only where the line is not anonymous: for an anonymous invite the row is never read.
+        $page->getCollection()->filter(fn (PulseConversation $c) => ! $c->identity_hidden)->load('recipient:id,name,profile_photo_path');
+
         $snippets = $this->snippets($page->getCollection()->pluck('id'));
 
         $page->getCollection()->transform(function (PulseConversation $c) use ($u, $snippets) {
@@ -442,7 +446,7 @@ class LineService
     public function present(User $viewer, PulseConversation $c): array
     {
         Gate::forUser($viewer)->authorize('view', $c);
-        $c->loadMissing(['initiator', 'recipient', 'entity', 'initiatorEntity']);
+        $this->loadParties($c);
 
         return $this->presenter->present($viewer, $c);
     }
@@ -453,7 +457,7 @@ class LineService
     public function thread(User $viewer, PulseConversation $c, ?int $afterId = null): array
     {
         Gate::forUser($viewer)->authorize('view', $c);
-        $c->loadMissing(['initiator', 'recipient', 'entity', 'initiatorEntity']);
+        $this->loadParties($c);
 
         return $this->presenter->thread($viewer, $c, $afterId);
     }
@@ -528,13 +532,23 @@ class LineService
     /** The name of one side as the other side may know it: a page, a person, or "An anonymous professional". */
     public function partyName(PulseConversation $c, string $side): string
     {
-        $c->loadMissing(['initiator', 'recipient', 'entity', 'initiatorEntity']);
+        $this->loadParties($c);
         $party = $this->presenter->counterpart($c, Access::otherSide($side));
 
         return $party['kind'] === 'anonymous' ? 'An anonymous professional' : $party['name'];
     }
 
     // ---------------------------------------------------------------- private
+
+    /** Load what a screen needs about the parties. The invited professional of an anonymous line is never loaded. */
+    private function loadParties(PulseConversation $c): void
+    {
+        $c->loadMissing(['initiator', 'entity', 'initiatorEntity']);
+
+        if (! $c->identity_hidden) {
+            $c->loadMissing('recipient');
+        }
+    }
 
     /**
      * @return array{user: ?User, entity: ?PulseEntity, as_entity: ?PulseEntity, signal: ?PulseSignal, door: ?PulseDoor, context: ?Model, hidden: bool, gate: Model}
