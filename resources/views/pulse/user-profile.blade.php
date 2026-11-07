@@ -1,13 +1,5 @@
-<x-app-layout>
-
-<div class="pulse-page">
-
-    <a href="{{ route('dashboard') }}" style="font-size:0.78rem;color:#52525b;text-decoration:none;">&larr; Back to feed</a>
-
-    <div style="margin-top:1rem;">
+<x-app-layout title="Profile" width="floor" :dial="false">
+    <div class="me-page me-page--profile">
         <livewire:pulse.user-profile :profile-user="$profileUser" />
     </div>
-
-</div>
-
 </x-app-layout>

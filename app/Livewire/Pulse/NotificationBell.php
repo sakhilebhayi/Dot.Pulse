@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pulse;
 
+use App\Livewire\Pulse\Me\Concerns\PresentsNotifications;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\View\View;
@@ -9,8 +10,15 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+/**
+ * The shell now shows a badge link to Me, Notifications that the poller keeps current (layouts/app.blade.php); this
+ * component renders the same kit link, with the unread count drawn on the server, for any page that still mounts it.
+ * Wording comes from the shared presenter: Pulse notifications through NotificationPresenter, older ones as before.
+ */
 class NotificationBell extends Component
 {
+    use PresentsNotifications;
+
     #[Computed]
     public function unreadCount(): int
     {
@@ -24,9 +32,7 @@ class NotificationBell extends Component
     }
 
     /**
-     * resources/js/pulse-realtime.js dispatches this on a live
-     * App\Notifications\NewFollower broadcast -- mirrors HomeFeed's own
-     * #[On('post-created')] pattern.
+     * resources/js/pulse-realtime.js dispatches this on a live broadcast.
      */
     #[On('notification-received')]
     public function refresh(): void
@@ -35,49 +41,13 @@ class NotificationBell extends Component
     }
 
     /**
-     * One row of the bell: who/what (bold), the sentence, and where it
-     * leads. Notification payloads are per-type, so the wording lives here
-     * rather than assuming every notification is a new follower.
+     * One row: who or what (bold), the sentence, and where it leads.
      *
      * @return array{lead: string, text: string, url: ?string}
      */
     public function present(DatabaseNotification $notification): array
     {
-        $data = $notification->data;
-
-        return match ($data['type'] ?? 'new_follower') {
-            'community_join_requested' => [
-                'lead' => $data['requester_name'],
-                'text' => ' asked to join '.$data['community_name'],
-                'url' => route('communities.show', $data['community_slug']),
-            ],
-            'community_join_decision' => ($data['approved'] ?? false)
-                ? [
-                    'lead' => 'Your request to join '.$data['community_name'].' was approved',
-                    'text' => '',
-                    'url' => route('communities.show', $data['community_slug']),
-                ]
-                : [
-                    'lead' => 'Your request to join '.$data['community_name'].' was not accepted',
-                    'text' => '',
-                    'url' => null,
-                ],
-            'report_outcome' => [
-                'lead' => 'Your report was reviewed',
-                'text' => ($data['actioned'] ?? false) ? ': the content was removed.' : ': no action was needed.',
-                'url' => null,
-            ],
-            'content_removed' => [
-                'lead' => 'A '.($data['content'] ?? 'post').' of yours was removed by a moderator',
-                'text' => '',
-                'url' => null,
-            ],
-            default => [
-                'lead' => $data['follower_name'] ?? 'Someone',
-                'text' => ' started following you',
-                'url' => isset($data['follower_id']) ? route('users.show', $data['follower_id']) : null,
-            ],
-        };
+        return $this->presentNotification($notification);
     }
 
     public function markAllRead(): void
