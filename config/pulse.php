@@ -185,6 +185,11 @@ return [
     // PHP backend's own publish address), so connect-src can allow exactly that origin.
     'security' => [
         'csp_report_only' => (bool) env('SECURITY_CSP_REPORT_ONLY', false),
+        // Searches and typed-ahead suggestions per person per minute: scraping and enumeration cost something. 0 turns one off.
+        'rate_limits' => [
+            'search' => (int) env('PULSE_LIMIT_SEARCH', 90),
+            'suggest' => (int) env('PULSE_LIMIT_SUGGEST', 150),
+        ],
         'reverb_public' => [
             'host' => env('REVERB_HOST', 'localhost'),
             'port' => env('REVERB_PORT', 8080),

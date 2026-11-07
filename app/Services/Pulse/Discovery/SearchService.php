@@ -10,7 +10,9 @@ use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Support\Arr;
 use App\Services\Pulse\Discovery\Support\SubjectTypes;
 use Illuminate\Support\Collection;
+use App\Support\PulseThrottle;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 /**
@@ -45,6 +47,8 @@ class SearchService
      */
     public function search(User $u, string $q, array $filters = [], ?string $cursor = null): array
     {
+        $this->throttle($u, 'search');
+
         $q = trim(mb_substr($q, 0, 120));
         $terms = $this->terms($q);
         $hasFilter = array_filter(Arr::only($filters), fn ($v) => $v !== null && $v !== '' && $v !== []) !== [];
@@ -103,6 +107,10 @@ class SearchService
     {
         $q = trim($q);
 
+        if (mb_strlen($q) >= 2) {
+            $this->throttle($u, 'suggest');
+        }
+
         if (mb_strlen($q) < 2) {
             return [];
         }
@@ -143,6 +151,24 @@ class SearchService
 
             return isset($seen[$key]) ? false : ($seen[$key] = true);
         })), 0, $limit);
+    }
+
+    /** Per person per minute, from config('pulse.security.rate_limits'); a refusal is the same 429 the other limits give. */
+    private function throttle(User $u, string $action): void
+    {
+        $max = (int) config("pulse.security.rate_limits.{$action}", 0);
+
+        if ($max <= 0) {
+            return;
+        }
+
+        $key = "pulse:{$action}:".$u->id;
+
+        if (RateLimiter::tooManyAttempts($key, $max)) {
+            throw PulseThrottle::exception(RateLimiter::availableIn($key));
+        }
+
+        RateLimiter::hit($key, PulseThrottle::WINDOW_SECONDS);
     }
 
     // -- candidates ---------------------------------------------------------------------------------------------

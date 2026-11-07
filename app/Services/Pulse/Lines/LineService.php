@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Lines;
 use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Models\PulseEntity;
+use App\Models\PulseEntityBlock;
 use App\Models\PulseEntityMember;
 use App\Models\PulseMessage;
 use App\Models\PulseProfile;
@@ -69,6 +70,13 @@ class LineService
 
         if ($kind === 'application' && ! ($context instanceof PulseRole)) {
             throw LineException::because('invalid', 'Applications start from a role. Open the role and apply from there.');
+        }
+
+        // A page the person blocked (or that blocked them) cannot invite them again through another member, and the
+        // refusal says nothing about why.
+        if ($t['as_entity'] !== null && $t['user'] !== null
+            && PulseEntityBlock::query()->where('entity_id', $t['as_entity']->id)->where('user_id', $t['user']->id)->exists()) {
+            throw LineException::because('not_allowed', 'They cannot be contacted right now.');
         }
 
         $decision = $this->gate->can($from, $t['gate'], $context);
