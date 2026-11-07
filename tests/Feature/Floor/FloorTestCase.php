@@ -44,6 +44,7 @@ abstract class FloorTestCase extends TestCase
             'discoverability' => $profile['discoverability'] ?? 'off',
             'experience_years' => $profile['experience_years'] ?? null,
             'age_confirmed_at' => now(),
+            'onboarded_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

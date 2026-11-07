@@ -20,9 +20,8 @@ trait BuildsPulseFixtures
         $factory = User::factory();
         $user = ($withTeam ? $factory->withPersonalTeam() : $factory)->create();
 
-        if ($role !== null) {
-            PulseProfile::create(['user_id' => $user->id, 'role' => $role]);
-        }
+        // Everyone here has been through the welcome flow, so the Floor pages open for them.
+        PulseProfile::create(['user_id' => $user->id, 'role' => $role ?? 'customer', 'onboarded_at' => now()->subDay()]);
 
         return $user;
     }

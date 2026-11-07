@@ -30,6 +30,7 @@ trait LinesFixtures
         PulseProfile::query()->create(['user_id' => $u->id, 'role' => 'customer']);
         DB::table('pulse_profiles')->where('user_id', $u->id)->update(array_merge([
             'age_confirmed_at' => now()->subDays(30),
+            'onboarded_at' => now()->subDays(30),
             'contact_policy' => 'context',
             'discoverability' => 'off',
         ], $profile));

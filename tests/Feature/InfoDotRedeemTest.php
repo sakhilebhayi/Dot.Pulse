@@ -107,6 +107,8 @@ class InfoDotRedeemTest extends TestCase
         $this->post(route('ecosystem.auth'), ['token' => 'one-time-token'], $this->fromInfodot())->assertRedirect();
         $user = User::where('email', 'amara@example.test')->firstOrFail();
 
+        $this->get(route('community.feed'))->assertRedirect(route('onboarding'), 'a first visit goes through the welcome flow once');
+        $this->onboard($user);
         $this->get(route('community.feed'))->assertOk();
 
         Livewire::actingAs($user)->test(CreatePost::class)
@@ -489,6 +491,7 @@ class InfoDotRedeemTest extends TestCase
         $this->assertFalse((bool) $profile->is_verified);
         $this->assertFalse($user->isPlatformModerator());
         $this->assertFalse($user->canAccessModeration());
+        $this->onboard($user);
         $this->get(route('moderation'))->assertForbidden();
     }
 

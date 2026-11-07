@@ -71,6 +71,19 @@ class PulseProfile extends Model
         return $this->age_confirmed_at !== null;
     }
 
+    /**
+     * Finished the welcome flow, or already had a profile in use before the flow existed (a headline, an about text, a
+     * place or an open-to choice). Such people are not sent through it.
+     */
+    public function isOnboarded(): bool
+    {
+        return $this->onboarded_at !== null
+            || filled($this->headline)
+            || filled($this->bio)
+            || $this->place_id !== null
+            || ! empty($this->open_to);
+    }
+
     public function isDiscoverable(): bool
     {
         return in_array($this->discoverability, ['anonymous', 'open'], true) && $this->isAdultConfirmed();

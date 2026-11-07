@@ -11,6 +11,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
+// Sends a signed-in person through the short welcome flow once, on any page that carries it. Left off on purpose:
+// the welcome flow itself, notifications, privacy (and its export), errors and sign-in.
+Route::aliasMiddleware('pulse.onboarded', \App\Http\Middleware\EnsureOnboarded::class);
+
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
     ->middleware('throttle:10,1')
@@ -27,6 +31,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'pulse.onboarded',
 ])->group(function () {
     // The Floor replaced the dashboard. The old community feed lives on at /community (see the floor block).
     Route::get('/dashboard', fn () => redirect()->route('floor'))->name('dashboard');
@@ -78,7 +83,7 @@ Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscr
 // --- end discovery digest (D2) ---
 // --- operator ---
 // Platform moderators only. The component checks again on every request it serves.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/operator', function () {
         abort_unless(auth()->user()->isPlatformModerator(), 403);
 
@@ -88,7 +93,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 // --- end operator ---
 // --- floor ---
 // The Floor and everything that hangs off it: the four mode pages, a beat in full, search, saved, doors.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     foreach (['floor' => 'all', 'trade' => 'trade', 'work' => 'work', 'local' => 'local', 'learn' => 'learn'] as $name => $mode) {
         Route::get('/'.$name, fn () => view('pages.pulse.floor.floor', ['mode' => $mode]))->name($name);
     }
@@ -117,10 +122,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 // --- end floor ---
 // --- me ---
 // People: welcome flow, the Me hub (profile, discoverability, settings, notifications, privacy), data download.
-// `pulse.onboarded` sends a signed-in person who has not finished the welcome flow there once; other areas adopt it
-// with ->middleware('pulse.onboarded'). Notifications and privacy are deliberately outside it: reading what Pulse
+// `pulse.onboarded` (registered at the top of this file) is on the Floor, search, saved, doors, lines, business and
+// need pages and the Me pages below. Notifications and privacy are deliberately outside it: reading what Pulse
 // holds about you, and erasing it, are never gated behind a sign-up flow.
-Route::aliasMiddleware('pulse.onboarded', \App\Http\Middleware\EnsureOnboarded::class);
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::view('/welcome-in', 'pulse.me.onboarding')->name('onboarding');
@@ -149,9 +153,9 @@ Route::get('/b/{entity:slug}', function (App\Models\PulseEntity $entity) {
         'entity' => $entity,
         'data' => App\Livewire\Pulse\Business\Support\EntityView::data($entity, auth()->user()),
     ]);
-})->name('entities.show');
+})->middleware('pulse.onboarded')->name('entities.show');
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');
 
     Route::get('/b/{entity:slug}/o/{offer:slug}', function (App\Models\PulseEntity $entity, App\Models\PulseOffer $offer) {
@@ -204,7 +208,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 // --- end business ---
 // --- lines-ui ---
 // Lines: the inbox, one line's thread, and the side by side comparison of a quote request.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
 
     Route::get('/lines/quotes/{group}', function (string $group) {

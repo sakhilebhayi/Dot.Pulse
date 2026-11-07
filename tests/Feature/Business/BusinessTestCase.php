@@ -35,7 +35,7 @@ abstract class BusinessTestCase extends TestCase
     {
         $user = User::factory()->create($attrs);
         PulseProfile::query()->firstOrCreate(['user_id' => $user->id], ['role' => 'customer']);
-        DB::table('pulse_profiles')->where('user_id', $user->id)->update(['age_confirmed_at' => now()->subDays(30)]);
+        DB::table('pulse_profiles')->where('user_id', $user->id)->update(['age_confirmed_at' => now()->subDays(30), 'onboarded_at' => now()->subDays(30)]);
 
         return $user->fresh();
     }

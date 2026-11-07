@@ -13,7 +13,10 @@ use Symfony\Component\HttpFoundation\Response;
  * remembered and they land on it afterwards. Only plain page loads are redirected: form posts, JSON and Livewire
  * calls pass, so nothing in flight is lost.
  *
- * Adopt it on a route or group: ->middleware('pulse.onboarded').
+ * A person counts as onboarded when onboarded_at is set, or when they already have a profile they filled in before the
+ * flow existed (a headline, an about text, a place or an open-to choice). Those people are never sent through it.
+ *
+ * It is on every signed-in page except the flow itself, notifications, privacy and its export.
  */
 class EnsureOnboarded
 {
@@ -31,7 +34,7 @@ class EnsureOnboarded
             return $next($request);
         }
 
-        $done = PulseProfile::query()->where('user_id', $user->id)->whereNotNull('onboarded_at')->exists();
+        $done = PulseProfile::query()->where('user_id', $user->id)->first()?->isOnboarded() ?? false;
 
         if ($done) {
             $request->session()->put($key, true);
