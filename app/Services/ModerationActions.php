@@ -52,8 +52,8 @@ class ModerationActions
             $this->log($moderator, $post, 'reject', $reason);
         });
 
+        // No notice from here. The caller tells the author once, with the reason, through ModerationDesk::postDecided.
         $this->syncSignal($post);
-        $this->safely(fn () => $post->author->notify(new ContentRemoved('post')));
 
         return true;
     }

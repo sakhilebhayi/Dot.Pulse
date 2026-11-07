@@ -7,10 +7,8 @@ use App\Livewire\Pulse\ModerationQueue;
 use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\PulsePostEnrichment;
-use App\Notifications\ContentRemoved;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\Concerns\BuildsPulseFixtures;
 use Tests\TestCase;
@@ -140,17 +138,18 @@ class ModerationScopeTest extends TestCase
             ->assertDontSee('AI recommended reject');
     }
 
-    public function test_removing_a_held_post_tells_its_author_without_naming_the_moderator(): void
+    public function test_rejecting_a_held_post_tells_its_author_once_with_the_reason_and_without_naming_the_moderator(): void
     {
-        Notification::fake();
         $post = $this->held(null, 'A post that will be rejected by staff.');
         $moderator = $this->platformModerator();
 
         Livewire::actingAs($moderator)->test(ModerationQueue::class)
             ->call('promptReject', $post->id)->set('rejectReason', 'Spam.')->call('confirmReject', $post->id);
 
-        Notification::assertSentTo($post->author, ContentRemoved::class, function ($n) use ($moderator) {
-            return ! str_contains(json_encode($n->toDatabase($n)), (string) $moderator->name);
-        });
+        $notices = $post->author->notifications()->get();
+        $this->assertCount(1, $notices, 'one notice, not the old one as well');
+        $this->assertSame('post_decision', $notices[0]->data['type']);
+        $this->assertStringContainsString('Spam.', $notices[0]->data['body']);
+        $this->assertStringNotContainsString((string) $moderator->name, json_encode($notices[0]->data));
     }
 }
