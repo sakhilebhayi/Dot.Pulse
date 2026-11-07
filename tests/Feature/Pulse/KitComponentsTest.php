@@ -185,6 +185,16 @@ class KitComponentsTest extends TestCase
         }
     }
 
+    public function test_the_floor_sample_page_renders_the_dial_the_beats_the_meter_and_the_end_of_the_round(): void
+    {
+        $html = $this->get('/dev/floor')->assertOk()->getContent();
+
+        $this->assertStringContainsString('class="pk-dial"', $html);
+        $this->assertStringContainsString('pk-meter', $html);
+        $this->assertStringContainsString('id="sh-context"', $html);
+        $this->assertStringContainsString('You are caught up.', $html);
+    }
+
     public function test_visible_copy_has_no_em_or_en_dashes_or_exclamation_marks(): void
     {
         foreach (['/', '/login', '/dev/kit'] as $path) {
