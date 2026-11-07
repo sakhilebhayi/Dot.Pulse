@@ -10,6 +10,7 @@ use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\EntityService;
 use App\Services\Pulse\Entities\RoleService;
+use App\Services\Pulse\Entities\TalentCohort;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -82,6 +83,19 @@ class RoleManager extends Component
     public function roles()
     {
         return $this->entity->roles()->latest('id')->get();
+    }
+
+    /** The band a headcount may be shown as ("5 to 9"), or null when fewer than 5 professionals match. */
+    #[Computed]
+    public function cohort(): ?string
+    {
+        if (! $this->entity->hasHiringSignal()) {
+            return null;
+        }
+
+        $band = app(TalentCohort::class)->countFor($this->entity);
+
+        return $band === null ? null : TalentCohort::label($band);
     }
 
     #[Computed]

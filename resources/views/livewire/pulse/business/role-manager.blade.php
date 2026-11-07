@@ -13,6 +13,9 @@
         <section class="pk-card bz-signal" aria-labelledby="hs-title">
             <h2 id="hs-title">Hiring signal</h2>
             <p>Meet people before you advertise. With a signal on, professionals whose skills fit can find your page, even with no role open. They stay anonymous to you until they choose to say who they are. You only see how many match once at least 5 do, so nobody can be picked out of a small group.</p>
+            @if ($this->cohort)
+                <p><strong>{{ $this->cohort }} professionals match.</strong> <span class="pk-muted">A range, never an exact count, and nobody is named.</span></p>
+            @endif
             <form class="pk-stack" wire:submit="saveSignal" novalidate>
                 <x-pulse.select name="hiring_signal" id="hs-signal" label="Signal" wire:model="hiring_signal" :options="['none' => 'Off', 'building' => 'Building a team, no vacancy yet', 'active' => 'Hiring now']" :disabled="! $this->canSignal" />
                 <x-pulse.field name="hiring_skills_text" id="hs-skills" label="Skills you want to meet" wire:model="hiring_skills_text" optional hint="Separated by commas. Up to 15." :disabled="! $this->canSignal" />
