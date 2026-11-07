@@ -207,4 +207,19 @@ class AnonymousIdentityLeakTest extends TestCase
 
         $this->actingAs($this->employer)->get('/s/'.$this->signal->id)->assertNotFound();
     }
+
+    public function test_only_a_live_approved_employer_page_opens_the_talent_cards(): void
+    {
+        $employer = $this->w('employer');
+        $search = fn () => collect(app(\App\Services\Pulse\Discovery\SearchService::class)->search($this->employer, 'bookkeeping')['results'])->filter(fn ($r) => ($r['beat']->kind ?? null) === 'talent')->count();
+
+        $this->assertSame(1, $search());
+
+        foreach ([['status' => 'suspended'], ['status' => 'archived'], ['moderation' => 'removed'], ['moderation' => 'pending']] as $change) {
+            $employer->forceFill(array_merge(['status' => 'live', 'moderation' => 'approved'], $change))->save();
+
+            $this->assertSame(0, $search(), 'a page that is not live and approved still sees talent: '.json_encode($change));
+            $this->actingAs($this->employer)->get('/s/'.$this->signal->id)->assertNotFound();
+        }
+    }
 }

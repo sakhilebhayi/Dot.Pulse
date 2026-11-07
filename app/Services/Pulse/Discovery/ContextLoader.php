@@ -53,7 +53,7 @@ class ContextLoader
             ->whereIn('m.user_id', $userIds)
             ->whereNull('e.deleted_at')
             ->where('e.status', '!=', 'suspended')
-            ->get(['m.user_id', 'e.id as entity_id', 'e.name', 'e.is_employer', 'e.is_seller', 'e.hiring_signal', 'e.hiring_skills', 'e.place_id', 'e.industry'])
+            ->get(['m.user_id', 'e.id as entity_id', 'e.name', 'e.is_employer', 'e.is_seller', 'e.hiring_signal', 'e.hiring_skills', 'e.place_id', 'e.industry', 'e.status', 'e.moderation'])
             ->groupBy('user_id');
 
         $entityIds = $memberships->flatten(1)->pluck('entity_id')->unique()->values()->all();
@@ -112,7 +112,9 @@ class ContextLoader
                     $ctx->offerTopics = array_merge($ctx->offerTopics, array_merge(Taxonomy::normalise(array_merge($this->json($o->tags), [(string) $o->category])), Taxonomy::extract((string) $o->title)));
                 }
 
-                if ($m->is_employer) {
+                // Only a page that is live and approved is an employer. One that is held, suspended, archived or removed
+                // does not open the talent cards to its members.
+                if ($m->is_employer && $m->status === 'live' && $m->moderation === 'approved') {
                     $ctx->isEmployer = true;
 
                     foreach ($roles->get($m->entity_id, collect()) as $r) {
@@ -180,10 +182,10 @@ class ContextLoader
         $ctx = new UserContext($userId);
 
         foreach (DB::table('pulse_entity_members as m')->join('pulse_entities as e', 'e.id', '=', 'm.entity_id')
-            ->where('m.user_id', $userId)->whereNull('e.deleted_at')->get(['e.id', 'e.name', 'e.is_employer']) as $e) {
+            ->where('m.user_id', $userId)->whereNull('e.deleted_at')->get(['e.id', 'e.name', 'e.is_employer', 'e.status', 'e.moderation']) as $e) {
             $ctx->ownEntityIds[(int) $e->id] = true;
             $ctx->employerNames[] = mb_strtolower((string) $e->name);
-            $ctx->isEmployer = $ctx->isEmployer || (bool) $e->is_employer;
+            $ctx->isEmployer = $ctx->isEmployer || ((bool) $e->is_employer && $e->status === 'live' && $e->moderation === 'approved');
         }
 
         foreach (DB::table('pulse_mutes')->where('user_id', $userId)->get(['kind', 'target']) as $m) {
