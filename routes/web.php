@@ -18,26 +18,16 @@ Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
 // the visitor is sent to the normal sign-in page and the token in the URL is never read.
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'legacy']);
 
-Route::get('/', fn () => view('welcome'));
+// Signed-in people land on the Floor; everyone else sees the front page.
+Route::get('/', fn () => auth()->check() ? redirect()->route('floor') : view('welcome'));
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $profile = PulseProfile::firstOrCreate(
-            ['user_id' => $user->id],
-            ['role' => 'customer', 'community_points' => 0],
-        );
-
-        return view('dashboard', [
-            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
-            'totalCommunities' => Community::count(),
-            'myPoints' => $profile->community_points ?? 0,
-        ]);
-    })->name('dashboard');
+    // The Floor replaced the dashboard. The old community feed lives on at /community (see the floor block).
+    Route::get('/dashboard', fn () => redirect()->route('floor'))->name('dashboard');
 
     Route::get('/moderation', fn () => view('pulse.moderation'))->name('moderation');
 
@@ -84,3 +74,32 @@ Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Cont
     ->middleware(['signed', 'throttle:20,1'])
     ->name('pulse.digest.unsubscribe');
 // --- end discovery digest (D2) ---
+// --- floor ---
+// The Floor and everything that hangs off it: the four mode pages, a beat in full, search, saved, doors.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    foreach (['floor' => 'all', 'trade' => 'trade', 'work' => 'work', 'local' => 'local', 'learn' => 'learn'] as $name => $mode) {
+        Route::get('/'.$name, fn () => view('pages.pulse.floor.floor', ['mode' => $mode]))->name($name);
+    }
+
+    Route::get('/s/{signal}', fn (\App\Models\PulseSignal $signal) => view('pages.pulse.floor.detail', ['signal' => $signal]))
+        ->whereNumber('signal')->name('signals.show');
+    Route::get('/search', fn () => view('pages.pulse.floor.search'))->name('search');
+    Route::get('/saved', fn () => view('pages.pulse.floor.saved'))->name('saved');
+    Route::get('/door', fn () => view('pages.pulse.floor.door'))->name('door');
+
+    // The community feed that used to be the dashboard: posts, communities and points.
+    Route::get('/community', function () {
+        $user = auth()->user();
+        $profile = PulseProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            ['role' => 'customer', 'community_points' => 0],
+        );
+
+        return view('dashboard', [
+            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
+            'totalCommunities' => Community::count(),
+            'myPoints' => $profile->community_points ?? 0,
+        ]);
+    })->name('community.feed');
+});
+// --- end floor ---
