@@ -3,9 +3,11 @@
 namespace Tests\Feature\Entities;
 
 use App\Models\PulseEntity;
+use App\Models\PulseMatch;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
 use App\Models\PulseRole;
+use App\Models\PulseSignal;
 use App\Services\Pulse\Lines\Access;
 use Illuminate\Support\Facades\Gate;
 
@@ -144,6 +146,26 @@ class PolicyTest extends EntitiesTestCase
             $this->assertFalse(Gate::forUser($stranger)->allows('delete', $n));
             $this->assertFalse(Gate::forUser($this->moderator())->allows('update', $n));
         }
+    }
+
+    public function test_the_policy_alone_lets_a_matched_person_open_a_matched_need_until_they_dismiss_it(): void
+    {
+        $owner = $this->person();
+        $need = PulseNeed::factory()->create(['user_id' => $owner->id, 'visibility' => 'matched']);
+        $signal = PulseSignal::where('subject_type', 'need')->where('subject_id', $need->id)->firstOrFail();
+        $matched = $this->person();
+        $stranger = $this->person();
+        $match = PulseMatch::create(['user_id' => $matched->id, 'signal_id' => $signal->id, 'score' => 50, 'reasons' => [['code' => 'topic', 'text' => 'x']], 'computed_at' => now()]);
+
+        $this->assertTrue(Gate::forUser($matched)->allows('view', $need));
+        $this->assertFalse(Gate::forUser($stranger)->allows('view', $need));
+
+        $match->forceFill(['dismissed_at' => now()])->save();
+        $this->assertFalse(Gate::forUser($matched)->allows('view', $need), 'a dismissed match no longer opens it');
+
+        $match->forceFill(['dismissed_at' => null])->save();
+        $need->forceFill(['status' => 'closed'])->save();
+        $this->assertFalse(Gate::forUser($matched)->allows('view', $need->fresh()), 'and neither does a need that is not live');
     }
 
     public function test_scopes_agree_with_the_policies(): void

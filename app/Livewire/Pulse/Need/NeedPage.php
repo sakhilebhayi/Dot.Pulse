@@ -37,18 +37,7 @@ class NeedPage extends Component
     /** The need, or a 404 for anyone who may not see it (never a 403: the page does not confirm that it exists). */
     public static function authorised(PulseNeed $need): PulseNeed
     {
-        $user = auth()->user();
-        abort_if($user === null, 404);
-
-        if (Gate::allows('view', $need)) {
-            return $need;
-        }
-
-        // A matched need is not open to everyone, but the people Pulse matched it to can open it.
-        $signalId = PulseSignal::query()->where('subject_type', 'need')->where('subject_id', $need->id)->where('status', 'live')->value('id');
-        $matched = $signalId && $need->isLive() && PulseMatch::query()->where('signal_id', $signalId)->where('user_id', $user->id)->whereNull('dismissed_at')->exists();
-
-        abort_unless($matched, 404);
+        abort_unless(Gate::allows('view', $need), 404); // PulseNeedPolicy::view is the only rule
 
         return $need;
     }

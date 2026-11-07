@@ -2,14 +2,17 @@
 
 namespace App\Policies;
 
+use App\Models\PulseMatch;
 use App\Models\PulseNeed;
+use App\Models\PulseSignal;
 use App\Models\User;
 
 class PulseNeedPolicy
 {
     /**
-     * A live open need is visible to any signed in person; a "matched" need only to its owner and moderators
-     * (others reach it through the discovery index, which matches before it shows). Never to signed out visitors.
+     * The one place that decides who may open a need. The owner and moderators always can. A live open need is visible
+     * to any signed in person. A live "matched" need is visible to the people Pulse matched it to who have not
+     * dismissed it. Never to signed out visitors. Pages and components ask this; none keeps its own copy of the rule.
      */
     public function view(?User $user, PulseNeed $need): bool
     {
@@ -21,7 +24,19 @@ class PulseNeedPolicy
             return true;
         }
 
-        return $need->isLive() && $need->visibility === 'open';
+        if (! $need->isLive()) {
+            return false;
+        }
+
+        return $need->visibility === 'open' || $this->matchedTo($user, $need);
+    }
+
+    private function matchedTo(User $user, PulseNeed $need): bool
+    {
+        $signalId = PulseSignal::query()->where('subject_type', 'need')->where('subject_id', $need->id)->where('status', 'live')->value('id');
+
+        return $signalId !== null
+            && PulseMatch::query()->where('signal_id', $signalId)->where('user_id', $user->id)->whereNull('dismissed_at')->exists();
     }
 
     public function update(User $user, PulseNeed $need): bool
