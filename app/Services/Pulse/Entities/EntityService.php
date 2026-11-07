@@ -59,6 +59,7 @@ class EntityService
         });
 
         $this->applyImages($entity, $clean);
+        app(VerificationService::class)->recompute($entity->refresh());
         Audit::record($by, 'entity.create', $entity, ['moderation' => $entity->moderation, 'source' => $decision['source']]);
 
         return $entity->refresh();

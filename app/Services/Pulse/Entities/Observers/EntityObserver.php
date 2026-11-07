@@ -17,10 +17,6 @@ class EntityObserver
     {
         $this->indexer->syncSubject($entity);
 
-        if ($entity->wasRecentlyCreated) {
-            return;
-        }
-
         if ($entity->wasChanged(['status', 'moderation', 'deleted_at', 'place_id', 'industry', 'service_area'])) {
             $this->cascade($entity);
         }
