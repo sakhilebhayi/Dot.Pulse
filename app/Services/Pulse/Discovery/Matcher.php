@@ -326,6 +326,11 @@ class Matcher
             }
         }
 
+        // K-anonymity (D23): an anonymous card is shown only inside a cohort of at least five.
+        if ($profile->discoverability === 'anonymous' || $s->anonymous) {
+            return app(AnonymousCohort::class)->allows($ctx, $s);
+        }
+
         return true;
     }
 

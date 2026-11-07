@@ -198,11 +198,14 @@ class SearchService
             $query->where(function ($w) use ($terms) {
                 foreach ($terms as $t) {
                     $like = '%'.$this->like($t).'%';
-                    $w->orWhereRaw("LOWER(title) LIKE ? ESCAPE '\\'", [$like])
+                    // An anonymous card is found on its skills alone (the same attributes its k-anonymity cohort is made of):
+                    // words in a free-text headline, interests or the experience band could single one person out.
+                    $w->orWhere(fn ($free) => $free->where('anonymous', false)->where(fn ($any) => $any
+                        ->whereRaw("LOWER(title) LIKE ? ESCAPE '\\'", [$like])
                         ->orWhereRaw("LOWER(COALESCE(excerpt, '')) LIKE ? ESCAPE '\\'", [$like])
                         ->orWhereRaw("LOWER(CAST(topics AS TEXT)) LIKE ? ESCAPE '\\'", [$like])
-                        ->orWhereRaw("LOWER(CAST(skills AS TEXT)) LIKE ? ESCAPE '\\'", [$like])
-                        ->orWhereIn('entity_id', fn ($sub) => $sub->select('id')->from('pulse_entities')->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$like]));
+                        ->orWhereIn('entity_id', fn ($sub) => $sub->select('id')->from('pulse_entities')->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$like]))))
+                        ->orWhereRaw("LOWER(CAST(skills AS TEXT)) LIKE ? ESCAPE '\\'", [$like]);
                 }
             });
         }
@@ -230,7 +233,8 @@ class SearchService
         }
 
         if (! empty($filters['remote'])) {
-            $query->where('is_remote', true);
+            // The remote switch is not one of an anonymous card's cohort attributes, so it never selects one.
+            $query->where('is_remote', true)->where('anonymous', false);
         }
 
         $min = isset($filters['price_min']) && $filters['price_min'] !== '' ? (int) round((float) $filters['price_min'] * 100) : null;
@@ -263,7 +267,8 @@ class SearchService
         $title = Str::lower($s->title);
         $excerpt = Str::lower((string) $s->excerpt);
         $entityName = Str::lower((string) ($pack->entities[(int) $s->entity_id]->name ?? ''));
-        $slugs = array_merge((array) $s->topics, (array) $s->skills);
+        $anonymousCard = (bool) $s->anonymous;
+        $slugs = $anonymousCard ? (array) $s->skills : array_merge((array) $s->topics, (array) $s->skills);
         $score = 0.0;
         $why = [];
         $inTitle = 0;
@@ -271,7 +276,7 @@ class SearchService
         foreach ($terms as $t) {
             $slug = Str::slug($t);
 
-            if (str_contains($title, $t)) {
+            if (! $anonymousCard && str_contains($title, $t)) {
                 $score += 10;
                 $inTitle++;
                 $why['title'] = 'Matched your words in the title.';
@@ -293,7 +298,7 @@ class SearchService
                 $why['entity'] = 'Matched the business name.';
             }
 
-            if ($excerpt !== '' && str_contains($excerpt, $t)) {
+            if (! $anonymousCard && $excerpt !== '' && str_contains($excerpt, $t)) {
                 $score += 3;
                 $why['excerpt'] = 'Matched your words in the description.';
             }
@@ -303,7 +308,7 @@ class SearchService
             $score += 8;
         }
 
-        if (mb_strlen($q) >= 3 && str_contains($title, Str::lower($q))) {
+        if (! $anonymousCard && mb_strlen($q) >= 3 && str_contains($title, Str::lower($q))) {
             $score += 8;
             $why['title'] = 'Matched your words in the title.';
         }

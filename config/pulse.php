@@ -199,4 +199,12 @@ return [
     ],
     // --- end security ---
 
+    // --- privacy (R-41 hardening) ---
+    'privacy' => [
+        // K-anonymity for anonymous talent cards (D23): an employer is shown an anonymous card only when this many
+        // professionals share its primary skills and region. Never set it below 5 in production; tests lower it.
+        'talent_cohort_min' => (int) env('PULSE_TALENT_COHORT_MIN', 5),
+    ],
+    // --- end privacy ---
+
 ];

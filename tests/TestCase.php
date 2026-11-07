@@ -12,6 +12,10 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         $this->withoutVite();
+
+        // The production rule shows an anonymous talent card only inside a cohort of five (D23). Most tests seed one
+        // professional to check something else, so the floor is lowered here; the tests for the rule itself put it back.
+        config(['pulse.privacy.talent_cohort_min' => 1]);
     }
 
     /** Mark a person as having finished the welcome flow, so signed-in pages open for them. */
