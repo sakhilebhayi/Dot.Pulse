@@ -68,7 +68,7 @@ class QuoteService
                 throw LineException::because('not_allowed', $entity->name.' does not sell anything, so it cannot quote.');
             }
 
-            $decision = $this->gate->can($from, $entity, $context);
+            $decision = $this->gate->can($from, $entity, $this->gateContext($context, $entity));
             if (! $decision['allowed']) {
                 throw LineException::because($decision['code'] === 'budget' ? 'budget' : 'not_allowed', $entity->name.': '.$decision['why']);
             }
@@ -319,6 +319,20 @@ class QuoteService
         }
 
         throw LineException::because('invalid', 'Say which need or offer the quote is for.');
+    }
+
+    /**
+     * The context a provider's contact policy is checked against. A need is a context for any seller that quotes.
+     * An offer is a context for its own page; another page is asked on the strength of its own quoting offer.
+     */
+    private function gateContext(\Illuminate\Database\Eloquent\Model $context, PulseEntity $entity): ?\Illuminate\Database\Eloquent\Model
+    {
+        if ($context instanceof PulseOffer && $context->entity_id !== $entity->id) {
+            return PulseOffer::query()->where('entity_id', $entity->id)->where('status', 'live')
+                ->where('moderation', 'approved')->where('accepts_quotes', true)->first();
+        }
+
+        return $context;
     }
 
     private function closeSiblings(User $by, PulseConversation $chosen): void

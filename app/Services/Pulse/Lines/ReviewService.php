@@ -129,9 +129,10 @@ class ReviewService
             throw LineException::because('exists', 'You already reviewed this.');
         }
 
+        $review->refresh();
         $this->notifyAfterSubmit($c, $by, $side, $review);
 
-        return $review->refresh();
+        return $review;
     }
 
     /** Reviews whose 14 days are up become public. Returns how many were stamped. */
