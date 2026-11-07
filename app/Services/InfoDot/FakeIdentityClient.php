@@ -4,7 +4,7 @@ namespace App\Services\InfoDot;
 
 /**
  * A stand-in for InfoDot's redeem endpoint for the browser end-to-end run (tests/e2e/pulse). A browser run cannot
- * use Http::fake, so the runner sets PULSE_E2E_FAKE_INFODOT=1 and AppServiceProvider binds this class, and only
+ * use the framework's request fake, so the runner sets PULSE_E2E_FAKE_INFODOT=1 and AppServiceProvider binds this class, and only
  * under the local or testing environment. It is never bound in production: the provider checks the environment first.
  *
  * Tokens: `e2e-valid:<email>:<name>[:company]` redeems to that person (with an InfoDot company when `company` is

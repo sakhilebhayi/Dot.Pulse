@@ -30,7 +30,7 @@ class RouteSweepTest extends TestCase
         '/', 'login', 'forgot-password', 'reset-password', 'reset-password/{token}', 'two-factor-challenge', 'auth/ecosystem', 'up',
         'b/{entity}', 'media/{mediaFile}/{size?}', 'pulse/digest/unsubscribe/{user}', 'sanctum/csrf-cookie',
         'register', 'storage/{path}', 'livewire/update', 'livewire/upload-file', 'livewire/preview-file/{filename}',
-        'livewire/livewire.js', 'livewire/livewire.min.js.map', 'broadcasting/auth', 'dev/kit', 'dev/floor', 'dev/login/{who}', 'dev/logout', 'dev/login/{who}', 'dev/logout', '_boost/browser-logs',
+        'livewire/livewire.js', 'livewire/livewire.min.js.map', 'broadcasting/auth', 'dev/kit', 'dev/floor', 'dev/login/{who}', 'dev/logout', 'dev/login-b/{id}', 'dev/boom-b', 'dev/login/{who}', 'dev/logout', '_boost/browser-logs',
     ];
 
     public function test_every_route_is_classified_and_everything_unclassified_needs_a_sign_in(): void
@@ -112,7 +112,7 @@ class RouteSweepTest extends TestCase
             ['/b/'.$seller.'/manage/offers', ['sellerOwner' => 200, 'sellerAdmin' => 200, 'sellerEditor' => 200, 'sellerResponder' => 403, 'stranger' => 404]],
             ['/b/'.$seller.'/manage/roles', ['sellerOwner' => 200, 'sellerAdmin' => 200, 'sellerEditor' => 200, 'sellerResponder' => 403, 'stranger' => 404]],
             ['/b/'.$seller.'/manage/lines', ['sellerOwner' => 200, 'sellerAdmin' => 200, 'sellerResponder' => 200, 'sellerEditor' => 403, 'stranger' => 404]],
-            ['/b/'.$seller.'/o/'.$w('offer')->slug, ['stranger' => 200, 'blocked' => 200, 'sellerResponder' => 200]],
+            ['/b/'.$seller.'/o/'.$w('offer')->slug, ['stranger' => 200, 'blocked' => 404, 'sellerResponder' => 200]], // a page that blocked you does not exist for you
             ['/b/'.$seller.'/o/'.$w('heldOffer')->slug, ['stranger' => 404, 'blocked' => 404, 'employerOwner' => 404, 'sellerEditor' => 200, 'sellerOwner' => 200, 'moderator' => 200]],
             ['/b/'.$seller.'/o/'.$w('draftOffer')->slug, ['stranger' => 404, 'sellerEditor' => 200]],
             ['/b/'.$seller.'/r/'.$w('role')->slug, ['stranger' => 200]],
