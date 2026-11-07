@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pulse\Business;
 
+use App\Livewire\Pulse\Business\Support\EntityView;
 use App\Livewire\Pulse\Business\Support\HandlesServiceErrors;
 use App\Models\PulseEntity;
 use App\Models\Team;
@@ -47,7 +48,7 @@ class VerifyPanel extends Component
     #[Computed]
     public function ladder(): array
     {
-        return app(VerificationService::class)->ladder($this->entity);
+        return EntityView::ladder($this->entity);
     }
 
     #[Computed]

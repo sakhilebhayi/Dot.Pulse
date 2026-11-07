@@ -60,6 +60,11 @@
 
     <div class="bz-cols">
         <div class="bz-main pk-stack">
+            @php $hasContent = filled($entity->about) || $d['offers']->isNotEmpty() || $d['roles']->isNotEmpty(); @endphp
+            @unless ($hasContent)
+                <x-pulse.empty :title="$isMember ? 'Nothing here yet' : 'Nothing published yet'" :text="$isMember ? 'Write an about and publish an offer or a role from Manage. They show up here the moment they are live.' : 'This business has not published an about, an offer or a role yet.'" />
+            @endunless
+
             @if ($entity->about)
                 <section aria-labelledby="bz-about">
                     <h2 id="bz-about">About</h2>
@@ -144,7 +149,7 @@
                 </section>
             @endif
 
-            @if ($member)
+            @if ($member && ($entity->team_size || $entity->founded_year || $entity->service_area || $entity->website || $entity->public_email || $entity->public_phone))
                 <section class="pk-card" aria-labelledby="bz-facts">
                     <h2 id="bz-facts">Details</h2>
                     <dl class="bz-facts">

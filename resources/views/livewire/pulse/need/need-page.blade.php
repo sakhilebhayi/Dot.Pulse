@@ -98,7 +98,7 @@
                         </div>
                         <p class="pk-muted" style="margin-top: 10px">Pulse tells you how many, never who. Anyone who wants to talk knocks.</p>
                     @else
-                        <p class="pk-muted" style="margin-top: 8px">Not shown to anyone yet. Pulse matches new needs within minutes.</p>
+                        <p class="pk-muted" style="margin-top: 8px">Not shown to anyone yet. When Pulse finds people it fits, the counts show up here.</p>
                     @endif
                 </section>
 

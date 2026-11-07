@@ -8,6 +8,7 @@ use App\Models\PulseConversation;
 use App\Models\PulseMatch;
 use App\Models\PulseNeed;
 use App\Models\PulseSignal;
+use App\Services\Pulse\Lines\LineService;
 use Livewire\Livewire;
 
 class NeedTest extends BusinessTestCase
@@ -173,7 +174,7 @@ class NeedTest extends BusinessTestCase
         $need = PulseNeed::factory()->create(['user_id' => $owner->id]);
         $helper = $this->person(['name' => 'Helpful Hanna']);
 
-        app(\App\Services\Pulse\Lines\LineService::class)->knock($helper, ['user' => $owner->id], 'enquiry', ['what' => 'I can help with this'], $need);
+        app(LineService::class)->knock($helper, ['user' => $owner->id], 'enquiry', ['what' => 'I can help with this'], $need);
         $this->assertSame(1, PulseConversation::where('context_type', 'need')->where('context_id', $need->id)->count());
 
         Livewire::actingAs($owner)->test(NeedPage::class, ['needId' => $need->id])->assertSee('Lines this started')->assertSee('Helpful Hanna');

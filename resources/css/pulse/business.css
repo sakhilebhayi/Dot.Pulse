@@ -5,6 +5,7 @@
 
 .bz {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-lg);
     min-width: 0;
 }
@@ -308,7 +309,7 @@
 
 .bz-frame--cover {
     width: 100%;
-    aspect-ratio: 3 / 1;
+    aspect-ratio: 4 / 1;
 }
 
 .bz-frame img {
@@ -359,7 +360,6 @@
 .bz-cover {
     margin: -20px -20px 0;
     aspect-ratio: 4 / 1;
-    max-height: 260px;
     background: var(--c-raised);
     border-bottom: 1px solid var(--c-line);
 }
@@ -465,6 +465,11 @@
     overflow-wrap: anywhere;
 }
 
+.bz-side .bz-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+}
+
 .bz-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -499,6 +504,23 @@
     gap: 4px;
     justify-items: end;
     text-align: right;
+}
+
+.bz-pay {
+    font-size: 1.25rem;
+}
+
+.bz-ladder summary {
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: var(--t-small);
+    cursor: pointer;
+}
+
+.bz-ladder[open] summary {
+    margin-bottom: 8px;
 }
 
 .bz-from {
@@ -625,6 +647,10 @@
 
     .bz-cover {
         margin: -16px -16px 0;
+        aspect-ratio: 3 / 1;
+    }
+
+    .bz-frame--cover {
         aspect-ratio: 3 / 1;
     }
 

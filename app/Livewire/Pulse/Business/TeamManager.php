@@ -8,6 +8,7 @@ use App\Models\PulseEntityMember;
 use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -43,7 +44,7 @@ class TeamManager extends Component
         return PulseEntity::query()->findOrFail($this->entityId);
     }
 
-    /** @return \Illuminate\Support\Collection<int, PulseEntityMember> */
+    /** @return Collection<int, PulseEntityMember> */
     #[Computed]
     public function members()
     {

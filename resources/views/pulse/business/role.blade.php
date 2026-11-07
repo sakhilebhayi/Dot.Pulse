@@ -24,7 +24,7 @@
         <p class="bz-crumb"><a href="{{ route('entities.show', ['entity' => $entity->slug]) }}">{{ $entity->name }}</a></p>
 
         @if ($manager && ! $open && ! $ended)
-            @if (in_array($role->moderation, ['pending', 'held', 'removed'], true))
+            @if ($role->moderation === 'removed' || ($role->status === 'live' && in_array($role->moderation, ['pending', 'held'], true)))
                 @include('livewire.pulse.business.partials.held', ['state' => $role->moderation, 'what' => 'role'])
             @else
                 <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This role is {{ $role->status === 'draft' ? 'a draft' : $role->status }}. Only your team can see it. <a href="{{ route('entities.manage.roles', ['entity' => $entity->slug]) }}">Edit it</a>.</p></div>
@@ -42,7 +42,7 @@
                 @if ($role->summary)<p class="bz-tagline">{{ $role->summary }}</p>@endif
             </div>
             @if ($role->pay_text)
-                <div class="bz-priceblock"><span class="pk-price pk-price--lg"><span>{{ $role->pay_text }}</span></span><p class="pk-muted">As the employer wrote it</p></div>
+                <div class="bz-priceblock"><span class="pk-price bz-pay"><span>{{ $role->pay_text }}</span></span><p class="pk-muted">As the employer wrote it</p></div>
             @endif
         </header>
 
@@ -99,8 +99,12 @@
                 </section>
                 <section class="pk-card" aria-labelledby="bz-trust">
                     <h2 id="bz-trust">About the employer</h2>
-                    <p class="pk-muted" style="margin: 6px 0 14px">Checked means Pulse saw it in a real record. Claimed means they said it.</p>
-                    <x-pulse.ladder :rungs="app(VerificationService::class)->ladder($entity)" />
+                    <p class="pk-muted" style="margin: 6px 0 10px">Checked means Pulse saw it in a real record. Claimed means they said it.</p>
+                    @php $ladder = EntityView::ladder($entity); $nChecked = collect($ladder)->where('state', 'checked')->count(); $nClaimed = collect($ladder)->where('state', 'claimed')->count(); @endphp
+                    <details class="bz-ladder">
+                        <summary>{{ $nChecked }} checked, {{ $nClaimed }} claimed. Show the ladder</summary>
+                        <x-pulse.ladder :rungs="$ladder" />
+                    </details>
                 </section>
             </aside>
         </div>

@@ -10,6 +10,7 @@ use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\MediaService;
 use App\Services\Pulse\Entities\OfferService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -81,7 +82,7 @@ class OfferManager extends Component
         return PulseEntity::query()->findOrFail($this->entityId);
     }
 
-    /** @return \Illuminate\Support\Collection<int, PulseOffer> */
+    /** @return Collection<int, PulseOffer> */
     #[Computed]
     public function offers()
     {

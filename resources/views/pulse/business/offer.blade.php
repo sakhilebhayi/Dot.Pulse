@@ -15,7 +15,7 @@
         <p class="bz-crumb"><a href="{{ route('entities.show', ['entity' => $entity->slug]) }}">{{ $entity->name }}</a></p>
 
         @if ($manager && ! $offer->isLive())
-            @if (in_array($offer->moderation, ['pending', 'held', 'removed'], true))
+            @if ($offer->moderation === 'removed' || ($offer->status === 'live' && in_array($offer->moderation, ['pending', 'held'], true)))
                 @include('livewire.pulse.business.partials.held', ['state' => $offer->moderation, 'what' => 'offer'])
             @else
                 <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This offer is {{ $offer->status === 'draft' ? 'a draft' : $offer->status }}. Only your team can see it. <a href="{{ route('entities.manage.offers', ['entity' => $entity->slug]) }}">Edit it</a>.</p></div>
@@ -84,8 +84,12 @@
                 </section>
                 <section class="pk-card" aria-labelledby="bz-trust">
                     <h2 id="bz-trust">About the seller</h2>
-                    <p class="pk-muted" style="margin: 6px 0 14px">Checked means Pulse saw it in a real record. Claimed means they said it.</p>
-                    <x-pulse.ladder :rungs="app(VerificationService::class)->ladder($entity)" />
+                    <p class="pk-muted" style="margin: 6px 0 10px">Checked means Pulse saw it in a real record. Claimed means they said it.</p>
+                    @php $ladder = EntityView::ladder($entity); $nChecked = collect($ladder)->where('state', 'checked')->count(); $nClaimed = collect($ladder)->where('state', 'claimed')->count(); @endphp
+                    <details class="bz-ladder">
+                        <summary>{{ $nChecked }} checked, {{ $nClaimed }} claimed. Show the ladder</summary>
+                        <x-pulse.ladder :rungs="$ladder" />
+                    </details>
                 </section>
             </aside>
         </div>

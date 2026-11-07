@@ -4,6 +4,7 @@ namespace Tests\Feature\Business;
 
 use App\Livewire\Pulse\Business\OfferManager;
 use App\Models\PulseOffer;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
@@ -126,7 +127,7 @@ class OfferManagerTest extends BusinessTestCase
         try {
             Livewire::actingAs($mine->members()->first()->user)->test(OfferManager::class, ['entity' => $mine])->call('pause', $offer->id);
             $this->fail('An offer of another page must not be found.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             $this->assertSame('live', $offer->fresh()->status);
         }
     }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Business;
 
 use App\Livewire\Pulse\Business\RoleManager;
 use App\Models\PulseRole;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Livewire;
 
 class RoleManagerTest extends BusinessTestCase
@@ -93,7 +94,7 @@ class RoleManagerTest extends BusinessTestCase
         try {
             Livewire::actingAs($mine->members()->first()->user)->test(RoleManager::class, ['entity' => $mine])->call('close', $role->id);
             $this->fail('A role of another page must not be found.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             $this->assertSame('live', $role->fresh()->status);
         }
     }

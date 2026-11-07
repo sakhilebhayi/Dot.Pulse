@@ -4,6 +4,7 @@ namespace App\Livewire\Pulse\Need;
 
 use App\Livewire\Pulse\Business\Support\HandlesServiceErrors;
 use App\Models\PulseEntity;
+use App\Models\PulseEntityMember;
 use App\Models\PulseNeed;
 use App\Models\PulsePlace;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
@@ -102,7 +103,7 @@ class NeedForm extends Component
     #[Computed]
     public function pages(): array
     {
-        return PulseEntity::query()->whereIn('id', \App\Models\PulseEntityMember::query()->where('user_id', auth()->id())->select('entity_id'))
+        return PulseEntity::query()->whereIn('id', PulseEntityMember::query()->where('user_id', auth()->id())->select('entity_id'))
             ->orderBy('name')->pluck('name', 'id')->all();
     }
 

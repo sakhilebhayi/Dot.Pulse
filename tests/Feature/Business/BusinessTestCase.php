@@ -9,6 +9,8 @@ use App\Models\PulseProfile;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -26,14 +28,14 @@ abstract class BusinessTestCase extends TestCase
         parent::setUp();
 
         config(['pulse.entities.rules_class' => 'Tests\\Absent\\Rules']);
-        \Illuminate\Support\Facades\Storage::fake(config('pulse.entities.media.disk', 'local'));
+        Storage::fake(config('pulse.entities.media.disk', 'local'));
     }
 
     protected function person(array $attrs = []): User
     {
         $user = User::factory()->create($attrs);
         PulseProfile::query()->firstOrCreate(['user_id' => $user->id], ['role' => 'customer']);
-        \Illuminate\Support\Facades\DB::table('pulse_profiles')->where('user_id', $user->id)->update(['age_confirmed_at' => now()->subDays(30)]);
+        DB::table('pulse_profiles')->where('user_id', $user->id)->update(['age_confirmed_at' => now()->subDays(30)]);
 
         return $user->fresh();
     }
@@ -41,7 +43,7 @@ abstract class BusinessTestCase extends TestCase
     protected function moderator(): User
     {
         $user = $this->person();
-        \Illuminate\Support\Facades\DB::table('pulse_profiles')->where('user_id', $user->id)->update(['role' => 'moderator']);
+        DB::table('pulse_profiles')->where('user_id', $user->id)->update(['role' => 'moderator']);
 
         return $user->fresh();
     }

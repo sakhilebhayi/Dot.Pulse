@@ -11,6 +11,7 @@ use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Entities\EntityService;
 use App\Services\Pulse\Entities\MediaService;
 use App\Services\Pulse\Entities\VerificationService;
+use App\Services\Pulse\Lines\Access;
 use App\Services\Pulse\Lines\ResponseStats;
 use Illuminate\Support\Carbon;
 
@@ -40,12 +41,37 @@ class EntityView
             'place' => $entity->place ? $places->label($entity->place) : null,
             'offers' => $offers,
             'roles' => $roles,
-            'ladder' => $verification->ladder($entity),
+            'ladder' => self::ladder($entity),
             'status' => $verification->summary($entity),
             'response' => $response['response_rate'] === null ? null : $response,
             'stats' => app(EntityService::class)->stats($entity),
             'isMember' => $viewer !== null && $entity->memberRole($viewer) !== null,
         ];
+    }
+
+    /**
+     * The verification ladder with dates and sources in words a person reads ("7 Nov 2026", "InfoDot sign-in") instead of
+     * the machine values the service stores.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function ladder(PulseEntity $entity): array
+    {
+        $sources = [
+            'infodot_redeem_teams' => 'InfoDot sign-in',
+            'infodot_redeem_verification' => 'InfoDot',
+            'pulse_account' => 'your Pulse account',
+            'business_claim' => 'what the business told Pulse',
+            'pulse_conversations' => 'lines on Pulse',
+            'pulse_records' => 'Pulse records',
+        ];
+
+        return array_map(function (array $r) use ($sources) {
+            $r['at'] = ! empty($r['at']) ? Carbon::parse($r['at'])->format('j M Y') : null;
+            $r['source'] = $sources[$r['source'] ?? ''] ?? ($r['source'] ?? null);
+
+            return $r;
+        }, app(VerificationService::class)->ladder($entity));
     }
 
     /** "usually within 3 hours", from a median in seconds. */
@@ -115,7 +141,7 @@ class EntityView
             $todos[] = ['text' => 'The page is waiting for a human. Until a person has looked, the public cannot see it.', 'href' => $to('entities.manage.page')];
         }
 
-        if ($viewer !== null && \App\Services\Pulse\Lines\Access::canRespondFor($viewer, $e)) {
+        if ($viewer !== null && Access::canRespondFor($viewer, $e)) {
             $waiting = PulseConversation::query()->where('entity_id', $e->id)->where('status', PulseConversation::REQUESTED)->whereNull('ignored_at')->count();
 
             if ($waiting > 0) {
