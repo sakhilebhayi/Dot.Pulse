@@ -786,3 +786,10 @@ kbd {
 .fl-beat--row .pk-beat__actions {
     margin-top: 10px;
 }
+
+.fl-lead-note {
+    margin: 0 0 8px;
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+    font-weight: 700;
+}

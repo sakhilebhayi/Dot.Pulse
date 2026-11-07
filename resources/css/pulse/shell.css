@@ -684,3 +684,14 @@
 .sh-body--focus .sh-stage {
     padding-top: var(--s-xl);
 }
+
+/* A long business name truncates inside the rail instead of running past it. */
+.sh-rail__more li,
+.sh-rail__verbs li {
+    min-width: 0;
+}
+
+.sh-rail__more .sh-verb {
+    min-width: 0;
+    max-width: 100%;
+}

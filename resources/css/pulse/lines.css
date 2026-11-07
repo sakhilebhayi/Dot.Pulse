@@ -831,7 +831,7 @@
     white-space: nowrap;
 }
 
-.ln-composer__text {
+textarea.ln-composer__text {
     min-height: var(--tap);
     max-height: 160px;
     resize: none;

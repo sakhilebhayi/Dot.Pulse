@@ -79,6 +79,7 @@
     @elseif ($compact || $lead)
         {{-- Compact: three reason chips, the thread on expand. The lead card shows the whole thread on a wide screen and the chips on a phone. --}}
         <x-slot name="meter">
+            @if ($lead)<p class="fl-lead-note">Best match for you, {{ \App\Support\Moment::plural($chips->count(), 'reason') }}.</p>@endif
             <div @class(['fl-lead-phone' => $lead])>
                 <ul class="fl-chips" aria-label="Why this fits">
                     @foreach ($chips->take(3) as $text)
