@@ -126,8 +126,10 @@ class PrivacyTest extends TestCase
         $this->assertSame('off', $profile->discoverability);
         $this->assertSame('nobody', $profile->contact_policy);
         $this->assertSame('removed', $signal->fresh()->status);
+        $this->assertSame('Removed', $signal->fresh()->title, 'the words are gone, not only the visibility');
         $this->assertSame('removed', $need->fresh()->status);
         $this->assertNull($need->fresh()->details);
+        $this->assertSame('Removed', $need->fresh()->title);
 
         $this->assertSame(0, PulseMute::where('user_id', $me->id)->count());
         $this->assertSame(0, PulseSave::where('user_id', $me->id)->count());

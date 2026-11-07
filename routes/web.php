@@ -17,7 +17,7 @@ Route::aliasMiddleware('pulse.onboarded', \App\Http\Middleware\EnsureOnboarded::
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:10,1,sso')
     ->name('ecosystem.auth');
 
 // Links minted before the token moved into a POST body carried it in the URL. They are no longer honoured:
@@ -51,13 +51,16 @@ if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
 
+// A numeric throttle (`throttle:N,M`) keys its counter by the signed in person alone, so every such route shared one
+// counter: the 30 second badge poll used up the 3 per 10 minutes allowed for the data export. Each now has its own
+// prefix (the third value), so the counters are separate.
 // --- media ---
 // Images are read through this route only. Authorisation is decided per request in MediaService::canView
 // (public images of live pages to anyone, message media to the people in the conversation).
 Route::get('/media/{mediaFile}/{size?}', MediaController::class)
     ->whereNumber('mediaFile')
     ->where('size', 'thumb|medium|large')
-    ->middleware('throttle:300,1')
+    ->middleware('throttle:300,1,media')
     ->name('pulse.media');
 // --- end media ---
 // --- shell ---
@@ -69,7 +72,7 @@ if (app()->environment('local', 'testing')) {
 // --- /shell ---
 // --- lines ---
 // The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1'])
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1,pulse-check'])
     ->get('/api/pulse/pulse-check', 'App\\Http\\Controllers\\Pulse\\PulseCheckController')
     ->name('pulse.check');
 // --- end lines ---
@@ -78,7 +81,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:1
 // client's one-click List-Unsubscribe-Post). No sign-in needed; the signature is the proof.
 Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscribeController::class)
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
-    ->middleware(['signed', 'throttle:20,1'])
+    ->middleware(['signed', 'throttle:20,1,digest-unsubscribe'])
     ->name('pulse.digest.unsubscribe');
 // --- end discovery digest (D2) ---
 // --- operator ---
@@ -139,7 +142,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::view('/me/notifications', 'pulse.me.notifications')->name('me.notifications');
     Route::view('/me/privacy', 'pulse.me.privacy')->name('me.privacy');
     Route::get('/me/privacy/export', \App\Http\Controllers\Pulse\PrivacyExportController::class)
-        ->middleware('throttle:3,10')
+        ->middleware('throttle:3,10,privacy-export')
         ->name('me.export');
 });
 // --- end me ---
