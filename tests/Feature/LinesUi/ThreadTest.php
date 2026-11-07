@@ -144,7 +144,7 @@ class ThreadTest extends TestCase
             ->assertSee('This Thursday')
             ->assertSee('Soweto')
             ->assertSee('R1000 to R3000')
-            ->assertSee('First message')
+            ->assertSee('Sent the request above.')
             ->assertSee('They said yes. Contact details can be shared now.', false);
     }
 
@@ -202,7 +202,7 @@ class ThreadTest extends TestCase
 
         $component = $this->thread($sender, $line)
             ->assertSee('No links or contact details until they reply')
-            ->assertSee('Photos unlock once they reply');
+            ->assertSee('Photos unlock then too.');
 
         $component->set('body', 'Call me on 082 555 0100 or see https://example.com/leak')->call('send')->assertHasErrors('body');
         $component->set('body', 'Plain words are fine.')->call('send')->assertHasNoErrors();
@@ -211,8 +211,8 @@ class ThreadTest extends TestCase
         $this->thread($recipient, $line->fresh())->set('body', 'Here is my number: 082 555 0199')->call('send')->assertHasNoErrors();
 
         $this->thread($sender, $line->fresh())
-            ->assertSee('You can share links and contact details now.')
-            ->assertSee('Add a photo')
+            ->assertSee('Links and contact details are fine now.')
+            ->assertSee('Photo')
             ->set('body', 'Thanks, see https://example.com/leak')
             ->call('send')
             ->assertHasNoErrors();

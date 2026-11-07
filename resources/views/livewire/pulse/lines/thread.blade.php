@@ -6,7 +6,7 @@
     $state = Words::state($line);
     $status = $line['status'];
     $lastSide = $model->last_message_side;
-    $awaitingReply = $status === 'open' && $lastSide !== null && $lastSide !== $side;
+    $awaitingReply = $status === 'open' && $lastSide !== null && $lastSide !== $side && $model->last_message_at?->lte(now()->subHour());
     $canDecide = $side === 'initiator';
     $canReport = $side !== null;
     $iAmInvited = $line['can']['reveal'];
@@ -88,7 +88,7 @@
         </div>
     @endif
 
-    @include('livewire.pulse.lines.partials.context-card', ['line' => $line, 'subject' => $subject])
+    @include('livewire.pulse.lines.partials.context-card', ['line' => $line, 'subject' => $subject, 'open' => count($messages) <= 3])
 
     @if ($anonymousToThem)
         <p class="ln-note ln-note--block"><x-pulse.icon name="lock" :size="16" />This employer sees you as an anonymous card: your headline, skills, experience band and region. Nothing else. Show who you are only when you are ready.</p>
@@ -120,7 +120,9 @@
         <p class="ln-nudge ln-nudge--card">Waiting for your reply for {{ Words::span($model->last_message_at) }}. Reply below, or close the line if it has run its course.</p>
     @endif
 
-    @include('livewire.pulse.lines.partials.handover', ['line' => $line, 'lineId' => $line['id']])
+    @if (in_array($status, ['requested', 'open'], true) && ! $line['outcome']['confirmed'])
+        @include('livewire.pulse.lines.partials.handover', ['line' => $line, 'lineId' => $line['id']])
+    @endif
 
     {{-- The business answers a quote request on a slip. --}}
     @if ($slipOpen)
@@ -129,14 +131,6 @@
 
     @if ($compareUrl)
         <p class="ln-compare"><a href="{{ $compareUrl }}">Compare all the quotes for this request</a></p>
-    @endif
-
-    @if ($outcomeState['visible'])
-        @include('livewire.pulse.lines.partials.outcome-bar', ['o' => $outcomeState, 'line' => $line])
-    @endif
-
-    @if ($reviewState['show'])
-        @include('livewire.pulse.lines.partials.review', ['r' => $reviewState])
     @endif
 
     <section class="ln-messages" aria-label="Messages" aria-live="polite">
@@ -154,6 +148,14 @@
             <p class="ln-muted">Nothing said yet.</p>
         @endforelse
     </section>
+
+    @if ($outcomeState['visible'])
+        @include('livewire.pulse.lines.partials.outcome-bar', ['o' => $outcomeState, 'line' => $line])
+    @endif
+
+    @if ($reviewState['show'])
+        @include('livewire.pulse.lines.partials.review', ['r' => $reviewState])
+    @endif
 
     @if ($line['can']['send'])
         @include('livewire.pulse.lines.partials.composer', ['line' => $line, 'limit' => $limit])

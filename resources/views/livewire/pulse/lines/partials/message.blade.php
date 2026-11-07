@@ -19,7 +19,7 @@
         @include('livewire.pulse.lines.partials.quote-slip', ['quote' => $quote, 'canDecide' => $canDecide, 'closedReason' => $closedReason ?? null])
     </div>
 @else
-    <div class="ln-msg {{ $mine ? 'ln-msg--mine' : 'ln-msg--theirs' }}{{ ! empty($m['meta']['card']) ? ' ln-msg--card' : '' }}" id="m-{{ $m['id'] }}">
+    <div class="ln-msg {{ $mine ? 'ln-msg--mine' : 'ln-msg--theirs' }}{{ ! empty($m['meta']['card']) ? '' : '' }}" id="m-{{ $m['id'] }}">
         <div class="ln-msg__from">
             {{ $you ? 'You' : $m['from'] }}
             @if (! empty($m['teammate']))<span class="ln-msg__mate">{{ $m['teammate'] }}</span>@endif
@@ -27,15 +27,8 @@
         </div>
         <div class="ln-msg__bubble">
             @if (! empty($m['meta']['card']))
-                @php
-                    $labels = ['what' => 'What', 'when_or_qty' => 'When or how many', 'where' => 'Where', 'budget_band' => 'Budget'];
-                @endphp
-                <p class="ln-msg__tag">{{ $m['kind'] === 'quote_request' ? 'Asked for a quote' : 'First message' }}</p>
-                <dl class="ln-msg__card">
-                    @foreach ($labels as $key => $label)
-                        @if (! empty($m['meta']['card'][$key]))<div><dt>{{ $label }}</dt><dd>{{ $m['meta']['card'][$key] }}</dd></div>@endif
-                    @endforeach
-                </dl>
+                {{-- The four fields sit in the card at the top of the line; the first message just says it was sent. --}}
+                <p class="ln-msg__text">{{ $m['kind'] === 'quote_request' ? 'Asked for a quote on the request above.' : 'Sent the request above.' }}</p>
             @elseif ($m['body'] !== '')
                 <p class="ln-msg__text">{{ $m['body'] }}</p>
             @endif

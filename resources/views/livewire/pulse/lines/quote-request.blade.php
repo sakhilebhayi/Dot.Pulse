@@ -1,5 +1,5 @@
 <div class="ln-qr">
-    <x-pulse.button variant="signal" wire:click="openSheet" type="button" aria-expanded="{{ $open ? 'true' : 'false' }}">Ask for quotes</x-pulse.button>
+    <x-pulse.button :variant="$open ? 'quiet' : 'signal'" wire:click="openSheet" type="button" aria-expanded="{{ $open ? 'true' : 'false' }}">Ask for quotes</x-pulse.button>
 
     @if ($open)
         <section class="pk-card ln-sheet" role="group" aria-labelledby="qr-title-{{ $this->getId() }}">
@@ -23,7 +23,7 @@
 
                 <form wire:submit="send" class="ln-stack">
                     <div>
-                        <x-pulse.field name="card.what" id="qr-what" label="What do you need?" wire:model="card.what" maxlength="200" required />
+                        <x-pulse.field name="card.what" id="qr-what" label="What do you need?" wire:model="card.what" maxlength="200" aria-required="true" />
                         <div class="ln-two">
                             <x-pulse.field name="card.when_or_qty" id="qr-when" label="When, or how many" wire:model="card.when_or_qty" maxlength="80" optional />
                             <x-pulse.field name="card.where" id="qr-where" label="Where" wire:model="card.where" maxlength="80" optional />
@@ -65,7 +65,7 @@
                     <p class="ln-muted">This costs one knock for the whole request, not one each. You have {{ $left }} left this week.</p>
 
                     <div class="pk-cluster">
-                        <x-pulse.button type="submit" variant="signal" wire:loading.attr="disabled" wire:target="send">{{ count($selected) === 1 ? 'Ask 1 business' : 'Ask '.count($selected).' businesses' }}</x-pulse.button>
+                        <x-pulse.button type="submit" variant="signal" wire:loading.attr="disabled" wire:target="send">{{ count($selected) === 0 ? 'Pick who to ask' : (count($selected) === 1 ? 'Ask 1 business' : 'Ask '.count($selected).' businesses') }}</x-pulse.button>
                         <x-pulse.button variant="quiet" wire:click="close" type="button">Not now</x-pulse.button>
                     </div>
                 </form>

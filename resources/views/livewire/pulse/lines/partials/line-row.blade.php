@@ -6,8 +6,8 @@
     $state = Words::state($line);
     $fact = $facts[$line['id']] ?? null;
     $forPage = $line['side'] === 'recipient' ? $fact?->entity?->name : $fact?->initiatorEntity?->name;
-    $awaiting = $line['status'] === 'open' && $fact && $fact->last_message_side !== null && $fact->last_message_side !== $line['side'];
     $since = $line['last_message_at'] ?? $line['created_at'];
+    $awaiting = $line['status'] === 'open' && $fact && $fact->last_message_side !== null && $fact->last_message_side !== $line['side'] && $since?->lte(now()->subHour());
 @endphp
 <x-pulse.row :title="$line['title']" :href="route('lines.show', $line['id'])" :unread="$line['unread']">
     <x-slot name="lead">@include('livewire.pulse.lines.partials.party', ['cp' => $cp, 'size' => 'md'])</x-slot>

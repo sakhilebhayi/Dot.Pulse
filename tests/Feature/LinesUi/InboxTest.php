@@ -251,7 +251,7 @@ class InboxTest extends TestCase
         Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'open'])
             ->set('unreadOnly', true)
             ->assertSee('Hello there')
-            ->assertSee('Only with something new');
+            ->assertSee('Unread only');
 
         $names = Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'open'])->set('unreadOnly', true)->viewData('lines');
         $this->assertCount(1, $names);

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\QuoteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\LinesFixtures;
@@ -401,5 +402,24 @@ class QuotesTest extends TestCase
             ->call('send')
             ->assertSet('sent', false)
             ->assertSeeHtml('role="alert"');
+    }
+
+    public function test_the_aliases_other_screens_embed_are_registered(): void
+    {
+        $user = $this->person();
+        $need = $this->need($user);
+        [$page] = $this->provider();
+        $this->actingAs($user);
+
+        $quote = Blade::render('<livewire:pulse.lines.quote-request :need-id="'.$need->id.'" />');
+        $this->assertStringContainsString('Ask for quotes', $quote);
+
+        $offerId = $page->offers()->value('id');
+        $fromOffer = Blade::render('<livewire:pulse.lines.quote-request :offer-id="'.$offerId.'" />');
+        $this->assertStringContainsString('Ask for quotes', $fromOffer);
+
+        $line = app(QuoteService::class)->request($user, ['need' => $need->id], [$page->id], $this->card())[0];
+        $report = Blade::render('<livewire:pulse.lines.report subject-type="conversation" :subject-id="'.$line->id.'" />');
+        $this->assertStringContainsString('Report', $report);
     }
 }

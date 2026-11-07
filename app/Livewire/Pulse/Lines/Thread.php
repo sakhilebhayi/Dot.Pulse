@@ -234,7 +234,7 @@ class Thread extends Component
     /**
      * The live subject this line is about, if it is still live and the viewer may be told which one it is.
      *
-     * @return array{url: string, label: string}|null
+     * @return array{live: bool, url: ?string, label: string}|null null when the line is not about a listing
      */
     private function liveSubject(array $line): ?array
     {
@@ -252,7 +252,7 @@ class Thread extends Component
         };
 
         if ($model === null || ! Context::isLive($model)) {
-            return null;
+            return ['live' => false, 'url' => null, 'label' => ''];
         }
 
         $url = match ($type) {
@@ -261,7 +261,7 @@ class Thread extends Component
             'need' => pulse_route('needs.show', ['need' => $model->id]),
         };
 
-        return $url === '#' ? null : ['url' => $url, 'label' => 'See the live '.$type];
+        return ['live' => true, 'url' => $url === '#' ? null : $url, 'label' => 'See the live '.$type];
     }
 
     public function render(LineService $lines): View

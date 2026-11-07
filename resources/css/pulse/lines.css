@@ -249,8 +249,13 @@
 }
 
 @media (max-width: 559.98px) {
-    .ln-facts,
     .ln-two {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 379.98px) {
+    .ln-facts {
         grid-template-columns: minmax(0, 1fr);
     }
 }
@@ -329,7 +334,7 @@
 }
 
 .ln-filter {
-    flex: 0 1 200px;
+    flex: 0 1 170px;
 }
 
 .ln-check {
@@ -565,7 +570,8 @@
 
 .ln-handover {
     margin-bottom: var(--s-md);
-    padding: 14px 16px;
+    padding: 12px 16px;
+    font-size: var(--t-small);
     border: 1px solid var(--c-warn);
     border-radius: var(--r-md);
     background: var(--c-warn-wash);
@@ -653,8 +659,7 @@
     justify-items: end;
 }
 
-.ln-msg--wide,
-.ln-msg--card {
+.ln-msg--wide {
     max-width: 100%;
 }
 
@@ -707,28 +712,6 @@
     white-space: pre-line;
 }
 
-.ln-msg__tag {
-    margin-bottom: 6px;
-    font-size: var(--t-small);
-    font-weight: 700;
-}
-
-.ln-msg__card {
-    display: grid;
-    gap: 6px;
-    margin: 0;
-}
-
-.ln-msg__card dt {
-    font-size: var(--t-small);
-    font-weight: 600;
-    opacity: 0.8;
-}
-
-.ln-msg__card dd {
-    margin: 0;
-}
-
 .ln-msg__photo {
     display: block;
     margin-top: 8px;
@@ -743,6 +726,23 @@
 
 .ln-msg__tools .ln-linkbtn {
     min-height: 24px;
+    color: var(--c-muted);
+}
+
+/* The context card folds once the conversation is under way. */
+.ln-details > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    margin-top: 6px;
+    color: var(--c-link);
+    font-size: var(--t-small);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ln-details > summary::marker {
     color: var(--c-muted);
 }
 
@@ -762,6 +762,25 @@
     .ln-composer {
         bottom: calc(60px + env(safe-area-inset-bottom));
     }
+
+    .ln-composer__text {
+        min-height: var(--tap);
+    }
+
+    .ln-composer__bar .pk-btn[type="submit"] {
+        margin-left: auto;
+    }
+
+    .ln-composer__hint {
+        order: 3;
+        flex-basis: 100%;
+    }
+}
+
+/* The shell's floating Compose button would sit on the Send button, so a line page leaves it out. */
+body:has(.ln-thread) .sh-fab,
+body:has(.ln-compare-page) .sh-fab {
+    display: none;
 }
 
 .ln-composer .pk-field > label {
@@ -774,26 +793,28 @@
 }
 
 .ln-composer__text {
-    min-height: 64px;
+    min-height: 56px;
     max-height: 200px;
     resize: none;
 }
 
-.ln-composer__hint {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px var(--s-md);
-    margin-top: 6px;
-    color: var(--c-muted);
-    font-size: var(--t-small);
-}
-
-.ln-composer__photo {
+.ln-composer__bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px var(--s-md);
+    gap: 8px 12px;
+}
+
+.ln-composer__hint {
+    flex: 1 1 180px;
+    min-width: 0;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    line-height: 1.35;
+}
+
+.ln-composer__count {
+    color: var(--c-muted);
 }
 
 .ln-attach {
@@ -816,14 +837,6 @@
     height: 72px;
     object-fit: cover;
     border-radius: var(--r-md);
-}
-
-.ln-composer__go {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px var(--s-md);
 }
 
 .ln-ended {
@@ -912,6 +925,7 @@
 }
 
 .ln-slipform__grid {
+    align-items: start;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--s-md);
@@ -936,6 +950,7 @@
 
 .ln-compare__head {
     display: grid;
+    justify-items: start;
     gap: 6px;
     max-width: 62ch;
 }
@@ -1054,8 +1069,17 @@
 
 .ln-reviewform {
     display: grid;
+    justify-items: start;
     gap: var(--s-md);
     margin-top: var(--s-sm);
+}
+
+.ln-reviewform > * {
+    justify-self: stretch;
+}
+
+.ln-reviewform > .pk-btn {
+    justify-self: start;
 }
 
 .ln-rating {

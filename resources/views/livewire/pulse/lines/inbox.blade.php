@@ -47,7 +47,7 @@
         </label>
         <label class="ln-check">
             <input type="checkbox" wire:model.live="unreadOnly">
-            <span>Only with something new</span>
+            <span>Unread only</span>
         </label>
     </div>
 

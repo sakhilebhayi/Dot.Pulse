@@ -33,9 +33,9 @@
         @if ($line['unread'])<x-pulse.pill tone="signal">New</x-pulse.pill>@endif
     </header>
 
-    <h3 class="ln-request__title" id="req-{{ $line['id'] }}">
+    <h2 class="ln-request__title" id="req-{{ $line['id'] }}">
         <a href="{{ route('lines.show', $line['id']) }}">{{ $line['title'] }}</a>
-    </h3>
+    </h2>
 
     @if ($cp['kind'] === 'anonymous')
         <p class="ln-note"><x-pulse.icon name="lock" :size="16" />Their name stays hidden until they choose to show it.</p>

@@ -54,7 +54,7 @@
 
     @if ($canDecide && $status === 'sent')
         <div class="pk-cluster">
-            <x-pulse.button variant="signal" size="sm" wire:click="acceptQuote({{ $quote->id }})">Accept this quote</x-pulse.button>
+            <x-pulse.button variant="primary" size="sm" wire:click="acceptQuote({{ $quote->id }})">Accept this quote</x-pulse.button>
             <x-pulse.button variant="quiet" size="sm" wire:click="declineQuote({{ $quote->id }})">Decline</x-pulse.button>
         </div>
     @endif

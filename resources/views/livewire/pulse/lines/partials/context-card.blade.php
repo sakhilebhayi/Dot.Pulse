@@ -22,6 +22,8 @@
     </div>
     <h1 id="ln-context-title" class="ln-title">{{ $ctx['title'] }}</h1>
 
+    <details class="ln-details" wire:ignore.self @if (($open ?? true) || $anonymous) open @endif>
+    <summary>What was asked</summary>
     @if ($anonymous)
         @include('livewire.pulse.lines.partials.anon-card', ['snap' => $snap])
     @elseif ($facts->isNotEmpty())
@@ -29,7 +31,7 @@
             @foreach ($facts as $key => $label)
                 <div class="ln-facts__row{{ in_array($key, ['summary', 'details'], true) ? ' ln-facts__row--wide' : '' }}">
                     <dt>{{ $label }}</dt>
-                    <dd>{{ $snap[$key] }}</dd>
+                    <dd>{{ $key === 'needed_by' ? Words::date($snap[$key]) : $snap[$key] }}</dd>
                 </div>
             @endforeach
         </dl>
@@ -42,10 +44,12 @@
         </div>
     @endif
 
+    </details>
+
     <p class="ln-foot">
-        @if ($subject)
+        @if ($subject && $subject['live'] && $subject['url'])
             <a href="{{ $subject['url'] }}">{{ $subject['label'] }}</a>
-        @elseif (in_array($ctx['type'], ['offer', 'role', 'need'], true) && $ctx['id'] !== null)
+        @elseif ($subject && ! $subject['live'])
             This is how it read when the line started. It is no longer live.
         @endif
     </p>
