@@ -260,7 +260,7 @@ class EntityService
         $base = DB::table('pulse_conversations')->where('entity_id', $e->id)->whereNotIn('status', ['spam']);
         $total = (clone $base)->count();
         $stats['conversations'] = $total;
-        $stats['confirmed_outcomes'] = (clone $base)->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at')->where('outcome', '!=', 'none')->count();
+        $stats['confirmed_outcomes'] = (clone $base)->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at')->where('outcome', '!=', 'none')->where('needs_review', false)->count();
 
         if ($total === 0) {
             return $stats;

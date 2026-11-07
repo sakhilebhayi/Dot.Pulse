@@ -71,7 +71,24 @@
     <section class="pk-card me-section" aria-labelledby="pv-export">
         <h2 id="pv-export">Download your data</h2>
         <p class="me-section__text">One JSON file with your profile, settings, consent, blocks, mutes, needs, doors, pages, conversations and the log of what you did. Your own words in full. The people on the other side show by public name only, and an anonymous professional never shows at all. Their emails and private settings are not in it.</p>
-        <div><x-pulse.button variant="quiet" :href="pulse_route('me.export')" icon="chevron">Download my data</x-pulse.button></div>
+        @if (session('pulse_notice'))
+            <p class="pk-field__hint" role="status">{{ session('pulse_notice') }}</p>
+        @endif
+        @if (! $exportOpen)
+            <div><x-pulse.button variant="quiet" wire:click="startExport" type="button" icon="chevron">Download my data</x-pulse.button></div>
+        @else
+            <form wire:submit="export" class="me-erase">
+                <x-pulse.field name="confirmation" id="export-confirmation" label="Type &quot;{{ \App\Services\Pulse\Lines\StepUp::phrase('export') }}&quot; to confirm" wire:model.live="confirmation" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                @if ($this->codeRequired())
+                    <x-pulse.field name="code" id="export-code" label="The 6 digit code from your email" hint="We email it to the address on your account. It works once, for 10 minutes." wire:model="code" inputmode="numeric" autocomplete="one-time-code" />
+                    <div><x-pulse.button variant="quiet" wire:click="sendCode('export')" type="button">{{ $codeSent ? 'Send it again' : 'Email me a code' }}</x-pulse.button></div>
+                @endif
+                <div class="pk-cluster">
+                    <x-pulse.button variant="primary" type="submit">Download</x-pulse.button>
+                    <x-pulse.button variant="quiet" wire:click="cancelExport" type="button">Not now</x-pulse.button>
+                </div>
+            </form>
+        @endif
         <p class="pk-field__hint">A few downloads every ten minutes is the limit.</p>
     </section>
 
@@ -107,7 +124,11 @@
             <div><x-pulse.button variant="danger" wire:click="startErase" type="button">Erase my Pulse data</x-pulse.button></div>
         @else
             <form wire:submit="erase" class="me-erase">
-                <x-pulse.field name="confirmation" label="Type &quot;{{ \App\Livewire\Pulse\Me\Privacy::PHRASE }}&quot; to confirm" wire:model.live="confirmation" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                <x-pulse.field name="confirmation" id="erase-confirmation" label="Type &quot;{{ \App\Livewire\Pulse\Me\Privacy::PHRASE }}&quot; to confirm" wire:model.live="confirmation" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                @if ($this->codeRequired())
+                    <x-pulse.field name="code" id="erase-code" label="The 6 digit code from your email" hint="We email it to the address on your account. It works once, for 10 minutes." wire:model="code" inputmode="numeric" autocomplete="one-time-code" />
+                    <div><x-pulse.button variant="quiet" wire:click="sendCode('erase')" type="button">{{ $codeSent ? 'Send it again' : 'Email me a code' }}</x-pulse.button></div>
+                @endif
                 <div class="pk-cluster">
                     <x-pulse.button variant="danger" type="submit" :disabled="mb_strtolower(trim($confirmation)) !== \App\Livewire\Pulse\Me\Privacy::PHRASE">Erase and sign me out</x-pulse.button>
                     <x-pulse.button variant="quiet" wire:click="cancelErase" type="button">Keep my data</x-pulse.button>

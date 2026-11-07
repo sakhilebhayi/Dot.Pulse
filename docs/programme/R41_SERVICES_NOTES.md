@@ -55,3 +55,32 @@ Read after `R41_DOMAIN_SPEC.md`. Where this file and the spec differ, this file 
 - `PulseNeedPolicy::view` is the only rule for matched needs. Beat urls point at the offer, role (by slug), need, page or post, and fall back to `signals.show`; doors use `signals.show`.
 - `PulseProfile::OPEN_TO` gains `suppliers` and `learning`. Matching does not use them yet (only `collab` is read); they are displayed and stored.
 - Intentionally not done: a column default change for `pulse_notification_prefs.digest` (every writer sets it, and a SQLite column change is a table rebuild).
+
+## Hardening (feat/r41-hard)
+
+### K-anonymity for anonymous talent (D23)
+- `Discovery\AnonymousCohort` is the one rule. An anonymous card is shown to an employer only when at least `pulse.privacy.talent_cohort_min` (5; `PULSE_TALENT_COHORT_MIN`) live, adult confirmed, open or anonymous professionals share the card's primary skills (the first three it lists) and its region. People who hide from this employer, blocked it, were blocked by it, or belong to its pages do not count. A card that lists no skills is never shown. Open professionals are never held back, but they count towards cohorts.
+- The rule sits inside `Matcher::talentVisible`, so it covers the Floor, stored matches, saved, the digest, search, `signals.show` (404) and, in `LineService::prepareInvite`, invitations (the same "cannot be contacted right now"). The cohort belongs to the card, not to the query: two searches cannot differ by one person.
+- Search holds anonymous cards to their cohort attributes: they are found by skills and region only (not headline, interests, experience band or the remote switch).
+- Tests set `pulse.privacy.talent_cohort_min` to 1 in `Tests\TestCase`; the tests of the rule (`AnonymousCohortTest`, `AnonymousLinkabilityTest`) put it back to 5.
+- Residual: a card shows up to eight skills, the cohort guarantee covers the first three. The headline is free text the person wrote.
+
+### Anonymous professionals acting under their name
+- Rule: while discoverability is `anonymous` the person cannot open a Door or publish or reopen a Need ("Switch to open to do this under your name."). Switching to anonymous closes their open door and open needs. `Entities\AnonymousGuard` holds it (`Doors::open`, `NeedService::create/reopen`, `ProfileService::setDiscoverability`).
+- Community posts and comments stay allowed: public by the person's own act, handle byline, no profile link, no place or skills on the post signal. Offers and roles belong to a business page, not to the person.
+- The card the employer sees has no owner, no subject id, a region only and the start of its week as its time, so no timestamp joins it to a post.
+
+### Team invitations (replaces add by email)
+- `Entities\InvitationService::invite($by, $page, $email, $role)` always returns `REPLY` ("If that person is on Pulse they will see your invitation."). Same work for a member, a stranger and an unknown address; the notification is sent with `defer()` after the response. Table `pulse_entity_invitations` (migration `2026_11_10_100000`): `email_hash` is an HMAC of the lowercased address with the app key, `email_hint` a masked `t***@domain` for the inviter's list. 14 days (`pulse.invitations.ttl_days`), 20 an hour per person and 50 a day per page, audited without the address.
+- The person sees invitations on `/me/notifications` (`Me\Invitations`, plus a `system` notification) and accepts or declines. Accepting checks the keyed hash of their own address and that the inviter can still grant the role. The inviter or an owner revokes from the Team tab.
+- `TeamManager::add()` keeps its name; `EntityService::addMember` still backs role changes of existing members.
+
+### Retention (`pulse:retention`)
+- `Lines\RetentionPurge::run($dryRun)` does all of it and returns counts; the command prints them (`--dry-run` counts only). Scheduled daily 03:40 UTC with `withoutOverlapping(120)`. Numbers: `config('pulse.retention')`. Messages with an open report and lines with an open report are skipped. Erased messages become `kind=system` stubs with `erased_at` set; the audit change is the one the append only log allows (actor and ip hash to null). What is held, why, how long: `R41_PRIVACY.md`.
+
+### Ring check (outcomes and reviews)
+- `Lines\RingCheck::assess()` runs when both sides confirm (`OutcomeService::confirm`). Pair = the two parties (a page when a side is a page, else the person), unordered. More than `pulse.ring.max_pair_results` (3) confirmed positive results in `window_days` (90), or more than 1 when either account (or a page's creator) is under 7 days old, sets `pulse_conversations.needs_review`. The people still see "confirmed". `PulseConversation::scopeConfirmed/successful` (so `Metrics`, `OutcomeService::confirmedCount`) and the raw counts in `EntityService::stats` and `VerificationService` leave flagged results out; `scopeSuccessfulIncludingFlagged` is for the people on the line (they can still review; the review is held with `held_for_ring`).
+- `ModerationDesk::flaggedResults/decideResult`: approve counts it, stamps the pair's earlier results as looked at (the limit restarts) and approves its held reviews; discard clears the outcome (the line can be marked again) and removes its reviews. Queue: Messages and reviews tab. Ring-held reviews are not in the held reviews list.
+
+### Step-up for download and erase
+- `Lines\StepUp`: phrase (`download my data`, `erase my data`) plus, when `StepUp::codeRequired()` (a real mailer, or `pulse.privacy.step_up_code=on`), a 6 digit code emailed by `Notifications\StepUpCode`. Code stored as an HMAC in the cache for 10 minutes, five tries, three sends an hour. Download: `Privacy::export()` sets the session grant `PrivacyExportController::GRANT` (5 minutes, used once); the route redirects to `/me/privacy` without it. Tests turn the download confirmation off in `Tests\TestCase` (`pulse.privacy.export_needs_confirmation`).

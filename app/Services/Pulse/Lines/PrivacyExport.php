@@ -92,6 +92,8 @@ class PrivacyExport
             'photos' => PulseMedia::query()->where('user_id', $user->id)->get(['id', 'purpose', 'mime', 'width', 'height', 'bytes', 'created_at'])->toArray(),
             'notifications' => DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)->orderBy('created_at')->get(['type', 'data', 'read_at', 'created_at'])
                 ->map(fn ($n) => ['type' => class_basename($n->type), 'data' => json_decode((string) $n->data, true), 'read_at' => $n->read_at, 'at' => $n->created_at])->all(),
+            'team_invitations' => DB::table('pulse_entity_invitations')->where('email_hash', \App\Services\Pulse\Entities\InvitationService::hash((string) $user->email))
+                ->orderBy('id')->get(['role', 'expires_at', 'accepted_at', 'declined_at', 'revoked_at', 'created_at'])->map(fn ($i) => (array) $i)->all(),
             'activity_log' => PulseAuditEntry::query()->where('actor_id', $user->id)->orderBy('id')->get(['action', 'subject_type', 'subject_id', 'created_at'])->toArray(),
         ];
     }

@@ -19,7 +19,7 @@ class PulseReview extends Model
 
     protected $fillable = [
         'user_id', 'reviewable_type', 'reviewable_id', 'rating', 'body', 'is_verified', 'fraud_score',
-        'conversation_id', 'reviewer_side', 'outcome', 'pseudonymous', 'moderation', 'revealed_at',
+        'conversation_id', 'reviewer_side', 'outcome', 'pseudonymous', 'moderation', 'revealed_at', 'held_for_ring',
     ];
 
     protected function casts(): array
@@ -28,6 +28,7 @@ class PulseReview extends Model
             'rating' => 'integer',
             'is_verified' => 'boolean',
             'pseudonymous' => 'boolean',
+            'held_for_ring' => 'boolean',
             'fraud_score' => 'float',
             'revealed_at' => 'datetime',
         ];

@@ -37,13 +37,29 @@
         </div>
     </section>
 
+    @if ($this->invitations->isNotEmpty())
+        <section class="pk-stack" aria-labelledby="tm-waiting">
+            <h2 id="tm-waiting">Invitations waiting</h2>
+            <p class="pk-muted">They expire after 14 days. You can take one back until it is answered.</p>
+            <div class="bz-list">
+                @foreach ($this->invitations as $inv)
+                    <x-pulse.row :title="$inv->email_hint ?? 'Invited'" :meta="ucfirst($inv->role).', expires '.$inv->expires_at->format('j M')" wire:key="invite-{{ $inv->id }}">
+                        <x-slot name="end">
+                            <x-pulse.button size="sm" variant="quiet" wire:click="revoke({{ $inv->id }})" wire:confirm="Take this invitation back?">Take back</x-pulse.button>
+                        </x-slot>
+                    </x-pulse.row>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="pk-card pk-stack" aria-labelledby="tm-add">
-        <h2 id="tm-add">Add someone</h2>
-        <p class="pk-muted">They need to have signed in to Pulse through InfoDot once. Use the email on their InfoDot account.</p>
+        <h2 id="tm-add">Invite someone</h2>
+        <p class="pk-muted">Use the email on their InfoDot account. Pulse never says whether an address is on Pulse. If it is, they see your invitation and choose.</p>
         <form class="bz-pair bz-pair--end" wire:submit="add" novalidate>
             <x-pulse.field name="email" id="team-email" type="email" label="Email" wire:model="email" autocomplete="off" required />
             <x-pulse.select name="role" id="team-role" label="Role" wire:model="role" :options="$this->grantable" />
-            <div><x-pulse.button type="submit" variant="primary">Add to the team</x-pulse.button></div>
+            <div><x-pulse.button type="submit" variant="primary">Send invitation</x-pulse.button></div>
         </form>
     </section>
 </div>

@@ -20,10 +20,12 @@ use App\Services\Pulse\Lines\AuditLog;
 use App\Services\Pulse\Lines\Notifier;
 use App\Services\Pulse\Lines\ReportService;
 use App\Services\Pulse\Lines\ReviewService;
+use App\Services\Pulse\Lines\RingCheck;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -112,7 +114,8 @@ class ModerationDesk
             ->merge(PulseNeed::query()->where('status', 'open')->whereIn('moderation', $waiting)->pluck('updated_at'))
             ->merge(PulseEntity::query()->where('status', 'live')->whereIn('moderation', $waiting)->pluck('updated_at'))
             ->merge(PulseReport::query()->open()->pluck('created_at'))
-            ->merge(PulseReview::query()->where('moderation', 'held')->pluck('created_at'))
+            ->merge(PulseReview::query()->where('moderation', 'held')->where('held_for_ring', false)->pluck('created_at'))
+            ->merge(PulseConversation::query()->where('needs_review', true)->whereNull('review_cleared_at')->pluck('needs_review_at'))
             ->filter()
             ->values();
     }
@@ -120,7 +123,94 @@ class ModerationDesk
     /** Held reviews, oldest first. @return Collection<int, PulseReview> */
     public function heldReviews(): Collection
     {
-        return PulseReview::query()->where('moderation', 'held')->with(['author', 'reviewable'])->oldest()->limit(self::LIMIT)->get();
+        // Reviews held with a flagged result are decided with it (flaggedResults), not one by one.
+        return PulseReview::query()->where('moderation', 'held')->where('held_for_ring', false)->with(['author', 'reviewable'])->oldest()->limit(self::LIMIT)->get();
+    }
+
+    /**
+     * Results the ring check flagged and nobody has decided yet, oldest first. Each says who the two sides are (a
+     * hidden professional stays hidden), what it came to, how often the pair did this in the window and why it is here.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function flaggedResults(): Collection
+    {
+        $ring = app(RingCheck::class);
+
+        return PulseConversation::query()->where('needs_review', true)->whereNull('review_cleared_at')
+            ->with(['initiator:id,name', 'entity:id,name', 'initiatorEntity:id,name', 'recipient:id,name'])
+            ->oldest('needs_review_at')->limit(self::LIMIT)->get()
+            ->map(function (PulseConversation $c) use ($ring) {
+                [$a, $b] = $ring->parties($c);
+
+                return [
+                    'id' => $c->id,
+                    'about' => $c->context_title,
+                    'outcome' => $c->outcome,
+                    'initiator' => $c->initiatorEntity?->name ?? $c->initiator?->name ?? 'Someone',
+                    'recipient' => $c->entity?->name ?? ($c->identity_hidden ? 'the professional (kept anonymous)' : ($c->recipient?->name ?? 'Someone')),
+                    'reason' => $c->needs_review_reason === RingCheck::NEW_ACCOUNT ? 'A brand new account is one side and the pair has already done this.' : 'The same two parties confirmed more than '.config('pulse.ring.max_pair_results', 3).' results in '.config('pulse.ring.window_days', 90).' days.',
+                    'pair_results' => $a && $b ? $ring->pairResults($a, $b) + 1 : 1,
+                    'since' => $c->needs_review_at ?? $c->updated_at,
+                    'reviews_held' => PulseReview::query()->where('conversation_id', $c->id)->where('held_for_ring', true)->where('moderation', 'held')->count(),
+                ];
+            });
+    }
+
+    /**
+     * A person decides a flagged result. Approve: it counts from now, the pair's earlier results are marked as looked
+     * at (so the limit starts again) and its held reviews go live. Discard: it does not count, the outcome is cleared
+     * so the line can be marked again honestly, and its held reviews are removed. Nobody on the line is told why.
+     */
+    public function decideResult(User $moderator, PulseConversation $c, bool $approve): void
+    {
+        $this->assertPlatformModerator($moderator);
+
+        if (! $c->needs_review || $c->review_cleared_at !== null) {
+            throw ValidationException::withMessages(['result' => 'This one was already decided.']);
+        }
+
+        DB::transaction(function () use ($moderator, $c, $approve) {
+            if ($approve) {
+                $c->forceFill(['needs_review' => false, 'review_cleared_at' => now(), 'review_cleared_by' => $moderator->id])->save();
+
+                [$a, $b] = app(RingCheck::class)->parties($c);
+
+                if ($a && $b) {
+                    $this->markPairLookedAt($a, $b, $moderator);
+                }
+
+                PulseReview::query()->where('conversation_id', $c->id)->where('held_for_ring', true)->where('moderation', 'held')
+                    ->get()->each(fn (PulseReview $r) => $r->forceFill(['moderation' => 'approved', 'held_for_ring' => false])->save());
+            } else {
+                $c->forceFill([
+                    'outcome' => 'none', 'outcome_side' => null, 'outcome_initiator_at' => null, 'outcome_recipient_at' => null,
+                    'needs_review' => false, 'review_cleared_at' => now(), 'review_cleared_by' => $moderator->id,
+                ])->save();
+
+                PulseReview::query()->where('conversation_id', $c->id)->where('held_for_ring', true)
+                    ->get()->each(fn (PulseReview $r) => $r->forceFill(['moderation' => 'removed'])->save());
+            }
+
+            AuditLog::record($moderator, $approve ? 'line.ring_approve' : 'line.ring_discard', $c);
+        });
+    }
+
+    /** Stamp the pair's other results in the window as looked at, so the limit counts from here. */
+    private function markPairLookedAt(string $a, string $b, User $moderator): void
+    {
+        $ring = app(RingCheck::class);
+        $since = now()->subDays(max(1, (int) config('pulse.ring.window_days', 90)));
+
+        PulseConversation::query()->successfulIncludingFlagged()->whereNull('review_cleared_at')
+            ->where('updated_at', '>=', $since->copy()->subDays(1))
+            ->get()
+            ->filter(function (PulseConversation $x) use ($ring, $a, $b) {
+                [$p, $q] = $ring->parties($x);
+
+                return ($p === $a && $q === $b) || ($p === $b && $q === $a);
+            })
+            ->each(fn (PulseConversation $x) => $x->forceFill(['review_cleared_at' => now(), 'review_cleared_by' => $moderator->id])->save());
     }
 
     // ---------------------------------------------------------------- why an item is here

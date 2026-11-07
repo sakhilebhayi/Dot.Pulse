@@ -12,6 +12,8 @@ use App\Models\PulseProfile;
 use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Discovery\AnonymousCohort;
+use App\Services\Pulse\Discovery\ContextLoader;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
@@ -659,7 +661,7 @@ class LineService
         }
 
         if ($kind === 'invite') {
-            $this->prepareInvite($out);
+            $this->prepareInvite($out, $from);
         } elseif ($out['as_entity'] !== null) {
             throw LineException::because('invalid', 'Only an invitation can be sent as a page.');
         }
@@ -670,7 +672,7 @@ class LineService
     }
 
     /** An invitation is sent by an employer page to a professional who can be found. */
-    private function prepareInvite(array &$t): void
+    private function prepareInvite(array &$t, User $from): void
     {
         $page = $t['as_entity'];
 
@@ -704,6 +706,16 @@ class LineService
         // Whoever the signal is, the profile's own setting wins: anonymous stays anonymous until they reveal.
         $t['hidden'] = $discoverability === 'anonymous' || ($t['signal']->kind === 'talent' && $t['signal']->anonymous);
         $t['entity'] = null;
+
+        // K-anonymity (D23): an anonymous card that is not inside a cohort of five is not there for this employer, so it
+        // cannot be invited either. The same words as any other card that cannot be reached.
+        if ($t['hidden'] && AnonymousCohort::min() > 1) {
+            $ctx = app(ContextLoader::class)->loadExclusions($from->id);
+
+            if (! app(AnonymousCohort::class)->allows($ctx, $t['signal'])) {
+                throw LineException::because('unavailable', 'They cannot be contacted right now.');
+            }
+        }
     }
 
     /** @return array<string, string> */

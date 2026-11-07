@@ -148,9 +148,27 @@
     @if ($tab === 'lines' && $platform)
         <p class="pk-muted mq-lead">You see a message or a request here because someone reported it. Anonymous professionals stay anonymous.</p>
 
-        @if ($lineGroups->isEmpty() && $this->heldReviews->isEmpty())
-            <x-pulse.empty title="Nothing reported in lines or reviews" text="Reported messages, requests and reviews, and reviews the rules held, show up here." />
+        @if ($lineGroups->isEmpty() && $this->heldReviews->isEmpty() && $this->flaggedResults->isEmpty())
+            <x-pulse.empty title="Nothing reported in lines or reviews" text="Reported messages, requests and reviews, reviews the rules held, and results between the same two parties again and again show up here." />
         @endif
+
+        @foreach ($this->flaggedResults as $result)
+            <article class="pk-card mq-item" wire:key="result-{{ $result['id'] }}">
+                <header class="mq-item__head">
+                    <div class="mq-item__who">
+                        <x-pulse.kind-word kind="Result" />
+                        <span class="mq-item__by">{{ $result['initiator'] }} and {{ $result['recipient'] }}</span>
+                    </div>
+                    <x-pulse.pill tone="warn">Repeated pair</x-pulse.pill>
+                </header>
+                <h3 class="mq-item__title">{{ ucfirst($result['outcome']) }}@if ($result['about']), about {{ $result['about'] }}@endif</h3>
+                <p class="mq-item__body">{{ $result['reason'] }} That is {{ $result['pair_results'] }} in the window. It is out of public counts until you decide.@if ($result['reviews_held']) {{ $result['reviews_held'] }} {{ $result['reviews_held'] === 1 ? 'review is' : 'reviews are' }} held with it.@endif</p>
+                <div class="pk-cluster">
+                    <x-pulse.button size="sm" wire:click="approveResult({{ $result['id'] }})">Approve</x-pulse.button>
+                    <x-pulse.button variant="danger" size="sm" wire:click="discardResult({{ $result['id'] }})" wire:confirm="Discard this result? It will not count and the line can be marked again.">Discard</x-pulse.button>
+                </div>
+            </article>
+        @endforeach
 
         @foreach ($lineGroups as $group)
             @include('livewire.pulse.queue.group', ['group' => $group, 'd' => $this->describe($group), 'resolvingType' => $resolvingType, 'resolvingId' => $resolvingId, 'platform' => $platform])

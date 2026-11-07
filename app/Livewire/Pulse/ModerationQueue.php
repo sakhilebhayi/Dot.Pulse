@@ -134,6 +134,13 @@ class ModerationQueue extends Component
         return $this->desk()->listings()->map(fn (array $item) => $item + ['why' => $this->desk()->why($item['model'], $item['author'])]);
     }
 
+    /** Results the ring check flagged: platform moderators only. */
+    #[Computed]
+    public function flaggedResults(): Collection
+    {
+        return $this->isPlatform() ? $this->desk()->flaggedResults() : collect();
+    }
+
     #[Computed]
     public function heldReviews(): Collection
     {
@@ -194,7 +201,7 @@ class ModerationQueue extends Component
     #[Computed]
     public function lineCount(): int
     {
-        return $this->groupsFor(true)->count() + $this->heldReviews->count();
+        return $this->groupsFor(true)->count() + $this->heldReviews->count() + $this->flaggedResults->count();
     }
 
     // -- Held posts -------------------------------------------------------------------------------------------
@@ -508,6 +515,28 @@ class ModerationQueue extends Component
         $this->desk()->decideReview($this->moderator(), $review, false, $this->reviewReason);
         $this->cancelRemoveReview();
         unset($this->heldReviews);
+    }
+
+    // -- Flagged results (ring check) -------------------------------------------------------------------------
+
+    public function approveResult(int $conversationId): void
+    {
+        $this->decideResult($conversationId, true);
+    }
+
+    public function discardResult(int $conversationId): void
+    {
+        $this->decideResult($conversationId, false);
+    }
+
+    private function decideResult(int $conversationId, bool $approve): void
+    {
+        abort_unless($this->isPlatform(), 403);
+
+        $conversation = PulseConversation::query()->where('needs_review', true)->whereNull('review_cleared_at')->findOrFail($conversationId);
+        $this->desk()->decideResult($this->moderator(), $conversation, $approve);
+        unset($this->flaggedResults, $this->heldReviews);
+        $this->notice = $approve ? 'Approved. It counts from now.' : 'Discarded. It does not count.';
     }
 
     // -- Render -----------------------------------------------------------------------------------------------

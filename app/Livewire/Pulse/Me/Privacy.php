@@ -13,7 +13,10 @@ use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\MuteService;
+use App\Http\Controllers\Pulse\PrivacyExportController;
 use App\Services\Pulse\Lines\PrivacyEraser;
+use App\Services\Pulse\Lines\StepUp;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +32,13 @@ class Privacy extends Component
     public const PHRASE = 'erase my data';
 
     public string $confirmation = '';
+
+    /** The emailed code, when the step needs one (StepUp::codeRequired). */
+    public string $code = '';
+
+    public bool $exportOpen = false;
+
+    public bool $codeSent = false;
 
     public ?string $problem = null;
 
@@ -81,6 +91,8 @@ class Privacy extends Component
     {
         $this->problem = null;
         $this->confirmation = '';
+        $this->code = '';
+        $this->codeSent = false;
         $this->eraseOpen = true;
     }
 
@@ -88,6 +100,66 @@ class Privacy extends Component
     {
         $this->eraseOpen = false;
         $this->confirmation = '';
+        $this->code = '';
+    }
+
+    public function codeRequired(): bool
+    {
+        return StepUp::codeRequired();
+    }
+
+    /** Email the 6 digit code for "export" or "erase". */
+    public function sendCode(string $action, StepUp $stepUp): void
+    {
+        $this->resetErrorBag('code');
+        abort_unless(in_array($action, [StepUp::EXPORT, StepUp::ERASE], true), 404);
+
+        if (! StepUp::codeRequired()) {
+            return;
+        }
+
+        try {
+            $stepUp->sendCode(auth()->user(), $action);
+            $this->codeSent = true;
+            $this->dispatch('toast', message: 'Code sent. Check your email. It works for 10 minutes.', kind: 'good');
+        } catch (ValidationException $e) {
+            $this->addError('code', collect($e->errors())->flatten()->first());
+        }
+    }
+
+    public function startExport(): void
+    {
+        $this->resetErrorBag();
+        $this->confirmation = '';
+        $this->code = '';
+        $this->codeSent = false;
+        $this->exportOpen = true;
+    }
+
+    public function cancelExport(): void
+    {
+        $this->exportOpen = false;
+        $this->confirmation = '';
+        $this->code = '';
+    }
+
+    /** Confirmed: allow the download for the next five minutes and send the browser to it. */
+    public function export(StepUp $stepUp): mixed
+    {
+        $this->resetErrorBag();
+
+        if ($problem = $stepUp->problem(auth()->user(), StepUp::EXPORT, $this->confirmation, $this->code)) {
+            $this->addError(mb_strtolower(trim($this->confirmation)) === StepUp::phrase(StepUp::EXPORT) ? 'code' : 'confirmation', $problem);
+
+            return null;
+        }
+
+        session()->put(PrivacyExportController::GRANT, now()->addMinutes(5)->getTimestamp());
+        $this->exportOpen = false;
+        $this->confirmation = '';
+        $this->code = '';
+
+        return $this->redirect(route('me.export'), navigate: false);
     }
 
     public function erase(): mixed
@@ -95,8 +167,8 @@ class Privacy extends Component
         $this->problem = null;
         $user = auth()->user();
 
-        if (mb_strtolower(trim($this->confirmation)) !== self::PHRASE) {
-            $this->addError('confirmation', 'Type "'.self::PHRASE.'" exactly to go on.');
+        if ($problem = app(StepUp::class)->problem($user, StepUp::ERASE, $this->confirmation, $this->code)) {
+            $this->addError(mb_strtolower(trim($this->confirmation)) === self::PHRASE ? 'code' : 'confirmation', $problem);
 
             return null;
         }

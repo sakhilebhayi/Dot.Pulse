@@ -43,6 +43,9 @@ class PulseConversation extends Model
         'ignored_at', 'refilled_at', 'initiator_read_at', 'recipient_read_at',
     ];
 
+    // needs_review, needs_review_reason, needs_review_at, review_cleared_at, review_cleared_by are written by the ring check and
+    // the moderation desk only (forceFill), never by a form.
+
     /** The person contacted is not exposed by serialisation: for an anonymous invite the page must never learn it. */
     protected $hidden = ['recipient_id'];
 
@@ -50,6 +53,9 @@ class PulseConversation extends Model
     {
         return [
             'identity_hidden' => 'boolean',
+            'needs_review' => 'boolean',
+            'needs_review_at' => 'datetime',
+            'review_cleared_at' => 'datetime',
             'card' => 'array',
             'context_snapshot' => 'array',
             'outcome_initiator_at' => 'datetime',
@@ -131,6 +137,12 @@ class PulseConversation extends Model
         return $this->status === self::REQUESTED;
     }
 
+    /** Flagged by the ring check and not yet cleared: the people see it as confirmed, public counts do not. */
+    public function isUnderReview(): bool
+    {
+        return (bool) $this->needs_review;
+    }
+
     /** Both sides agreed on the same, real outcome. */
     public function hasConfirmedOutcome(): bool
     {
@@ -152,13 +164,24 @@ class PulseConversation extends Model
     {
         return $query->where('outcome', '!=', 'none')
             ->whereNotNull('outcome_initiator_at')
-            ->whereNotNull('outcome_recipient_at');
+            ->whereNotNull('outcome_recipient_at')
+            ->where($query->qualifyColumn('needs_review'), false); // the ring check: not counted until a moderator clears it
     }
 
     /** Confirmed outcomes that are a result: a sale, a hire, a partnership. */
     public function scopeSuccessful(Builder $query): Builder
     {
         return $query->confirmed()->whereIn('outcome', self::POSITIVE_OUTCOMES);
+    }
+
+    /**
+     * Results both sides confirmed, flagged or not. For the people who took part (they may review it); public counts use
+     * successful(), which leaves out what the ring check is still holding.
+     */
+    public function scopeSuccessfulIncludingFlagged(Builder $query): Builder
+    {
+        return $query->where('outcome', '!=', 'none')->whereIn('outcome', self::POSITIVE_OUTCOMES)
+            ->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at');
     }
 
     /** Lines a user may see: their own, plus the lines of every page they answer for. */

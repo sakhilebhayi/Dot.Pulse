@@ -92,6 +92,9 @@ class OutcomeService
         $this->lines->writeMessage($c, $by, $side, 'Both sides confirmed: '.$this->word($c->outcome).'.', 'system', ['event' => 'outcome_confirmed', 'outcome' => $c->outcome], touch: false);
         AuditLog::record($by, 'line.outcome_confirm', $c, ['outcome' => $c->outcome]);
 
+        // Accepted either way; a pair that keeps confirming each other's results is held back from public counts for a person to look at.
+        app(RingCheck::class)->assess($c);
+
         $positive = in_array($c->outcome, PulseConversation::POSITIVE_OUTCOMES, true);
         foreach (['initiator', 'recipient'] as $s) {
             $this->lines->notifySide($c, $s, null, [

@@ -199,4 +199,53 @@ return [
     ],
     // --- end security ---
 
+    // --- privacy (R-41 hardening) ---
+    'privacy' => [
+        // K-anonymity for anonymous talent cards (D23): an employer is shown an anonymous card only when this many
+        // professionals share its primary skills and region. Never set it below 5 in production; tests lower it.
+        'talent_cohort_min' => (int) env('PULSE_TALENT_COHORT_MIN', 5),
+
+        // Step-up before the two sensitive privacy actions. Everyone signs in through InfoDot, so there is no password to
+        // re-ask: the person types a phrase and, when mail is configured, a 6 digit code Pulse emails them (10 minutes).
+        // 'auto' asks for the code only when the mailer is a real one (not log or array); 'on' and 'off' force it.
+        'step_up_code' => env('PULSE_STEP_UP_CODE', 'auto'),
+        'step_up_minutes' => 10,
+        // Whether /me/privacy/export insists on that confirmation first. Tests that only want the file turn it off.
+        'export_needs_confirmation' => (bool) env('PULSE_EXPORT_NEEDS_CONFIRMATION', true),
+    ],
+    // --- end privacy ---
+
+    // --- invitations (R-41 hardening) ---
+    'invitations' => [
+        'ttl_days' => (int) env('PULSE_INVITATION_TTL_DAYS', 14),
+        'per_person_hour' => (int) env('PULSE_LIMIT_INVITES_HOUR', 20),
+        'per_page_day' => (int) env('PULSE_LIMIT_INVITES_PAGE_DAY', 50),
+    ],
+    // --- end invitations ---
+
+    // --- retention ---
+    // `pulse:retention` (daily). What is held, why and for how long: docs/programme/R41_PRIVACY.md.
+    'retention' => [
+        'closed_line_messages_months' => (int) env('PULSE_RETAIN_MESSAGES_MONTHS', 24),
+        'declined_request_days' => (int) env('PULSE_RETAIN_REQUESTS_DAYS', 90),
+        'ended_signal_days' => (int) env('PULSE_RETAIN_SIGNALS_DAYS', 90), // expired or removed signals, dismissed matches, ended needs' text
+        'read_notification_months' => (int) env('PULSE_RETAIN_NOTIFICATIONS_MONTHS', 12),
+        'audit_actor_months' => (int) env('PULSE_RETAIN_AUDIT_ACTOR_MONTHS', 24), // the actor and ip hash are nulled; rows are never deleted
+        'invitation_days' => (int) env('PULSE_RETAIN_INVITATIONS_DAYS', 30),
+        'chunk' => 500,
+    ],
+    // --- end retention ---
+
+    // --- ring check ---
+    // Two accounts confirming each other's results again and again. Only pair frequency and account age are used (there
+    // is no device or ip signal). A flagged result is accepted, stays out of public counts and the ladder, and its
+    // reviews are held, until a moderator approves or discards it.
+    'ring' => [
+        'window_days' => (int) env('PULSE_RING_WINDOW_DAYS', 90),
+        'max_pair_results' => (int) env('PULSE_RING_MAX_PAIR', 3),            // more than this many confirmed results between the same pair is flagged
+        'new_account_days' => (int) env('PULSE_RING_NEW_ACCOUNT_DAYS', 7),
+        'new_account_max_pair_results' => (int) env('PULSE_RING_NEW_ACCOUNT_MAX_PAIR', 1), // the limit when either side's account is that new
+    ],
+    // --- end ring check ---
+
 ];
