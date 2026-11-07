@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Pulse\Me\Concerns;
 
+use App\Models\PulseProfile;
+use App\Models\User;
 use App\Services\Pulse\Lines\NotificationPresenter;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -47,14 +49,28 @@ trait PresentsNotifications
                 'text' => '',
                 'url' => null,
             ],
-            default => [
-                'lead' => $data['follower_name'] ?? 'Someone',
-                'text' => ' started following you',
-                'url' => isset($data['follower_id']) ? route('users.show', $data['follower_id']) : null,
-            ],
+            default => $this->followerRow($data),
         };
 
         return $row + ['category' => 'community'];
+    }
+
+    /**
+     * "Someone started following you". An anonymous professional is not named and not linked: their page is a 404.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{lead: string, text: string, url: ?string}
+     */
+    protected function followerRow(array $data): array
+    {
+        $follower = isset($data['follower_id']) ? User::query()->with('pulseProfile')->find($data['follower_id']) : null;
+        $hidden = $follower !== null && PulseProfile::isHiddenFrom($follower, auth()->user());
+
+        return [
+            'lead' => $hidden ? 'A professional' : ($data['follower_name'] ?? 'Someone'),
+            'text' => ' started following you',
+            'url' => isset($data['follower_id']) && ! $hidden ? route('users.show', $data['follower_id']) : null,
+        ];
     }
 
     /** Only same-site links are followed from a notification. */

@@ -26,9 +26,10 @@
             <div class="lg-list">
                 @foreach($this->pendingRequests as $joinRequest)
                     <div class="pk-row lg-person" wire:key="join-request-{{ $joinRequest->id }}">
-                        <a href="{{ route('users.show', $joinRequest->user) }}" class="lg-avatar" aria-label="{{ $joinRequest->user->name }}"><x-pulse.avatar :name="$joinRequest->user->name" /></a>
+                        @php $linkable = \App\Models\PulseProfile::isLinkable($joinRequest->user, auth()->user()); @endphp
+                        @if($linkable)<a href="{{ route('users.show', $joinRequest->user) }}" class="lg-avatar" aria-label="{{ $joinRequest->user->name }}"><x-pulse.avatar :name="$joinRequest->user->name" /></a>@else<span class="lg-avatar"><x-pulse.avatar :name="$joinRequest->user->name" /></span>@endif
                         <div class="pk-row__main">
-                            <a href="{{ route('users.show', $joinRequest->user) }}" class="pk-row__title">{{ $joinRequest->user->name }}</a>
+                            @if($linkable)<a href="{{ route('users.show', $joinRequest->user) }}" class="pk-row__title">{{ $joinRequest->user->name }}</a>@else<span class="pk-row__title">{{ $joinRequest->user->name }}</span>@endif
                             <span class="pk-row__meta">asked {{ $joinRequest->created_at->diffForHumans() }}</span>
                         </div>
                         <div class="pk-cluster">

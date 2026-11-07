@@ -1,11 +1,12 @@
 @php
     $author = $comment->author;
+    $linkable = \App\Models\PulseProfile::isLinkable($author, auth()->user());
 @endphp
 <div class="lg-comment">
-    <a href="{{ route('users.show', $author) }}" class="lg-avatar" aria-label="{{ $author->name }}"><x-pulse.avatar :name="$author->name" size="sm" /></a>
+    @if($linkable)<a href="{{ route('users.show', $author) }}" class="lg-avatar" aria-label="{{ $author->name }}"><x-pulse.avatar :name="$author->name" size="sm" /></a>@else<span class="lg-avatar"><x-pulse.avatar :name="$author->name" size="sm" /></span>@endif
     <div class="lg-comment__main">
         <div class="lg-post__meta">
-            <a href="{{ route('users.show', $author) }}" class="lg-post__name">{{ $author->name }}</a>
+            @if($linkable)<a href="{{ route('users.show', $author) }}" class="lg-post__name">{{ $author->name }}</a>@else<span class="lg-post__name">{{ $author->name }}</span>@endif
             <livewire:pulse.follow-button :user="$author" :compact="true" wire:key="follow-{{ $author->id }}-comment-{{ $comment->id }}" />
             @if($comment->is_solution)<x-pulse.pill tone="good">Solution</x-pulse.pill>@endif
             <time class="lg-post__time" datetime="{{ $comment->created_at->toIso8601String() }}">{{ $comment->created_at->diffForHumans() }}</time>

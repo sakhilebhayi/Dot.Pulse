@@ -36,9 +36,10 @@
             @foreach($this->posts as $post)
                 <article class="pk-card lg-post" wire:key="post-{{ $post->id }}">
                     <header class="lg-post__head">
-                        <a href="{{ route('users.show', $post->author) }}" class="lg-avatar" aria-label="{{ $post->author->name }}"><x-pulse.avatar :name="$post->author->name" /></a>
+                        @php $linkable = \App\Models\PulseProfile::isLinkable($post->author, auth()->user()); @endphp
+                        @if($linkable)<a href="{{ route('users.show', $post->author) }}" class="lg-avatar" aria-label="{{ $post->author->name }}"><x-pulse.avatar :name="$post->author->name" /></a>@else<span class="lg-avatar"><x-pulse.avatar :name="$post->author->name" /></span>@endif
                         <div class="lg-post__meta">
-                            <a href="{{ route('users.show', $post->author) }}" class="lg-post__name">{{ $post->author->name }}</a>
+                            @if($linkable)<a href="{{ route('users.show', $post->author) }}" class="lg-post__name">{{ $post->author->name }}</a>@else<span class="lg-post__name">{{ $post->author->name }}</span>@endif
                             <livewire:pulse.follow-button :user="$post->author" :compact="true" wire:key="follow-{{ $post->author->id }}-feed-{{ $post->id }}" />
                             <x-pulse.kind-word :kind="str_replace('_', ' ', ucfirst($post->type))" />
                             @if($post->community)

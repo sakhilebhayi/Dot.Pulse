@@ -71,6 +71,57 @@ class PulseProfile extends Model
         return $this->age_confirmed_at !== null;
     }
 
+    // -- what other people may see of a person, in lists and bylines ----------------------------------------------
+    // One place decides it. An anonymous professional's card must never be tied to a name: no profile link (the page
+    // is a 404 for everyone but them), no headline, no photo. A byline on something they wrote themselves in the
+    // community keeps their name, because posting is public by their own act and it is not the talent card.
+
+    /** True when this person is an anonymous professional and the viewer is someone else. */
+    public static function isHiddenFrom(User $person, ?User $viewer = null): bool
+    {
+        $viewer ??= auth()->user();
+
+        if ($viewer !== null && $viewer->id === $person->id) {
+            return false;
+        }
+
+        return $person->pulseProfile?->discoverability === 'anonymous';
+    }
+
+    /** Whether a link to /u/{id} would open. It would 404 for an anonymous professional, so no link is drawn. */
+    public static function isLinkable(User $person, ?User $viewer = null): bool
+    {
+        return ! self::isHiddenFrom($person, $viewer);
+    }
+
+    /**
+     * The name to show. `authored` is for a byline on something the person wrote in the community (a post, a comment, a
+     * join request): their handle, as they posted it. Anywhere else (people lists, suggestions) an anonymous
+     * professional is not named.
+     */
+    public static function publicName(User $person, ?User $viewer = null, bool $authored = false): string
+    {
+        return ! $authored && self::isHiddenFrom($person, $viewer) ? 'A professional' : (string) $person->name;
+    }
+
+    /** The headline to show in a people list: only for people whose profile is open. Never an anonymous or private one. */
+    public static function publicHeadline(User $person, ?User $viewer = null): ?string
+    {
+        $profile = $person->pulseProfile;
+
+        if ($profile === null || self::isHiddenFrom($person, $viewer)) {
+            return null;
+        }
+
+        $viewer ??= auth()->user();
+
+        if ($viewer !== null && $viewer->id === $person->id) {
+            return filled($profile->headline) ? $profile->headline : null;
+        }
+
+        return $profile->discoverability === 'open' && $profile->isAdultConfirmed() && filled($profile->headline) ? $profile->headline : null;
+    }
+
     /**
      * Finished the welcome flow, or already had a profile in use before the flow existed (a headline, an about text, a
      * place or an open-to choice). Such people are not sent through it.

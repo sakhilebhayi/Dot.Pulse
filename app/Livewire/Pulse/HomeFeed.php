@@ -22,7 +22,7 @@ class HomeFeed extends Component
     #[Computed]
     public function posts(): Collection
     {
-        return PulsePost::with(['author', 'community', 'enrichment'])
+        return PulsePost::with(['author.pulseProfile', 'community', 'enrichment'])
             ->published()
             // The viewer's own view of the world: public posts, posts with
             // no community, and posts from communities they belong to.

@@ -37,7 +37,7 @@ class CommunityShow extends Component
         return $this->community->posts()
             ->published()
             ->visibleTo(auth()->user())
-            ->with(['author', 'enrichment'])
+            ->with(['author.pulseProfile', 'enrichment'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->limit(30)
@@ -65,7 +65,7 @@ class CommunityShow extends Component
 
         return $this->community->joinRequests()
             ->where('status', CommunityJoinRequest::PENDING)
-            ->with('user')
+            ->with('user.pulseProfile')
             ->oldest()
             ->get();
     }
