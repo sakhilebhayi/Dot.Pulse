@@ -138,7 +138,7 @@ class KnockSheet extends Component
             'whenOrQty' => ['nullable', 'string', 'max:120'],
             'where' => ['nullable', 'string', 'max:120'],
             'budgetBand' => ['nullable', 'string', 'max:80'],
-        ], [], ['what' => 'what you want', 'whenOrQty' => 'when or how many', 'where' => 'where', 'budgetBand' => 'budget']);
+        ], ['what.required' => 'Say what you want in a few words.'], ['what' => 'what you want', 'whenOrQty' => 'when or how many', 'where' => 'where', 'budgetBand' => 'budget']);
 
         try {
             $line = $lines->knock(auth()->user(), $this->target, $this->kind, [

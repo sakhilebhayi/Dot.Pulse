@@ -10,6 +10,7 @@
             <x-pulse.tabs :tabs="$tabs" :active="$kind" label="Saved, by kind" />
         @endif
 
+        <h2 class="sr-only">Saved beats</h2>
         <div class="pk-enter fl-list">
             @forelse ($shown as $b)
                 @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'saved', 'why' => []])

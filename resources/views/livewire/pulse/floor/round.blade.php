@@ -20,6 +20,7 @@
         </x-pulse.empty>
     @else
         @if ($beats !== [])
+            <h2 class="sr-only">The round</h2>
             <div class="pk-enter fl-list">
                 @foreach ($beats as $b)
                     @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => []])

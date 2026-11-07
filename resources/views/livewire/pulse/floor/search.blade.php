@@ -77,6 +77,7 @@
         </x-pulse.empty>
     @else
         <p class="fl-count" role="status">{{ $total }} {{ $total === 1 ? 'result' : 'results' }}@if ($ran !== '') for <strong>{{ $ran }}</strong>@endif.</p>
+        <h2 class="sr-only">Results</h2>
         <div class="pk-enter fl-list">
             @foreach ($beats as $b)
                 @if (($b['result'] ?? 'signal') === 'entity')

@@ -163,6 +163,7 @@
 /* ---------- Context column ---------- */
 .fl-context {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-md);
 }
 
@@ -251,6 +252,7 @@ kbd {
 
 .fl-sheet {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
 }
 
@@ -304,6 +306,7 @@ kbd {
 .fl-search {
     position: relative;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
 }
 
@@ -430,6 +433,7 @@ kbd {
 /* ---------- Doors ---------- */
 .fl-door {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-md);
 }
 
@@ -536,6 +540,7 @@ kbd {
 
 .fl-detail {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-md);
 }
 
@@ -570,6 +575,7 @@ kbd {
 
 .fl-section {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
 }
 
@@ -604,6 +610,7 @@ kbd {
 
 .fl-safety {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
 }
 
@@ -617,4 +624,20 @@ kbd {
     .fl-draw {
         animation: none;
     }
+}
+
+.fl-facts--block + p {
+    margin-top: 12px;
+}
+
+.fl-search__bar > .pk-btn {
+    flex: none;
+}
+
+/* A long verification sentence wraps inside the beat instead of running off a phone. */
+.fl-beat .pk-beat__from-text .pk-pill,
+.fl-detail .pk-beat__from-text .pk-pill {
+    max-width: 100%;
+    white-space: normal;
+    align-items: flex-start;
 }
