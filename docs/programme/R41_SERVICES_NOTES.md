@@ -55,3 +55,17 @@ Read after `R41_DOMAIN_SPEC.md`. Where this file and the spec differ, this file 
 - `PulseNeedPolicy::view` is the only rule for matched needs. Beat urls point at the offer, role (by slug), need, page or post, and fall back to `signals.show`; doors use `signals.show`.
 - `PulseProfile::OPEN_TO` gains `suppliers` and `learning`. Matching does not use them yet (only `collab` is read); they are displayed and stored.
 - Intentionally not done: a column default change for `pulse_notification_prefs.digest` (every writer sets it, and a SQLite column change is a table rebuild).
+
+## Hardening (feat/r41-hard)
+
+### K-anonymity for anonymous talent (D23)
+- `Discovery\AnonymousCohort` is the one rule. An anonymous card is shown to an employer only when at least `pulse.privacy.talent_cohort_min` (5; `PULSE_TALENT_COHORT_MIN`) live, adult confirmed, open or anonymous professionals share the card's primary skills (the first three it lists) and its region. People who hide from this employer, blocked it, were blocked by it, or belong to its pages do not count. A card that lists no skills is never shown. Open professionals are never held back, but they count towards cohorts.
+- The rule sits inside `Matcher::talentVisible`, so it covers the Floor, stored matches, saved, the digest, search, `signals.show` (404) and, in `LineService::prepareInvite`, invitations (the same "cannot be contacted right now"). The cohort belongs to the card, not to the query: two searches cannot differ by one person.
+- Search holds anonymous cards to their cohort attributes: they are found by skills and region only (not headline, interests, experience band or the remote switch).
+- Tests set `pulse.privacy.talent_cohort_min` to 1 in `Tests\TestCase`; the tests of the rule (`AnonymousCohortTest`, `AnonymousLinkabilityTest`) put it back to 5.
+- Residual: a card shows up to eight skills, the cohort guarantee covers the first three. The headline is free text the person wrote.
+
+### Anonymous professionals acting under their name
+- Rule: while discoverability is `anonymous` the person cannot open a Door or publish or reopen a Need ("Switch to open to do this under your name."). Switching to anonymous closes their open door and open needs. `Entities\AnonymousGuard` holds it (`Doors::open`, `NeedService::create/reopen`, `ProfileService::setDiscoverability`).
+- Community posts and comments stay allowed: public by the person's own act, handle byline, no profile link, no place or skills on the post signal. Offers and roles belong to a business page, not to the person.
+- The card the employer sees has no owner, no subject id, a region only and the start of its week as its time, so no timestamp joins it to a post.

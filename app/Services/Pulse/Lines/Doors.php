@@ -8,6 +8,7 @@ use App\Models\PulseEntity;
 use App\Models\PulseProfile;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Entities\AnonymousGuard;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,9 @@ class Doors
             }
         } elseif (! $owner->is($by)) {
             throw new AuthorizationException('You can only open your own door.');
+        } elseif (AnonymousGuard::isAnonymous($owner)) {
+            // A door carries your name and your place, which would join it to your anonymous card.
+            throw LineException::because('anonymous', AnonymousGuard::MESSAGE.' A door carries your name.');
         }
 
         if (! isset(self::LENGTHS[$length])) {

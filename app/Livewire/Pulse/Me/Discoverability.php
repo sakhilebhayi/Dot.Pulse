@@ -38,7 +38,7 @@ class Discoverability extends Component
             $service->setDiscoverability(auth()->user(), $value);
             $this->dispatch('toast', message: match ($value) {
                 'off' => 'Employers can no longer find you.',
-                'anonymous' => 'Employers can find you without your name.',
+                'anonymous' => 'Employers can find you without your name. Doors and needs stay closed while you are anonymous, because they carry your name.',
                 default => 'Employers can find you by name.',
             }, kind: 'good');
         } catch (ValidationException $e) {

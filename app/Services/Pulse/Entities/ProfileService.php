@@ -80,6 +80,10 @@ class ProfileService
 
         Audit::record($by, 'profile.discoverability', $profile, ['mode' => $mode]);
 
+        if ($mode === 'anonymous') {
+            AnonymousGuard::closeNamedSurfaces($by);
+        }
+
         return $profile->refresh();
     }
 

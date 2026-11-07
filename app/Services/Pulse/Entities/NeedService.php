@@ -22,6 +22,8 @@ class NeedService
     /** @param array<string, mixed> $data */
     public function create(User $by, array $data): PulseNeed
     {
+        AnonymousGuard::assertNeedAllowed($by);
+
         $max = (int) config('pulse.entities.max_open_needs', 10);
 
         if (PulseNeed::query()->where('user_id', $by->id)->where('status', 'open')->count() >= $max) {
@@ -82,6 +84,7 @@ class NeedService
     {
         Gate::forUser($by)->authorize('update', $n);
         $this->guardEditable($n);
+        AnonymousGuard::assertNeedAllowed($by);
 
         $max = (int) config('pulse.entities.max_open_needs', 10);
 
