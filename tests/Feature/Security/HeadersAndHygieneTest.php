@@ -124,4 +124,35 @@ class HeadersAndHygieneTest extends TestCase
         $this->getJson('/api/pulse/pulse-check')->assertUnauthorized();
         $this->get('/api/pulse/pulse-check', ['Accept' => 'text/html'])->assertStatus(401);
     }
+
+    public function test_the_session_cookie_is_secure_by_default_in_production(): void
+    {
+        $this->assertStringContainsString("env('APP_ENV') === 'production'", file_get_contents(config_path('session.php')));
+        $this->assertTrue((bool) config('session.http_only'));
+    }
+
+    public function test_reset_links_cannot_be_mailed_on_demand(): void
+    {
+        $statuses = [];
+        for ($i = 0; $i < 8; $i++) {
+            $statuses[] = $this->post('/forgot-password', ['email' => 'nobody'.$i.'@example.test'])->getStatusCode();
+        }
+
+        $this->assertContains(429, $statuses, 'the mail form is not limited');
+    }
+
+    public function test_the_reset_form_answers_the_same_for_an_address_with_an_account_and_one_without(): void
+    {
+        User::factory()->create(['email' => 'known@example.test']);
+
+        $known = $this->from('/forgot-password')->post('/forgot-password', ['email' => 'known@example.test']);
+        $this->flushSession();
+        $unknown = $this->from('/forgot-password')->post('/forgot-password', ['email' => 'unknown@example.test']);
+
+        $this->assertSame($known->getStatusCode(), $unknown->getStatusCode());
+        $this->assertSame($known->headers->get('Location'), $unknown->headers->get('Location'));
+        $unknown->assertSessionHas('status');
+        $unknown->assertSessionHasNoErrors();
+        $this->assertSame(session('status'), trans('passwords.sent'));
+    }
 }
