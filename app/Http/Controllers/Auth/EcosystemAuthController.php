@@ -101,6 +101,13 @@ class EcosystemAuthController extends Controller
 
             if ($user) {
                 $syncTeams($user, $identity);
+
+                // A page linked to an InfoDot company re-reads what InfoDot said about it. Never blocks sign-in.
+                try {
+                    app(\App\Services\Pulse\Entities\VerificationService::class)->refreshForUser($user, $identity);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 
