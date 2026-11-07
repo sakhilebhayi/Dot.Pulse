@@ -5,7 +5,6 @@ namespace App\Services\Pulse\Lines;
 use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Models\PulseEntity;
-use App\Models\PulseEntityMember;
 use App\Models\PulseMessage;
 use App\Models\PulseProfile;
 use App\Models\PulseRole;
@@ -399,10 +398,10 @@ class LineService
     public function inbox(User $u, array $filters = []): LengthAwarePaginator
     {
         $tab = (string) ($filters['tab'] ?? 'open');
-        $entityIds = PulseEntityMember::query()->where('user_id', $u->id)->whereIn('role', Access::RESPONDER_ROLES)->select('entity_id');
+        $entityIds = PulseConversation::responderEntityIds($u);
 
-        $recipientSide = fn ($q) => $q->where(fn ($w) => $w->where('recipient_id', $u->id)->orWhereIn('entity_id', $entityIds));
-        $initiatorSide = fn ($q) => $q->where(fn ($w) => $w->where('initiator_id', $u->id)->orWhereIn('initiator_entity_id', $entityIds));
+        $recipientSide = fn ($q) => $q->where(fn ($w) => $w->where('recipient_id', $u->id)->when($entityIds !== [], fn ($x) => $x->orWhereIn('entity_id', $entityIds)));
+        $initiatorSide = fn ($q) => $q->where(fn ($w) => $w->where('initiator_id', $u->id)->when($entityIds !== [], fn ($x) => $x->orWhereIn('initiator_entity_id', $entityIds)));
 
         $query = PulseConversation::query()->visibleTo($u)
             ->with(['initiator:id,name,profile_photo_path', 'entity:id,slug,name,logo_media_id', 'initiatorEntity:id,slug,name,logo_media_id']);
@@ -437,8 +436,8 @@ class LineService
 
         $snippets = $this->snippets($page->getCollection()->pluck('id'));
 
-        $page->getCollection()->transform(function (PulseConversation $c) use ($u, $snippets) {
-            return $this->presenter->present($u, $c, $snippets[$c->id] ?? null);
+        $page->getCollection()->transform(function (PulseConversation $c) use ($u, $snippets, $entityIds) {
+            return $this->presenter->present($u, $c, $snippets[$c->id] ?? null, $entityIds);
         });
 
         return $page;

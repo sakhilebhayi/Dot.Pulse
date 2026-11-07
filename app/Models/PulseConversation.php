@@ -164,26 +164,29 @@ class PulseConversation extends Model
     /** Lines a user may see: their own, plus the lines of every page they answer for. */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        $entityIds = PulseEntityMember::query()
-            ->where('user_id', $user->id)
-            ->whereIn('role', Access::RESPONDER_ROLES)
-            ->select('entity_id');
+        $entityIds = self::responderEntityIds($user);
 
         return $query->where(function (Builder $q) use ($user, $entityIds) {
             $q->where('initiator_id', $user->id)
                 ->orWhere('recipient_id', $user->id)
-                ->orWhereIn('entity_id', $entityIds)
-                ->orWhereIn('initiator_entity_id', $entityIds);
+                // No pages: no branch at all. An empty list becomes "0 = 1", and an OR with a constant stops SQLite
+                // using the per-column indexes for the other branches.
+                ->when($entityIds !== [], fn (Builder $w) => $w->orWhereIn('entity_id', $entityIds)->orWhereIn('initiator_entity_id', $entityIds));
         });
     }
 
-    /** Responder entity ids for a user, as a subquery. */
-    private static function responderEntityIds(User $user)
+    /**
+     * The pages a user answers for, as a plain list. A list (not a sub-select) lets the database use the per-column
+     * indexes on the line table for each side of the OR instead of scanning every line and probing a hashed sub-plan.
+     *
+     * @return list<int>
+     */
+    public static function responderEntityIds(User $user): array
     {
         return PulseEntityMember::query()
             ->where('user_id', $user->id)
             ->whereIn('role', Access::RESPONDER_ROLES)
-            ->select('entity_id');
+            ->pluck('entity_id')->map(fn ($id) => (int) $id)->all();
     }
 
     /**
@@ -191,19 +194,20 @@ class PulseConversation extends Model
      * and is newer than the user's side's read mark. Requests the user let lapse quietly are not counted.
      *
      * @param  list<string>  $statuses
+     * @param  list<int>|null  $entityIds  the pages the user answers for, when the caller already has them
      */
-    public function scopeUnreadFor(Builder $query, User $user, array $statuses = [self::REQUESTED, self::OPEN]): Builder
+    public function scopeUnreadFor(Builder $query, User $user, array $statuses = [self::REQUESTED, self::OPEN], ?array $entityIds = null): Builder
     {
-        $entityIds = self::responderEntityIds($user);
+        $entityIds ??= self::responderEntityIds($user);
 
         return $query->whereIn('status', $statuses)->where(function (Builder $q) use ($user, $entityIds) {
             $q->where(function (Builder $a) use ($user, $entityIds) {
-                $a->where(fn (Builder $w) => $w->where('recipient_id', $user->id)->orWhereIn('entity_id', $entityIds))
+                $a->where(fn (Builder $w) => $w->where('recipient_id', $user->id)->when($entityIds !== [], fn (Builder $x) => $x->orWhereIn('entity_id', $entityIds)))
                     ->whereNull('ignored_at')
                     ->where('last_message_side', 'initiator')
                     ->where(fn (Builder $r) => $r->whereNull('recipient_read_at')->orWhereColumn('last_message_at', '>=', 'recipient_read_at'));
             })->orWhere(function (Builder $a) use ($user, $entityIds) {
-                $a->where(fn (Builder $w) => $w->where('initiator_id', $user->id)->orWhereIn('initiator_entity_id', $entityIds))
+                $a->where(fn (Builder $w) => $w->where('initiator_id', $user->id)->when($entityIds !== [], fn (Builder $x) => $x->orWhereIn('initiator_entity_id', $entityIds)))
                     ->where('last_message_side', 'recipient')
                     ->where(fn (Builder $r) => $r->whereNull('initiator_read_at')->orWhereColumn('last_message_at', '>=', 'initiator_read_at'));
             });
@@ -211,11 +215,11 @@ class PulseConversation extends Model
     }
 
     /** Requests waiting for this user's answer (not the ones they let lapse). */
-    public function scopeAwaitingAnswerFrom(Builder $query, User $user): Builder
+    public function scopeAwaitingAnswerFrom(Builder $query, User $user, ?array $entityIds = null): Builder
     {
-        $entityIds = self::responderEntityIds($user);
+        $entityIds ??= self::responderEntityIds($user);
 
         return $query->where('status', self::REQUESTED)->whereNull('ignored_at')
-            ->where(fn (Builder $w) => $w->where('recipient_id', $user->id)->orWhereIn('entity_id', $entityIds));
+            ->where(fn (Builder $w) => $w->where('recipient_id', $user->id)->when($entityIds !== [], fn (Builder $x) => $x->orWhereIn('entity_id', $entityIds)));
     }
 }

@@ -40,8 +40,11 @@ class Access
         return PulseEntityMember::query()->where('entity_id', $id)->where('user_id', $user->id)->exists();
     }
 
-    /** @return 'initiator'|'recipient'|null */
-    public static function side(User $user, PulseConversation $c): ?string
+    /**
+     * @param  list<int>|null  $pages  the pages the user answers for, when the caller already has them (a list of lines): saves one query per line
+     * @return 'initiator'|'recipient'|null
+     */
+    public static function side(User $user, PulseConversation $c, ?array $pages = null): ?string
     {
         if ($c->initiator_id === $user->id) {
             return 'initiator';
@@ -51,11 +54,14 @@ class Access
             return 'recipient';
         }
 
-        if ($c->initiator_entity_id !== null && self::canRespondFor($user, $c->initiator_entity_id)) {
+        $answers = fn (?int $entityId) => $entityId !== null
+            && ($pages !== null ? in_array($entityId, $pages, true) : self::canRespondFor($user, $entityId));
+
+        if ($answers($c->initiator_entity_id)) {
             return 'initiator';
         }
 
-        if ($c->entity_id !== null && self::canRespondFor($user, $c->entity_id)) {
+        if ($answers($c->entity_id)) {
             return 'recipient';
         }
 

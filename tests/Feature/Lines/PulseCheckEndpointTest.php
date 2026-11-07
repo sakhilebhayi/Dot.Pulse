@@ -64,7 +64,7 @@ class PulseCheckEndpointTest extends TestCase
         $this->actingAs($sender)->getJson('/api/pulse/pulse-check')->assertJsonPath('lines_unread', 1);
     }
 
-    public function test_it_is_cheap_three_queries_and_no_more(): void
+    public function test_it_is_cheap_one_counting_statement_and_no_more(): void
     {
         $page = $this->page(null, ['contact_policy' => 'requests']);
         $owner = $this->responderOf($page);
@@ -79,8 +79,10 @@ class PulseCheckEndpointTest extends TestCase
         $this->getJson('/api/pulse/pulse-check')->assertOk();
 
         $pulse = collect(DB::getQueryLog())->filter(fn ($q) => preg_match('/from "(pulse_conversations|notifications)"/', $q['query']));
-        $this->assertCount(3, $pulse, $pulse->pluck('query')->implode("\n"));
+        // The three counts are sub-selects of one statement; the only other read is the list of pages the person answers for.
+        $this->assertCount(1, $pulse, $pulse->pluck('query')->implode("\n"));
         $this->assertTrue($pulse->every(fn ($q) => str_contains($q['query'], 'count(*)')), 'counts only, no rows hydrated');
+        $this->assertLessThanOrEqual(2, count(DB::getQueryLog()), collect(DB::getQueryLog())->pluck('query')->implode("\n"));
     }
 
     public function test_the_unread_queries_use_indexes_on_the_new_columns(): void
