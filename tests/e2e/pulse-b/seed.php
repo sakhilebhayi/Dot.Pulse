@@ -124,6 +124,19 @@ $aneleNeed = $needs->create($anele, [
 // --- notification prefs for the spec 9 person ---
 // (none: defaults are private; the spec changes them through the UI)
 
+// --- richer data for the crawl (spec 15/16): a community with posts, an open line with messages, a quote request ---
+// Specs that count lines or notifications start from their own users, so these use people no other spec drives:
+// Naledi (extra) talks to Moyo Books; Jabu asks Moyo Plumbing for a quote (a quote group needs a need or offer).
+if (getenv('PULSE_E2E_RICH') === '1') {
+    $community = App\Models\Community::factory()->create(['created_by' => $extra->id, 'name' => 'Soweto Small Business', 'slug' => 'soweto-small-business', 'description' => 'Neighbours who run small businesses.']);
+    $post = App\Models\PulsePost::factory()->create(['user_id' => $extra->id, 'community_id' => $community->id, 'title' => 'Who delivers in Soweto?', 'body' => 'Looking for a reliable courier for small parcels. Any recommendations?', 'status' => 'published']);
+    $lines = app(App\Services\Pulse\Lines\LineService::class);
+    $line = $lines->knock($extra, ['entity' => $books->id], 'enquiry', ['what' => 'Monthly books for a salon', 'when_or_qty' => 'From December', 'where' => 'Soweto', 'budget_band' => 'R1 500'], $bookOffer);
+    $lines->send($sipho, $line->fresh(), 'Happy to help. How many invoices a month?');
+    $lines->send($extra, $line->fresh(), 'About forty.');
+    $richSeed = ['community' => $community->slug, 'post' => $post->id, 'line' => $line->id];
+}
+
 // Index and match through the real commands.
 Artisan::call('pulse:index');
 Artisan::call('pulse:match');
@@ -145,8 +158,10 @@ $seed['roles'] = ['dispatch' => ['id' => $dispatchRole->id, 'slug' => $dispatchR
 $seed['needs'] = ['anele' => ['id' => $aneleNeed->id, 'moderation' => $aneleNeed->moderation]];
 $seed['signals'] = DB::table('pulse_signals')->select('id', 'kind', 'subject_type', 'subject_id', 'owner_id', 'moderation')->get()->all();
 $seed['matches'] = DB::table('pulse_matches')->count();
+$seed['rich'] = $richSeed ?? null;
 $seed['secrets'] = ['lerato_name' => 'Anonsecret', 'lerato_email' => 'lerato.private@e2e.test', 'lerato_employer' => 'Secretfreight'];
 
-@mkdir(__DIR__.'/out', 0777, true);
-file_put_contents(__DIR__.'/out/seed.json', json_encode($seed, JSON_PRETTY_PRINT));
+$outDir = getenv('PULSE_E2E_OUT') ?: __DIR__.'/out';
+@mkdir($outDir, 0777, true);
+file_put_contents($outDir.'/seed.json', json_encode($seed, JSON_PRETTY_PRINT));
 echo "seed ok: ".count($seed['users'])." users, ".count($seed['signals'])." signals, {$seed['matches']} matches\n";

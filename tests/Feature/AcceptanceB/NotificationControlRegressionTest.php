@@ -95,4 +95,14 @@ class NotificationControlRegressionTest extends TestCase
         $this->assertSame(0, PulseNotificationPref::count());
         $this->assertSame(0, PulseSignal::count());
     }
+
+    public function test_the_transactional_mail_greets_the_recipient_by_first_name_and_signs_as_pulse(): void
+    {
+        $me = new User(['name' => 'Sipho Moyo', 'email' => 's@example.test']);
+        $mail = (new \App\Notifications\PulseNotice(['title' => 'Someone sent an enquiry', 'url' => 'http://x.test/lines/1'], ['mail']))->toMail($me);
+
+        $this->assertSame('Hi Sipho,', $mail->greeting);
+        $this->assertSame('Dot.Pulse', $mail->salutation);
+        $this->assertStringNotContainsString('Hello!', $mail->render()->toHtml());
+    }
 }

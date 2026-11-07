@@ -36,8 +36,13 @@ class PulseNotice extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        // The recipient's own first name only. Never a name from the payload: it may be someone they may not see.
+        $first = trim(explode(' ', trim((string) ($notifiable->name ?? '')))[0] ?? '');
+
         $mail = (new MailMessage)
             ->subject((string) ($this->payload['title'] ?? 'Something on Dot.Pulse'))
+            ->greeting($first !== '' ? 'Hi '.$first.',' : 'Hi,')
+            ->salutation('Dot.Pulse')
             ->line((string) ($this->payload['title'] ?? ''));
 
         if (! empty($this->payload['body'])) {

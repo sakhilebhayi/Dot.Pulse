@@ -9,8 +9,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../../..');
-const out = join(here, 'out');
-const PORT = 8791;
+// PULSE_B_PORT and PULSE_B_OUT let a second runner work in parallel (specs that do not read the mail log or call artisan down).
+const out = process.env.PULSE_B_OUT ? resolve(process.env.PULSE_B_OUT) : join(here, 'out');
+const PORT = Number(process.env.PULSE_B_PORT || 8791);
 const BASE = `http://127.0.0.1:${PORT}`;
 const db = join(out, 'e2e.sqlite');
 const reuse = process.env.REUSE === '1' && existsSync(db) && existsSync(join(out, 'seed.json'));
@@ -21,11 +22,12 @@ const env = {
     ...process.env,
     APP_ENV: 'local', APP_DEBUG: 'false', APP_URL: BASE,
     DB_CONNECTION: 'sqlite', DB_DATABASE: db,
-    SESSION_DRIVER: 'file', CACHE_STORE: 'file', QUEUE_CONNECTION: 'sync',
+    SESSION_DRIVER: 'file', CACHE_STORE: process.env.PULSE_B_PORT ? 'database' : 'file', QUEUE_CONNECTION: 'sync',
     BROADCAST_CONNECTION: 'null', MAIL_MAILER: 'log', LOG_CHANNEL: 'single', LOG_LEVEL: 'debug',
     ANALYTICS_INGEST_URL: '', ANALYTICS_INGEST_SECRET: '', ANALYTICS_COMPANY_UUID: '',
     ANTHROPIC_API_KEY: '', PHP_CLI_SERVER_WORKERS: '6',
     PULSE_E2E_BASE: BASE, PULSE_E2E_OUT: out,
+    PULSE_E2E_RICH: process.env.PULSE_E2E_RICH ?? '1',
 };
 
 Object.assign(process.env, env); // specs shell out to artisan against the same database

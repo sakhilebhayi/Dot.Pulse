@@ -905,3 +905,27 @@
         transition: none;
     }
 }
+
+/* ---------- Phone tap targets (found by the acceptance run, criterion 15) ----------
+   Small controls that were 20 to 32px tall on a phone. 44px is the floor; the hit area grows without changing the look
+   of the chip or the link around it. Last in the cascade on purpose. */
+@media (max-width: 859.98px) {
+    .me-chip button,
+    .bz-tagx {
+        width: 44px;
+        height: 44px;
+        margin-right: -14px;
+    }
+
+    .bz-chosen button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .fl-filters summary,
+    .op-table summary {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
