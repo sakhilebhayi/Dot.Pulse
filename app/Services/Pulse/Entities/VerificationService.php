@@ -301,7 +301,7 @@ class VerificationService
     private function lastOutcomeAt(PulseEntity $e): ?string
     {
         $at = DB::table('pulse_conversations')->where('entity_id', $e->id)
-            ->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at')->where('outcome', '!=', 'none')
+            ->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at')->where('outcome', '!=', 'none')->where('needs_review', false)
             ->selectRaw('max(outcome_initiator_at) as a, max(outcome_recipient_at) as b')->first();
 
         $times = array_filter([$at->a ?? null, $at->b ?? null]);

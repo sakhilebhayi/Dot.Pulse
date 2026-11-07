@@ -30,7 +30,7 @@ class ReviewService
      */
     public function canReview(User $u, PulseEntity|User $subject): ?PulseConversation
     {
-        $candidates = PulseConversation::query()->successful()
+        $candidates = PulseConversation::query()->successfulIncludingFlagged()
             ->when($subject instanceof PulseEntity,
                 fn ($q) => $q->where(fn ($w) => $w->where('entity_id', $subject->id)->orWhere('initiator_entity_id', $subject->id)),
                 fn ($q) => $q->where(fn ($w) => $w
@@ -116,7 +116,9 @@ class ReviewService
                     'reviewer_side' => $side,
                     'outcome' => $c->outcome,
                     'pseudonymous' => $pseudonymous,
-                    'moderation' => $verdict['verdict'] === 'hold' ? 'held' : 'approved',
+                    // A result the ring check flagged holds its reviews with it; the moderator decides both together.
+                    'moderation' => $c->needs_review || $verdict['verdict'] === 'hold' ? 'held' : 'approved',
+                    'held_for_ring' => (bool) $c->needs_review,
                 ]);
 
                 $other = PulseReview::query()->where('conversation_id', $c->id)->where('user_id', '!=', $by->id)->exists();

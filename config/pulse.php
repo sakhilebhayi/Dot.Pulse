@@ -228,4 +228,16 @@ return [
     ],
     // --- end retention ---
 
+    // --- ring check ---
+    // Two accounts confirming each other's results again and again. Only pair frequency and account age are used (there
+    // is no device or ip signal). A flagged result is accepted, stays out of public counts and the ladder, and its
+    // reviews are held, until a moderator approves or discards it.
+    'ring' => [
+        'window_days' => (int) env('PULSE_RING_WINDOW_DAYS', 90),
+        'max_pair_results' => (int) env('PULSE_RING_MAX_PAIR', 3),            // more than this many confirmed results between the same pair is flagged
+        'new_account_days' => (int) env('PULSE_RING_NEW_ACCOUNT_DAYS', 7),
+        'new_account_max_pair_results' => (int) env('PULSE_RING_NEW_ACCOUNT_MAX_PAIR', 1), // the limit when either side's account is that new
+    ],
+    // --- end ring check ---
+
 ];
