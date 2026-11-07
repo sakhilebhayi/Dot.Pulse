@@ -76,6 +76,14 @@ class PulseEntity extends Model
         ];
     }
 
+    /** The hiring signal is on and has not lapsed. A signal with no end date (set before signals lapsed) counts as on. */
+    public function hasHiringSignal(): bool
+    {
+        return $this->is_employer
+            && $this->hiring_signal !== 'none'
+            && ($this->hiring_signal_until === null || $this->hiring_signal_until->isFuture());
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

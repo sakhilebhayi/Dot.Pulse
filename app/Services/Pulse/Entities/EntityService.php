@@ -52,6 +52,7 @@ class EntityService
                 'status' => ($data['draft'] ?? false) ? 'draft' : 'live',
                 ...$this->gate->stamp($decision),
                 'verification_status' => 'unverified',
+                'hiring_signal_until' => ($clean['hiring_signal'] ?? 'none') !== 'none' ? now()->addDays((int) config('pulse.entities.hiring_signal_days', 60)) : null,
                 'claims' => $this->claimsFor($clean, []),
             ])->save();
 
@@ -100,6 +101,11 @@ class EntityService
 
         if (! $e->is_employer) {
             $e->hiring_signal = 'none';
+        }
+
+        // A hiring signal lapses unless it is renewed: setting it starts the clock, switching it off stops it.
+        if (array_key_exists('hiring_signal', $clean) || ! $e->is_employer) {
+            $e->hiring_signal_until = $e->hiring_signal === 'none' ? null : now()->addDays((int) config('pulse.entities.hiring_signal_days', 60));
         }
 
         $textChanged = $e->isDirty(['name', 'tagline', 'about']);
@@ -190,6 +196,21 @@ class EntityService
     {
         DB::table('pulse_entity_followers')->where('entity_id', $e->id)->where('user_id', $u->id)->delete();
         $this->recountFollowers($e);
+    }
+
+    /** Another full period for a hiring signal that is on. Owners and admins, like any change to the signal. */
+    public function renewHiringSignal(User $by, PulseEntity $e): PulseEntity
+    {
+        Gate::forUser($by)->authorize('update', $e);
+
+        if (! $e->is_employer || $e->hiring_signal === 'none') {
+            throw ValidationException::withMessages(['hiring_signal' => 'There is no hiring signal to renew. Turn one on first.']);
+        }
+
+        $e->forceFill(['hiring_signal_until' => now()->addDays((int) config('pulse.entities.hiring_signal_days', 60))])->save();
+        Audit::record($by, 'entity.hiring_signal.renew', $e, ['until' => $e->hiring_signal_until?->toIso8601String()]);
+
+        return $e->refresh();
     }
 
     /** Takes the page and everything on it out of discovery. Members still see it; `restore` brings it back. */

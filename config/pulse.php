@@ -58,6 +58,7 @@ return [
         'max_offer_images' => 8,
         'rules_class' => null, // tests only: the class whose assess() decides moderation instead of Discovery\Moderation\LocalRules
         'need_ttl_days' => (int) env('PULSE_NEED_TTL_DAYS', 30),
+        'hiring_signal_days' => (int) env('PULSE_HIRING_SIGNAL_DAYS', 60),
         'media' => [
             'disk' => env('PULSE_MEDIA_DISK', 'local'),
             'max_bytes' => 5 * 1024 * 1024,

@@ -104,7 +104,7 @@
                 </section>
             @endif
 
-            @if ($member && $entity->is_employer && $entity->hiring_signal !== 'none')
+            @if ($member && $entity->hasHiringSignal())
                 <section aria-labelledby="bz-hiring">
                     <h2 id="bz-hiring">{{ $entity->hiring_signal === 'active' ? 'Hiring now' : 'Building a team' }}</h2>
                     <p>{{ $entity->hiring_signal === 'active' ? 'This business is hiring and wants to meet people with these skills.' : 'No vacancy yet. This business wants to meet people with these skills before it advertises.' }}</p>

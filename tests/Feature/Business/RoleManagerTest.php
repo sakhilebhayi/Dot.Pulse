@@ -108,4 +108,17 @@ class RoleManagerTest extends BusinessTestCase
             ->call('newRole')->set('title', 'Waits for a look')->set('summary', 'Summary here.')
             ->call('savePublish')->assertSee('Waiting for a human');
     }
+
+    public function test_the_hiring_signal_shows_when_it_lapses_and_can_be_renewed(): void
+    {
+        $page = $this->page(null, ['hiring_signal' => 'active', 'hiring_skills' => ['Welding'], 'hiring_signal_until' => now()->addDays(3)]);
+        $owner = $page->members()->first()->user;
+
+        Livewire::actingAs($owner)->test(RoleManager::class, ['entity' => $page])
+            ->assertSee('lapses on '.now()->addDays(3)->format('j M Y').' unless you renew it')
+            ->call('renewSignal')
+            ->assertSee('Renewed. The signal stays on until '.now()->addDays(60)->format('j M Y'));
+
+        $this->assertEqualsWithDelta(now()->addDays(60)->getTimestamp(), $page->fresh()->hiring_signal_until->getTimestamp(), 5);
+    }
 }

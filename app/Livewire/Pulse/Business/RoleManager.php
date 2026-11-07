@@ -263,6 +263,27 @@ class RoleManager extends Component
         };
     }
 
+    public function renewSignal(EntityService $entities): void
+    {
+        $this->resetErrorBag();
+        $this->notice = null;
+
+        try {
+            $entity = $entities->renewHiringSignal(auth()->user(), $this->entity);
+        } catch (AuthorizationException) {
+            $this->addError('hiring_signal', 'Only an owner or an admin can renew the hiring signal.');
+
+            return;
+        } catch (ValidationException $e) {
+            $this->fail($e);
+
+            return;
+        }
+
+        unset($this->entity);
+        $this->notice = 'Renewed. The signal stays on until '.$entity->hiring_signal_until->format('j M Y').'.';
+    }
+
     public function render(): View
     {
         return view('livewire.pulse.business.role-manager');

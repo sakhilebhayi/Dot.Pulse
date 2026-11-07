@@ -17,7 +17,15 @@
                 <x-pulse.select name="hiring_signal" id="hs-signal" label="Signal" wire:model="hiring_signal" :options="['none' => 'Off', 'building' => 'Building a team, no vacancy yet', 'active' => 'Hiring now']" :disabled="! $this->canSignal" />
                 <x-pulse.field name="hiring_skills_text" id="hs-skills" label="Skills you want to meet" wire:model="hiring_skills_text" optional hint="Separated by commas. Up to 15." :disabled="! $this->canSignal" />
                 @if (! $this->canSignal)<p class="pk-muted">Only an owner or an admin can change the signal.</p>@endif
-                <div><x-pulse.button type="submit" variant="primary" size="sm" :disabled="! $this->canSignal">Save signal</x-pulse.button></div>
+                <div class="pk-cluster">
+                    <x-pulse.button type="submit" variant="primary" size="sm" :disabled="! $this->canSignal">Save signal</x-pulse.button>
+                    @if ($this->entity->hiring_signal !== 'none' && $this->entity->hiring_signal_until)
+                        <x-pulse.button type="button" variant="quiet" size="sm" wire:click="renewSignal" :disabled="! $this->canSignal">Renew</x-pulse.button>
+                    @endif
+                </div>
+                @if ($this->entity->hiring_signal !== 'none' && $this->entity->hiring_signal_until)
+                    <p class="pk-muted">@if ($this->entity->hiring_signal_until->isPast()) The signal has lapsed. Renew it to meet people again. @else The signal lapses on {{ $this->entity->hiring_signal_until->format('j M Y') }} unless you renew it. @endif</p>
+                @endif
             </form>
         </section>
 

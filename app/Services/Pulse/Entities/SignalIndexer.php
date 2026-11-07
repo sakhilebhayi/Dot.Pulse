@@ -366,7 +366,7 @@ class SignalIndexer
 
         $place = $entity->place;
         $area = (array) $entity->service_area;
-        $hiring = $entity->is_employer && $entity->hiring_signal !== 'none';
+        $hiring = $entity->hasHiringSignal();
 
         return [
             'kind' => 'business',

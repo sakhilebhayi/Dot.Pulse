@@ -4,6 +4,7 @@ namespace App\Services\Pulse\Discovery;
 
 use App\Models\PulsePlace;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -53,7 +54,7 @@ class ContextLoader
             ->whereIn('m.user_id', $userIds)
             ->whereNull('e.deleted_at')
             ->where('e.status', '!=', 'suspended')
-            ->get(['m.user_id', 'e.id as entity_id', 'e.name', 'e.is_employer', 'e.is_seller', 'e.hiring_signal', 'e.hiring_skills', 'e.place_id', 'e.industry'])
+            ->get(['m.user_id', 'e.id as entity_id', 'e.name', 'e.is_employer', 'e.is_seller', 'e.hiring_signal', 'e.hiring_signal_until', 'e.hiring_skills', 'e.place_id', 'e.industry'])
             ->groupBy('user_id');
 
         $entityIds = $memberships->flatten(1)->pluck('entity_id')->unique()->values()->all();
@@ -126,7 +127,7 @@ class ContextLoader
                     }
 
                     // An employer open to meeting talent before any vacancy exists (passive discovery).
-                    if (in_array($m->hiring_signal, ['building', 'active'], true)) {
+                    if (in_array($m->hiring_signal, ['building', 'active'], true) && ($m->hiring_signal_until === null || Carbon::parse($m->hiring_signal_until)->isFuture())) {
                         $skills = Taxonomy::normalise($this->json($m->hiring_skills));
                         if ($skills !== []) {
                             $ctx->seeks[] = ['skills' => $skills, 'band' => null, 'remote' => false, 'place' => $m->place_id ? $placeMap->get($m->place_id) : null, 'entity_id' => (int) $m->entity_id];
