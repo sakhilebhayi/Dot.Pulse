@@ -11,6 +11,7 @@ use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -77,7 +78,7 @@ trait DiscoveryFixtures
             'updated_at' => now(),
         ];
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn('pulse_profiles', 'age_confirmed_at')) {
+        if (Schema::hasColumn('pulse_profiles', 'age_confirmed_at')) {
             $row['age_confirmed_at'] = ($profile['age_confirmed'] ?? true) ? now() : null;
         }
 

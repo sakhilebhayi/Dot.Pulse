@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Events\PostPublished;
-use App\Models\User;
-use App\Services\Pulse\Discovery\Moderation\LocalRules;
-use App\Services\Pulse\Discovery\PostSignalAdapter;
 use App\Models\PulseModerationLog;
 use App\Models\PulsePost;
 use App\Models\PulsePostEnrichment;
+use App\Models\User;
+use App\Services\Pulse\Discovery\Moderation\LocalRules;
+use App\Services\Pulse\Discovery\PostSignalAdapter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;

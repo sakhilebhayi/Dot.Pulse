@@ -3,14 +3,12 @@
 namespace Tests\Feature\Discovery;
 
 use App\Models\PulseMatch;
-use App\Models\PulseNeed;
 use App\Models\PulseOffer;
 use App\Models\PulsePost;
-use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Tests\Support\DiscoveryFixtures;
 use Tests\TestCase;
 
@@ -38,7 +36,7 @@ class CommandsAndScheduleTest extends TestCase
 
     public function test_every_command_is_registered_with_artisan(): void
     {
-        $all = array_keys(\Illuminate\Support\Facades\Artisan::all());
+        $all = array_keys(Artisan::all());
 
         foreach (['pulse:index', 'pulse:match', 'pulse:digest', 'pulse:expire', 'pulse:places:seed'] as $name) {
             $this->assertContains($name, $all);

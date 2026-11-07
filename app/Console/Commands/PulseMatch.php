@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Discovery\Matcher;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -65,13 +67,13 @@ class PulseMatch extends Command
         return self::SUCCESS;
     }
 
-    private function since(): \Carbon\CarbonInterface
+    private function since(): CarbonInterface
     {
         try {
             $mark = Cache::get(self::MARK);
 
             if ($mark) {
-                return \Carbon\Carbon::parse($mark)->subMinute();
+                return Carbon::parse($mark)->subMinute();
             }
         } catch (\Throwable) {
         }
@@ -80,7 +82,7 @@ class PulseMatch extends Command
     }
 
     /** @return list<int> */
-    private function activeUserIds(?\Carbon\CarbonInterface $since, int $limit): array
+    private function activeUserIds(?CarbonInterface $since, int $limit): array
     {
         if ($since === null) {
             return DB::table('pulse_profiles')->orderBy('user_id')->limit($limit)->pluck('user_id')->map(fn ($v) => (int) $v)->all();

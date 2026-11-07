@@ -10,7 +10,6 @@ use App\Services\Pulse\Discovery\ContextLoader;
 use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\SignalPack;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 

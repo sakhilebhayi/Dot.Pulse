@@ -4,7 +4,6 @@ namespace Tests\Feature\Discovery;
 
 use App\Models\PulsePlace;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
-use Database\Seeders\PulsePlaceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\DiscoveryFixtures;
@@ -158,5 +157,26 @@ class PlacesTest extends TestCase
 
         $this->assertSame($g->pta->id, $this->repo()->forUser($with)->id);
         $this->assertNull($this->repo()->forUser($without));
+    }
+
+    public function test_with_the_real_gazetteer_a_suburb_shares_its_city_with_the_metro_and_other_suburbs(): void
+    {
+        $this->artisan('pulse:places:seed')->assertSuccessful();
+        $sandton = PulsePlace::where('slug', 'sandton-johannesburg')->first();
+        $tiers = $this->repo()->nearbyIds($sandton, 'national');
+        $slugs = fn (array $ids) => PulsePlace::whereIn('id', $ids)->pluck('slug')->all();
+
+        $this->assertContains('johannesburg-za', $slugs($tiers['city']));
+        $this->assertContains('rosebank-johannesburg', $slugs($tiers['city']));
+        $this->assertContains('pretoria-za', $slugs($tiers['region']));
+        $this->assertContains('gauteng-za', $slugs($tiers['region']));
+        $this->assertContains('cape-town-za', $slugs($tiers['country']));
+        $this->assertContains('south-africa', $slugs($tiers['country']));
+        $this->assertNotContains('london-gb', $slugs($tiers['country']));
+
+        $this->assertSame(0, $this->repo()->rank($sandton, PulsePlace::where('slug', 'johannesburg-za')->first()));
+        $this->assertSame(1, $this->repo()->rank($sandton, PulsePlace::where('slug', 'hatfield-pretoria')->first()));
+        $this->assertSame(2, $this->repo()->rank($sandton, PulsePlace::where('slug', 'camps-bay-cape-town')->first()));
+        $this->assertSame(3, $this->repo()->rank($sandton, PulsePlace::where('slug', 'london-gb')->first()));
     }
 }

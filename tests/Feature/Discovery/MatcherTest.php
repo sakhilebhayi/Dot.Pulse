@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Discovery;
 
+use App\Models\Community;
 use App\Models\PulseMatch;
+use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Discovery\ContextLoader;
 use App\Services\Pulse\Discovery\Matcher;
@@ -31,7 +33,7 @@ class MatcherTest extends TestCase
     }
 
     /** @return array<string, array<string, mixed>> reason code => reason, for the one match of $u on $signal */
-    private function reasonsFor(User $u, \App\Models\PulseSignal $s): array
+    private function reasonsFor(User $u, PulseSignal $s): array
     {
         $this->matcher()->forUser($u);
         $m = PulseMatch::where('user_id', $u->id)->where('signal_id', $s->id)->first();
@@ -278,7 +280,7 @@ class MatcherTest extends TestCase
     {
         $author = $this->dUser();
         $reader = $this->dUser(['interests' => ['plumbing']]);
-        $community = \App\Models\Community::factory()->create();
+        $community = Community::factory()->create();
         foreach ([$author, $reader] as $user) {
             DB::table('community_memberships')->insert(['community_id' => $community->id, 'user_id' => $user->id, 'role' => 'member', 'created_at' => now(), 'updated_at' => now()]);
         }

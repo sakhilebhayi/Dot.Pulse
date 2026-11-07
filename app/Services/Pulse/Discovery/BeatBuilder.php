@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Discovery;
 use App\Models\PulseEntity;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
+use App\Models\PulsePlace;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
 use App\Models\PulseRole;
@@ -188,7 +189,7 @@ class BeatBuilder
         return ['status' => $status, 'label' => $label];
     }
 
-    private function placeArray(?\App\Models\PulsePlace $place): ?array
+    private function placeArray(?PulsePlace $place): ?array
     {
         return $place ? ['id' => $place->id, 'slug' => $place->slug, 'name' => $place->name, 'label' => $this->places->label($place), 'level' => $place->level] : null;
     }

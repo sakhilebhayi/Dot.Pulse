@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Pulse\Discovery\Moderation\LocalRules;
 use App\Services\Pulse\Discovery\Moderation\ModerationPipeline;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class LocalRulesTest extends TestCase
@@ -89,7 +90,7 @@ class LocalRulesTest extends TestCase
     }
 
     /** @dataProvider samples */
-    #[\PHPUnit\Framework\Attributes\DataProvider('samples')]
+    #[DataProvider('samples')]
     public function test_verdict_table(string $text, string $verdict, ?string $flag): void
     {
         $result = app(LocalRules::class)->assess($text, $this->veteran());

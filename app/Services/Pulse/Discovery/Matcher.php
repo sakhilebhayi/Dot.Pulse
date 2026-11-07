@@ -7,7 +7,6 @@ use App\Models\PulsePlace;
 use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
-use App\Services\Pulse\Discovery\Support\SubjectTypes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 

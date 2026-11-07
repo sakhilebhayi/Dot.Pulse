@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\PulseRole;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -30,7 +31,7 @@ class PulseExpire extends Command
             ->update(['status' => 'paused', 'updated_at' => $now]);
 
         // Role signals follow their role's closing date even where nothing set the signal's own expiry.
-        $roleSignals = DB::table('pulse_signals')->where('status', 'live')->whereIn('subject_type', ['role', \App\Models\PulseRole::class])
+        $roleSignals = DB::table('pulse_signals')->where('status', 'live')->whereIn('subject_type', ['role', PulseRole::class])
             ->whereIn('subject_id', fn ($q) => $q->select('id')->from('pulse_roles')->where('status', '!=', 'live'))
             ->update(['status' => 'expired', 'updated_at' => $now]);
 

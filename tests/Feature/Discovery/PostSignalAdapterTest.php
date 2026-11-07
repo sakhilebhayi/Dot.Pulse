@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Discovery;
 
+use App\Jobs\ModeratePost;
 use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\PulseSignal;
+use App\Services\AiModerationService;
+use App\Services\ModerationActions;
 use App\Services\Pulse\Discovery\PostSignalAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\DiscoveryFixtures;
@@ -102,10 +105,27 @@ class PostSignalAdapterTest extends TestCase
         $ok = PulsePost::factory()->status('pending')->create(['user_id' => $author->id, 'body' => 'Great paving workshop next Saturday in Midrand, all welcome.']);
         $held = PulsePost::factory()->status('pending')->create(['user_id' => $author->id, 'body' => 'Call me on 082 555 1234 about the paving.']);
 
-        (new \App\Jobs\ModeratePost($ok))->handle(app(\App\Services\AiModerationService::class));
-        (new \App\Jobs\ModeratePost($held))->handle(app(\App\Services\AiModerationService::class));
+        (new ModeratePost($ok))->handle(app(AiModerationService::class));
+        (new ModeratePost($held))->handle(app(AiModerationService::class));
 
         $this->assertSame('live', PulseSignal::where('subject_id', $ok->id)->value('status'));
         $this->assertNull(PulseSignal::where('subject_id', $held->id)->first());
+    }
+
+    public function test_a_moderator_action_moves_the_signal_at_once(): void
+    {
+        $moderator = $this->dUser(['place' => null]);
+        $actions = app(ModerationActions::class);
+
+        $held = PulsePost::factory()->status('flagged')->create();
+        $this->assertTrue($actions->approvePost($held, $moderator));
+        $this->assertSame('live', PulseSignal::where('subject_id', $held->id)->value('status'));
+
+        $this->assertTrue($actions->removePost($held->fresh(), $moderator, 'Not suitable.'));
+        $this->assertSame('removed', PulseSignal::where('subject_id', $held->id)->value('status'));
+
+        $other = PulsePost::factory()->status('flagged')->create();
+        $this->assertTrue($actions->rejectPost($other, $moderator, 'No.'));
+        $this->assertNull(PulseSignal::where('subject_id', $other->id)->first());
     }
 }

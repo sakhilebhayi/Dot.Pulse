@@ -4,6 +4,7 @@ namespace Tests\Feature\Discovery;
 
 use App\Models\PulseMatch;
 use App\Models\PulseMute;
+use App\Models\PulseOffer;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
 use App\Models\User;
@@ -266,7 +267,7 @@ class FloorTest extends TestCase
         $this->assertNotNull($b->published_at);
         $this->assertTrue($b->can_knock['allowed']);
         $this->assertFalse($b->saved);
-        $this->assertInstanceOf(\App\Models\PulseOffer::class, $b->subject);
+        $this->assertInstanceOf(PulseOffer::class, $b->subject);
         $this->assertArrayHasKey('reasons', $b->toArray());
     }
 
