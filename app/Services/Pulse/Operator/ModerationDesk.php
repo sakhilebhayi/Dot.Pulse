@@ -169,6 +169,42 @@ class ModerationDesk
         return is_array($entry?->meta) ? ($entry->meta['source'] ?? null) : null;
     }
 
+    /**
+     * The rules' flags on a held post, so the moderator sees why it is here. Re-run now, deterministic, no network.
+     *
+     * @return list<array{code: string, severity: string, text: string}>
+     */
+    public function postFlags(PulsePost $post): array
+    {
+        $class = (string) (config('pulse.entities.rules_class') ?: ContentGate::LOCAL_RULES);
+
+        if (! class_exists($class) || $post->author === null) {
+            return [];
+        }
+
+        try {
+            return array_values((array) (app($class)->assess((string) $post->body, $post->author, [
+                'kind' => 'post', 'title' => (string) $post->title, 'exclude_post_id' => $post->id,
+            ])['flags'] ?? []));
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
+    }
+
+    /** A held post was approved or rejected: audit it and tell the author in plain words. */
+    public function postDecided(User $moderator, PulsePost $post, bool $approved, ?string $reason = null): void
+    {
+        AuditLog::record($moderator, $approved ? 'post.approve' : 'post.reject', $post, $approved ? [] : ['reason' => $reason]);
+
+        if ($post->author !== null) {
+            $this->tell($post->author, $approved
+                ? ['type' => 'post_decision', 'title' => 'Your post is live', 'body' => 'A person checked it and approved it. It shows in the feed now.']
+                : ['type' => 'post_decision', 'title' => 'Your post was not published', 'body' => 'Reason: '.$reason]);
+        }
+    }
+
     // ---------------------------------------------------------------- listing decisions
 
     /**

@@ -302,3 +302,130 @@
         transition: none;
     }
 }
+
+/* Moderation queue */
+.mq-body {
+    display: grid;
+    gap: var(--s-md);
+    max-width: 780px;
+}
+
+.mq-lead,
+.mq-bar p {
+    font-size: var(--t-small);
+}
+
+.mq-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm) var(--s-md);
+}
+
+.mq-notice {
+    padding: 10px 14px;
+    border: 1px solid var(--c-good);
+    border-radius: var(--r-md);
+    background: var(--c-good-wash);
+    color: var(--c-good);
+    font-weight: 600;
+}
+
+.mq-item {
+    display: grid;
+    gap: 12px;
+}
+
+.mq-item__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+}
+
+.mq-item__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    min-width: 0;
+}
+
+.mq-item__by {
+    font-weight: 600;
+}
+
+.mq-item__title {
+    font-size: 1.0625rem;
+    font-stretch: 106%;
+    overflow-wrap: anywhere;
+}
+
+.mq-item__body {
+    color: var(--c-ink-2);
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.mq-meta {
+    display: grid;
+    gap: 2px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.mq-why {
+    display: grid;
+    gap: 8px;
+    padding: 12px 14px;
+    border-left: 4px solid var(--c-warn);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    background: var(--c-raised);
+}
+
+.mq-why__note {
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.mq-flags,
+.mq-reasons,
+.mq-notes {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mq-flags li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: var(--t-small);
+}
+
+.mq-reasons {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mq-notes {
+    padding-left: 16px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    list-style: disc;
+}
+
+.mq-form {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+}
