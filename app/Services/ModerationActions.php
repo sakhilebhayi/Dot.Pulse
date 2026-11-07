@@ -10,6 +10,7 @@ use App\Models\PulseReport;
 use App\Models\User;
 use App\Notifications\ContentRemoved;
 use App\Notifications\ReportResolved;
+use App\Services\Pulse\Discovery\PostSignalAdapter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,7 @@ class ModerationActions
 
         (new HashtagExtractionService)->extractAndAttach($post);
         $this->safely(fn () => PostPublished::dispatch($post));
+        $this->syncSignal($post);
 
         return true;
     }
@@ -50,6 +52,7 @@ class ModerationActions
             $this->log($moderator, $post, 'reject', $reason);
         });
 
+        $this->syncSignal($post);
         $this->safely(fn () => $post->author->notify(new ContentRemoved('post')));
 
         return true;
@@ -67,6 +70,7 @@ class ModerationActions
             $this->log($moderator, $post, 'remove', $reason);
         });
 
+        $this->syncSignal($post);
         $this->safely(fn () => $post->author->notify(new ContentRemoved('post')));
 
         return true;
@@ -149,6 +153,12 @@ class ModerationActions
             'rationale' => $rationale !== null ? trim($rationale) : null,
             'is_ai_decision' => false,
         ]);
+    }
+
+    /** A removed or approved post leaves or joins the discovery index at once, not at the next hourly rebuild. */
+    private function syncSignal(PulsePost $post): void
+    {
+        $this->safely(fn () => app(PostSignalAdapter::class)->sync($post->fresh() ?? $post));
     }
 
     /** Notifications and broadcasts are best-effort; the decision is already saved. */

@@ -21,3 +21,10 @@ Schedule::command('pulse:publish-metrics')->dailyAt('00:10')->timezone('UTC')->w
 // reveal reviews whose blind period is over.
 Schedule::command('pulse:lines:sweep')->hourly()->withoutOverlapping();
 // --- end lines ---
+// --- R-41 discovery (D2) ---
+// The host has ONE shared crontab, so every entry here is guarded against overlapping itself.
+Schedule::command('pulse:index')->hourly()->withoutOverlapping();
+Schedule::command('pulse:match')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('pulse:digest')->hourly()->withoutOverlapping();
+Schedule::command('pulse:expire')->hourly()->withoutOverlapping();
+// --- end R-41 discovery (D2) ---

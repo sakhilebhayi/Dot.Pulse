@@ -139,4 +139,44 @@ return [
     ],
     // --- end lines ---
 
+    // --- discovery & moderation (R-41 D2) ---
+
+    /*
+    |--------------------------------------------------------------------------
+    | Local moderation rules
+    |--------------------------------------------------------------------------
+    |
+    | The deterministic first pass (Discovery\Moderation\LocalRules). It needs no model key. Extra terms can be
+    | added without a deploy through PULSE_BLOCKED_TERMS / PULSE_HOLD_TERMS (comma separated).
+    |
+    |   blocked_terms  published never; the author is told why
+    |   hold_terms     waits for a person
+    |
+    */
+    'moderation' => [
+        'blocked_terms' => array_values(array_filter(array_merge([
+            'kill yourself', 'buy followers', 'cheap viagra', 'order viagra', 'online casino bonus',
+            'nude pics for sale', 'child porn', 'cp for sale',
+        ], array_map('trim', explode(',', (string) env('PULSE_BLOCKED_TERMS', '')))))),
+        'hold_terms' => array_values(array_filter(array_merge([
+            'escort service', 'sugar daddy', 'sugar mummy', 'hookup', 'miracle cure', 'cure for cancer',
+            'fixed matches', 'betting tips', 'adult content', 'xxx',
+        ], array_map('trim', explode(',', (string) env('PULSE_HOLD_TERMS', '')))))),
+        'max_links' => (int) env('PULSE_MOD_MAX_LINKS', 3),
+        'block_links' => (int) env('PULSE_MOD_BLOCK_LINKS', 6),
+        'new_account_hours' => (int) env('PULSE_MOD_NEW_ACCOUNT_HOURS', 24),
+        'velocity_hold' => (int) env('PULSE_MOD_VELOCITY_HOLD', 8),
+        'velocity_window_minutes' => (int) env('PULSE_MOD_VELOCITY_WINDOW', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Digest
+    |--------------------------------------------------------------------------
+    */
+    'digest' => [
+        'max_items' => 6,
+        'grace_hours' => 10,
+    ],
+
 ];
