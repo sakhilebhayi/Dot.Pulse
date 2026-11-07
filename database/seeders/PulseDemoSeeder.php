@@ -129,49 +129,60 @@ class PulseDemoSeeder extends Seeder
     private function people(): void
     {
         $this->say('People');
-        $profiles = app(ProfileService::class);
 
         foreach (self::PEOPLE as $key => $p) {
-            $user = User::query()->where('email', self::email($key))->first();
-
-            if ($user === null) {
-                $user = new User(['name' => $p['name'], 'email' => self::email($key), 'password' => Hash::make(Str::random(40))]);
-                $user->forceFill(['email_verified_at' => now()])->save();
-
-                $user->ownedTeams()->save(Team::forceCreate([
-                    'user_id' => $user->id,
-                    'name' => explode(' ', $user->name, 2)[0]."'s Team",
-                    'personal_team' => true,
-                ]));
-            }
-
-            $this->users[$key] = $user;
-            $placeId = $this->place($p['place']);
-
-            $data = array_filter([
-                'kind' => $p['kind'],
-                'place_id' => $placeId,
-                'reach' => $p['kind'] === 'professional' ? 'region' : 'city',
-                'show_place' => true,
-                'headline' => $p['headline'],
-                'bio' => $p['kind'] === 'professional' ? 'Fictional demo person created by pulse:demo-seed.' : 'Fictional demo person who uses Pulse to find what they need.',
-                'skills' => $p['skills'] ?: null,
-                'experience_years' => $p['years'],
-                'languages' => ['English'],
-                'interests' => $p['interests'] ?? null,
-            ], fn ($v) => $v !== null);
-
-            $profiles->update($user, $data);
-            $profiles->setContactPolicy($user, $p['policy']);
-            $profiles->setOpenTo($user, $p['open_to']);
-            $profiles->completeOnboarding($user, ageConfirmed: true);
-
-            if ($p['disc'] !== 'off') {
-                $profiles->setDiscoverability($user, $p['disc']);
-            }
+            $this->users[$key] = $this->makePerson($key, $p);
         }
 
         PulseProfile::query()->where('user_id', $this->users['maple']->id)->update(['role' => 'moderator']);
+    }
+
+    /**
+     * One demo person with a finished profile, made through ProfileService (also used by the end-to-end runner to add
+     * extra professionals). Idempotent on the email.
+     *
+     * @param  array<string, mixed>  $p  name, kind, place (gazetteer slug), policy, headline, skills, years, disc, open_to, interests
+     */
+    public function makePerson(string $key, array $p): User
+    {
+        $profiles = app(ProfileService::class);
+        $user = User::query()->where('email', self::email($key))->first();
+
+        if ($user === null) {
+            $user = new User(['name' => $p['name'], 'email' => self::email($key), 'password' => Hash::make(Str::random(40))]);
+            $user->forceFill(['email_verified_at' => now()])->save();
+
+            $user->ownedTeams()->save(Team::forceCreate([
+                'user_id' => $user->id,
+                'name' => explode(' ', $user->name, 2)[0]."'s Team",
+                'personal_team' => true,
+            ]));
+        }
+
+        $kind = $p['kind'] ?? 'professional';
+        $data = array_filter([
+            'kind' => $kind,
+            'place_id' => $this->place($p['place']),
+            'reach' => $kind === 'professional' ? 'region' : 'city',
+            'show_place' => true,
+            'headline' => $p['headline'] ?? null,
+            'bio' => $kind === 'professional' ? 'Fictional demo person created by pulse:demo-seed.' : 'Fictional demo person who uses Pulse to find what they need.',
+            'skills' => ($p['skills'] ?? []) ?: null,
+            'experience_years' => $p['years'] ?? null,
+            'languages' => ['English'],
+            'interests' => $p['interests'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        $profiles->update($user, $data);
+        $profiles->setContactPolicy($user, $p['policy'] ?? 'context');
+        $profiles->setOpenTo($user, $p['open_to'] ?? []);
+        $profiles->completeOnboarding($user, ageConfirmed: true);
+
+        if (($p['disc'] ?? 'off') !== 'off') {
+            $profiles->setDiscoverability($user, $p['disc']);
+        }
+
+        return $user;
     }
 
     // ---------------------------------------------------------------------------------------------- pages
@@ -521,7 +532,7 @@ class PulseDemoSeeder extends Seeder
         return $this->users[$owner];
     }
 
-    private function place(string $slug): ?int
+    public function place(string $slug): ?int
     {
         return DB::table('pulse_places')->where('slug', $slug)->value('id');
     }

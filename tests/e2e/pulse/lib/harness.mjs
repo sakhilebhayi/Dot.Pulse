@@ -119,6 +119,13 @@ export class Journey {
     return r.stdout;
   }
 
+  /** Adds n finished professionals (`<prefix>1`, `<prefix>2`...) through the same service the product uses. */
+  addPeople(prefix, n, { skills, place = 'johannesburg-za', disc = 'anonymous', years = 5, headline }) {
+    const spec = JSON.stringify({ skills, place, disc, years, headline: headline ?? `${skills[0]} specialist` });
+    this.php(`$s = new Database\\Seeders\\PulseDemoSeeder; $spec = json_decode('${spec}', true); for ($i = 1; $i <= ${n}; $i++) { $s->makePerson('${prefix}'.$i, $spec + ['name' => 'Extra ${prefix} '.$i, 'kind' => 'professional', 'policy' => 'context', 'open_to' => ['work']]); }`);
+    this.tick();
+  }
+
   /** One tick of the scheduler's matching job (`pulse:match` runs every ten minutes in production). */
   tick() {
     return artisan(['pulse:match'], appEnv(this.dbFile, 0));
