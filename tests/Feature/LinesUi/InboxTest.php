@@ -343,4 +343,44 @@ class InboxTest extends TestCase
         Livewire::actingAs($this->person())->test(Inbox::class, ['startTab' => 'nonsense'])->assertSet('tab', 'requests');
         Livewire::actingAs($this->person())->test(Inbox::class)->set('kind', 'zzz')->call('refresh')->assertSet('kind', '');
     }
+
+    public function test_it_opens_on_the_first_tab_that_has_something_in_it(): void
+    {
+        // Nothing anywhere: the honest empty Requests tab.
+        Livewire::actingAs($this->person())->test(Inbox::class)->assertSet('tab', 'requests');
+
+        // A request waiting: Requests.
+        [$owner, , , $line] = $this->request();
+        Livewire::actingAs($owner)->test(Inbox::class)->assertSet('tab', 'requests');
+
+        // Answered, nothing waiting: the lines are in Open, so that is where it opens (the badge counts them there).
+        $this->lines()->accept($owner, $line);
+        Livewire::actingAs($owner)->test(Inbox::class)->assertSet('tab', 'open')->assertSee('Geyser repair');
+
+        // An explicit tab always wins.
+        Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'closed'])->assertSet('tab', 'closed');
+    }
+
+    public function test_the_sender_with_only_a_sent_request_lands_on_sent(): void
+    {
+        [, $sender] = $this->request();
+
+        Livewire::actingAs($sender)->test(Inbox::class)->assertSet('tab', 'sent');
+    }
+
+    public function test_a_business_lines_tab_opens_on_its_open_lines_too(): void
+    {
+        [$owner, , $page, $line] = $this->request();
+        $this->lines()->accept($owner, $line);
+
+        Livewire::actingAs($owner)->test(Inbox::class, ['entityId' => $page->id])->assertSet('tab', 'open');
+    }
+
+    public function test_the_badge_link_names_the_tab_that_explains_the_count(): void
+    {
+        $js = file_get_contents(resource_path('js/pulse/shell.js'));
+
+        $this->assertStringContainsString("tab=requests", $js);
+        $this->assertStringContainsString("tab=open", $js);
+    }
 }

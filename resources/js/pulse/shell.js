@@ -193,6 +193,18 @@ function setBadge(kind, count) {
     });
 }
 
+/* The Lines badge adds unread lines to requests waiting. The link opens the tab that holds what the number counts. */
+function setLinesLink(requests, unread) {
+    $$('[data-pulse-badge="lines"]').forEach((el) => {
+        const host = el.closest('a');
+        if (!host) return;
+        if (!host.hasAttribute('data-base-href')) host.setAttribute('data-base-href', host.getAttribute('href') || '');
+        const base = (host.getAttribute('data-base-href') || '').split('?')[0];
+        if (!base) return;
+        host.setAttribute('href', requests > 0 ? base + '?tab=requests' : unread > 0 ? base + '?tab=open' : host.getAttribute('data-base-href'));
+    });
+}
+
 async function poll() {
     if (pollStopped || document.hidden) return;
     const url = document.body.getAttribute('data-pulse-check');
@@ -211,6 +223,7 @@ async function poll() {
         const data = await response.json();
         pollFailures = 0;
         setBadge('lines', (Number(data.lines_unread) || 0) + (Number(data.requests) || 0));
+        setLinesLink(Number(data.requests) || 0, Number(data.lines_unread) || 0);
         setBadge('notifications', data.notifications);
     } catch (e) {
         pollFailures += 1; // network or server trouble: back off, never complain
