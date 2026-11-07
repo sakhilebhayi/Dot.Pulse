@@ -17,11 +17,12 @@ class LinePresenter
 {
     /**
      * @param  ?string  $snippet  latest message text, when the caller has it
+     * @param  list<int>|null  $pages  the pages the viewer answers for, when the caller has them (an inbox page)
      * @return array<string, mixed>
      */
-    public function present(User $viewer, PulseConversation $c, ?string $snippet = null): array
+    public function present(User $viewer, PulseConversation $c, ?string $snippet = null, ?array $pages = null): array
     {
-        $side = Access::side($viewer, $c);
+        $side = Access::side($viewer, $c, $pages);
         $hiddenFromViewer = $this->hiddenFrom($c, $side);
 
         $title = $c->context_title ?: $this->fallbackTitle($c);

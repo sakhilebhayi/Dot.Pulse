@@ -7,7 +7,6 @@ use App\Models\PulseBlock;
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityBlock;
-use App\Models\PulseKnockBudget;
 use App\Models\PulseMatch;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
@@ -20,6 +19,7 @@ use App\Services\Pulse\Lines\ResponseStats;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -171,26 +171,25 @@ class Metrics
             return ['received' => null, 'answered' => null, 'rate' => null, 'median_seconds' => null];
         }
 
-        $rows = PulseConversation::query()
+        $base = fn () => DB::table('pulse_conversations')
             ->whereBetween('created_at', [$from, $to])
             ->where('status', '!=', PulseConversation::SPAM)
             ->whereIn('kind', PulseConversation::KINDS)
-            ->whereNotNull('card')
-            ->limit(20000)
-            ->get(['id', 'created_at', 'first_response_at']);
+            ->whereNotNull('card');
 
-        $cutoff = Carbon::instance($to)->subHours(ResponseStats::GRACE_HOURS);
-        $counted = $rows->filter(fn ($c) => $c->first_response_at !== null || $c->created_at->lte($cutoff));
-        $answered = $counted->filter(fn ($c) => $c->first_response_at !== null);
+        // A line counts once it is answered or old enough that waiting longer is not an answer: both counts in SQL,
+        // and only the answered lines' two timestamps are read (as strings, no models) for the median.
+        $cutoff = $this->stamp(Carbon::instance($to)->subHours(ResponseStats::GRACE_HOURS));
+        $received = $base()->where(fn ($w) => $w->whereNotNull('first_response_at')->orWhere('created_at', '<=', $cutoff))->count();
+        $times = $base()->whereNotNull('first_response_at')->limit(200000)->get(['created_at', 'first_response_at']);
 
-        $seconds = $answered
-            ->map(fn ($c) => max(0, $c->created_at->diffInSeconds($c->first_response_at, false)))
-            ->sort()->values();
+        $seconds = $times->map(fn ($c) => max(0, strtotime((string) $c->first_response_at) - strtotime((string) $c->created_at)))->sort()->values();
+        $answered = $times->count();
 
         return [
-            'received' => $counted->count(),
-            'answered' => $answered->count(),
-            'rate' => $counted->isEmpty() ? null : round($answered->count() / $counted->count(), 3),
+            'received' => $received,
+            'answered' => $answered,
+            'rate' => $received === 0 ? null : round($answered / $received, 3),
             'median_seconds' => $seconds->isEmpty() ? null : self::median($seconds),
         ];
     }
@@ -290,27 +289,20 @@ class Metrics
         }
 
         $now = Carbon::instance($now ?? now());
-        $windowDays = max(1, (int) config('pulse.lines.knock_budget.window_days', 7));
+        $cfg = (array) config('pulse.lines.knock_budget');
+        $windowDays = max(1, (int) ($cfg['window_days'] ?? 7));
 
-        $count = 0;
+        // KnockBudget::base() in SQL: an account under `new_days` old starts each window with `new`, others with
+        // `established`; the allowance is that minus the penalty (never below zero) plus the refills earned.
+        $base = sprintf('(CASE WHEN u.created_at > ? THEN %d ELSE %d END)', (int) ($cfg['new'] ?? 3), (int) ($cfg['established'] ?? 7));
+        $newCut = $this->stamp($now->copy()->subDays((int) ($cfg['new_days'] ?? 7)));
 
-        PulseKnockBudget::query()
-            ->where('spent', '>', 0)
-            ->where('window_started_at', '>', $now->copy()->subDays($windowDays))
-            ->with('user:id,created_at')
-            ->chunkById(500, function ($rows) use (&$count) {
-                foreach ($rows as $row) {
-                    if ($row->user === null) {
-                        continue;
-                    }
-                    $allowance = max(0, $this->budget->base($row->user) - $row->penalty) + $row->bonus;
-                    if ($row->spent >= $allowance) {
-                        $count++;
-                    }
-                }
-            });
-
-        return $count;
+        return DB::table('pulse_knock_budgets as b')
+            ->join('users as u', 'u.id', '=', 'b.user_id')
+            ->where('b.spent', '>', 0)
+            ->where('b.window_started_at', '>', $this->stamp($now->copy()->subDays($windowDays)))
+            ->whereRaw("b.spent >= (CASE WHEN b.penalty > {$base} THEN 0 ELSE {$base} - b.penalty END) + b.bonus", [$newCut, $newCut])
+            ->count();
     }
 
     // ---------------------------------------------------------------- series
@@ -337,6 +329,48 @@ class Metrics
     }
 
     // ---------------------------------------------------------------- the whole picture
+
+    /** How long the dashboard may show the same figures, in seconds. The numbers are counts over days; a minute is invisible. */
+    public const CACHE_SECONDS = 60;
+
+    /**
+     * snapshot() for the dashboard: the same figures, reused for a minute per range so a handful of operators
+     * refreshing (or Livewire re-rendering on every click) do not repeat fifty aggregate queries each time.
+     * flush() drops them, and the range is part of the key, so a 7 day view never shows 30 day figures.
+     *
+     * @return array<string, mixed>
+     */
+    public function cachedSnapshot(int $days = 30): array
+    {
+        $days = max(1, min(self::MAX_DAYS, $days));
+
+        try {
+            return Cache::remember(self::cacheKey($days), self::CACHE_SECONDS, fn () => $this->snapshot($days));
+        } catch (\Throwable) {
+            return $this->snapshot($days); // a cache outage must not take the dashboard down
+        }
+    }
+
+    /** Forget the cached dashboard figures (after a moderation decision, say, when the queue should read true at once). */
+    public static function flush(): void
+    {
+        try {
+            Cache::forever('pulse:operator:version', (string) microtime(true));
+        } catch (\Throwable) {
+            // nothing cached, nothing to forget
+        }
+    }
+
+    private static function cacheKey(int $days): string
+    {
+        try {
+            $version = (string) Cache::get('pulse:operator:version', '0');
+        } catch (\Throwable) {
+            $version = '0';
+        }
+
+        return "pulse:operator:snapshot:{$version}:{$days}";
+    }
 
     /**
      * Everything the dashboard shows, with the range and a one-line definition per metric.

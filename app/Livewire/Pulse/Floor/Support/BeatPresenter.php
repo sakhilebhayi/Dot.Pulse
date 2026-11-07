@@ -35,6 +35,11 @@ final class BeatPresenter
         $row = $beat->toArray();
         $signal = $beat->signal;
 
+        // The array rides in the Livewire snapshot (down on every render, up on every action), so it carries only what
+        // the views read: the pre-check (can_knock), topics, the raw timestamp, the subject type and the beat's own url
+        // are decided or shown elsewhere and are left out.
+        unset($row['can_knock'], $row['topics'], $row['published_at'], $row['subject_type'], $row['url']);
+
         $row['when'] = self::ago($beat->published_at);
         $row['expires_at'] = $signal->expires_at?->toIso8601String();
         $row['aside'] = $this->aside($beat);

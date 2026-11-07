@@ -88,6 +88,9 @@ class Matcher
     /** Only signals published in this many days are considered. */
     public const WINDOW_DAYS = 90;
 
+    /** Signals handled together by forSignals(): one pack and one interested-people map per group. */
+    public const SIGNAL_GROUP = 25;
+
     private const CONTENT_CODES = ['need_offer', 'offer_need', 'skill_role', 'role_talent', 'topic', 'follows'];
 
     private const PLACE_ONLY_KINDS = ['offer', 'need', 'business', 'ask', 'event', 'news', 'collab'];
@@ -124,29 +127,87 @@ class Matcher
     /** A new or changed signal: match it against the people who might care. Returns match rows written. */
     public function forSignal(PulseSignal $signal): int
     {
-        if ($signal->status !== 'live') {
-            DB::table('pulse_matches')->where('signal_id', $signal->id)->whereNull('dismissed_at')->delete();
+        return $this->forSignals(collect([$signal]));
+    }
 
-            return 0;
+    /**
+     * New or changed signals against the people who might care, with the work shared between them: the interested
+     * people of a group of signals are loaded once (one context load per 200 people, not per signal and person) and
+     * the rows are written in batches. Same rows as calling forSignal() on each, in far fewer queries.
+     *
+     * @param  Collection<int, PulseSignal>  $signals
+     * @param  (callable(): bool)|null  $stop  asked between groups of signals; true ends the run early
+     * @return int match rows written
+     */
+    public function forSignals(Collection $signals, ?callable $stop = null): int
+    {
+        $written = 0;
+        $dead = $signals->filter(fn (PulseSignal $s) => $s->status !== 'live');
+
+        if ($dead->isNotEmpty()) {
+            DB::table('pulse_matches')->whereIn('signal_id', $dead->pluck('id')->all())->whereNull('dismissed_at')->delete();
         }
 
-        $written = 0;
-        $pack = SignalPack::build(collect([$signal]));
+        foreach ($signals->filter(fn (PulseSignal $s) => $s->status === 'live')->values()->chunk(self::SIGNAL_GROUP) as $group) {
+            if ($stop !== null && $stop()) {
+                break;
+            }
 
-        foreach (array_chunk($this->interestedUserIds($signal), 100) as $chunk) {
-            $contexts = $this->contexts->load($chunk);
-            $pack->loadNames($this->followedOwnerIds($contexts, $signal));
+            $pack = SignalPack::build($group);
+            $byUser = [];
 
-            foreach ($contexts as $userId => $ctx) {
-                $match = $this->score($ctx, $signal, $pack);
+            foreach ($group as $signal) {
+                foreach ($this->interestedUserIds($signal) as $userId) {
+                    $byUser[$userId][] = $signal;
+                }
+            }
 
-                if ($match === null) {
-                    DB::table('pulse_matches')->where('user_id', $userId)->where('signal_id', $signal->id)->whereNull('dismissed_at')->delete();
+            ksort($byUser);
 
-                    continue;
+            foreach (array_chunk(array_keys($byUser), 200) as $userIds) {
+                $contexts = $this->contexts->load($userIds);
+                $rows = [];
+                $unmatched = [];
+                $now = now();
+
+                foreach ($userIds as $userId) {
+                    foreach ($byUser[$userId] as $signal) {
+                        if ($signal->owner_id !== null && ! $signal->anonymous && isset($contexts[$userId]->followedUserIds[(int) $signal->owner_id])) {
+                            $pack->loadNames([(int) $signal->owner_id]);
+                        }
+
+                        $match = $this->score($contexts[$userId], $signal, $pack);
+
+                        if ($match === null) {
+                            $unmatched[$signal->id][] = $userId;
+
+                            continue;
+                        }
+
+                        $rows[] = [
+                            'user_id' => $userId, 'signal_id' => $signal->id, 'score' => $match['score'],
+                            'reasons' => json_encode($match['reasons'], JSON_UNESCAPED_UNICODE), 'computed_at' => $now,
+                        ];
+                    }
                 }
 
-                $written += $this->persist($userId, [$signal->id => $match], replace: false);
+                foreach (array_chunk($rows, 200) as $chunk) {
+                    DB::table('pulse_matches')->upsert($chunk, ['user_id', 'signal_id'], ['score', 'reasons', 'computed_at']);
+                }
+
+                $written += count($rows);
+
+                // A person who no longer matches loses the row, but only where there is one: look first, so a
+                // fresh signal (no rows yet) costs one read instead of a delete per signal.
+                if ($unmatched !== []) {
+                    $existing = DB::table('pulse_matches')->whereIn('signal_id', array_keys($unmatched))->whereIn('user_id', $userIds)->whereNull('dismissed_at')
+                        ->get(['signal_id', 'user_id'])->groupBy('signal_id');
+
+                    foreach ($existing as $signalId => $found) {
+                        $gone = array_values(array_intersect($found->pluck('user_id')->all(), $unmatched[$signalId] ?? []));
+                        $gone === [] || DB::table('pulse_matches')->where('signal_id', $signalId)->whereIn('user_id', $gone)->whereNull('dismissed_at')->delete();
+                    }
+                }
             }
         }
 
@@ -710,25 +771,6 @@ class Matcher
     private function prepareNames(UserContext $ctx, Collection $signals, SignalPack $pack): void
     {
         $pack->loadNames($signals->pluck('owner_id')->filter(fn ($id) => isset($ctx->followedUserIds[(int) $id]))->all());
-    }
-
-    /**
-     * @param  array<int, UserContext>  $contexts
-     * @return list<int>
-     */
-    private function followedOwnerIds(array $contexts, PulseSignal $signal): array
-    {
-        if ($signal->owner_id === null || $signal->anonymous) {
-            return [];
-        }
-
-        foreach ($contexts as $ctx) {
-            if (isset($ctx->followedUserIds[(int) $signal->owner_id])) {
-                return [(int) $signal->owner_id];
-            }
-        }
-
-        return [];
     }
 
     /**

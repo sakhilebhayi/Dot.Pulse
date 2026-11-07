@@ -719,8 +719,12 @@
 
 .ln-msg__photo img {
     display: block;
-    max-width: min(100%, 320px);
-    max-height: 320px;
+    /* A box is reserved before the picture arrives (the line scrolls to the newest message, so a late image would push it away). */
+    width: min(100%, 320px);
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    object-position: left top;
+    background: var(--c-raised);
     border-radius: var(--r-md);
 }
 

@@ -194,33 +194,31 @@ final class SignalPack
             return [];
         }
 
+        // Counted in SQL, one row per business: no conversation rows are read into PHP.
+        $driver = DB::connection()->getDriverName();
+        $quick = match ($driver) {
+            'sqlite' => "(first_response_at IS NOT NULL AND CAST(strftime('%s', first_response_at) AS INTEGER) - CAST(strftime('%s', created_at) AS INTEGER) <= 86400)",
+            'mysql', 'mariadb' => '(first_response_at IS NOT NULL AND TIMESTAMPDIFF(SECOND, created_at, first_response_at) <= 86400)',
+            default => "(first_response_at IS NOT NULL AND first_response_at <= created_at + INTERVAL '1 day')",
+        };
+
         try {
             $rows = DB::table('pulse_conversations')
                 ->whereIn('entity_id', $entityIds)
                 ->where('created_at', '>=', now()->subDays(90))
-                ->orderByDesc('id')
-                ->limit(4000)
-                ->get(['entity_id', 'created_at', 'first_response_at']);
+                ->groupBy('entity_id')
+                ->selectRaw("entity_id, COUNT(*) AS total, SUM(CASE WHEN {$quick} THEN 1 ELSE 0 END) AS quick")
+                ->get();
         } catch (\Throwable) {
             return [];
         }
 
         $out = [];
 
-        foreach ($rows->groupBy('entity_id') as $entityId => $conversations) {
-            if ($conversations->count() < 3) {
-                continue;
+        foreach ($rows as $row) {
+            if ((int) $row->total >= 3) {
+                $out[(int) $row->entity_id] = ((int) $row->quick / (int) $row->total) >= 0.7;
             }
-
-            $quick = $conversations->filter(function ($c) {
-                if ($c->first_response_at === null) {
-                    return false;
-                }
-
-                return strtotime((string) $c->first_response_at) - strtotime((string) $c->created_at) <= 86400;
-            })->count();
-
-            $out[(int) $entityId] = ($quick / $conversations->count()) >= 0.7;
         }
 
         return $out;
