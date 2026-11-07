@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# acceptance suite B
+/tests/e2e/pulse-b/node_modules
+/tests/e2e/pulse-b/out

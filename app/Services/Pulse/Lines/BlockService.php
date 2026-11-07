@@ -89,6 +89,28 @@ class BlockService
             ->exists();
     }
 
+    /**
+     * Whether a signed in person may not see this page at all: they blocked it, it blocked them, or either side has
+     * blocked one of the people who run it. Members of the page always see it.
+     */
+    public static function pageHiddenFrom(User $viewer, PulseEntity $entity): bool
+    {
+        if (self::entityHidden($viewer, $entity)) {
+            return true;
+        }
+
+        $owners = DB::table('pulse_entity_members')->where('entity_id', $entity->id)->whereIn('role', ['owner', 'admin'])->pluck('user_id')->all();
+
+        if ($owners === [] || in_array($viewer->id, $owners, true)) {
+            return false;
+        }
+
+        return PulseBlock::query()
+            ->where(fn ($q) => $q->where('blocker_id', $viewer->id)->whereIn('blocked_id', $owners))
+            ->orWhere(fn ($q) => $q->where('blocked_id', $viewer->id)->whereIn('blocker_id', $owners))
+            ->exists();
+    }
+
     /** A person and a page cannot see each other: either one blocked the other. */
     public static function entityHidden(User $user, PulseEntity $entity): bool
     {

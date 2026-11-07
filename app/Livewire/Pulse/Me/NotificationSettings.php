@@ -12,7 +12,9 @@ use Livewire\Component;
 /**
  * "Me, Notifications": what reaches you and how. Reads and writes only through NotificationPrefs. Viewing this page
  * never creates a row; the first save does. Conversations, outcomes and safety messages always appear in the app
- * (the service treats them as transactional), so only their email is a choice.
+ * (the service treats them as transactional), so only their email is a choice. There is no "Matches" row: nothing in
+ * Pulse sends a notification when a match appears (matches live on the Floor and in the opt-in summary), so a switch for
+ * it would control nothing.
  */
 class NotificationSettings extends Component
 {
@@ -20,7 +22,6 @@ class NotificationSettings extends Component
         'lines' => ['Conversations', 'Requests, replies and quotes on your lines.'],
         'outcomes' => ['Outcomes and reviews', 'When the other side confirms a result, or a review opens.'],
         'system' => ['Safety and account', 'Things you need to know about your account. Email for these cannot be turned off.'],
-        'matches' => ['Matches', 'New things on the Floor that fit you.'],
     ];
 
     /** @var array<string, bool> */

@@ -160,7 +160,7 @@ class SearchService
             ->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$like])->limit(5)->get(['id', 'name', 'slug', 'created_by']);
 
         foreach ($entities as $e) {
-            if (! isset($ctx->blockedUserIds[(int) $e->created_by])) {
+            if (! isset($ctx->blockedUserIds[(int) $e->created_by]) && ! isset($ctx->mutedEntities[(string) $e->id]) && ! isset($ctx->mutedEntities[(string) $e->slug])) {
                 $out[] = ['type' => 'business', 'label' => $e->name, 'value' => $e->name];
             }
         }

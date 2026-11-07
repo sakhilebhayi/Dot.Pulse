@@ -229,9 +229,13 @@ class NeedForm extends Component
             return null;
         }
 
+        if ($need->moderation === 'approved') {
+            app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'need', $need->id);
+        }
+
         session()->flash('bz_notice', match (true) {
             $need->moderation === 'approved' => $this->needId ? 'Saved.' : 'Posted. Pulse will show it to sellers and people it fits.',
-            default => 'Saved. Waiting for a human: nobody else sees it until a person has looked.',
+            default => 'Saved. Waiting for a human: nobody else sees it until a person has looked. '.pulse_review_note(),
         });
 
         return $this->redirectRoute('needs.show', ['need' => $need->id]);

@@ -227,6 +227,10 @@ class OfferManager extends Component
 
             if ($publish) {
                 $offer = $offers->publish($user, $offer);
+
+                if ($offer->isLive()) {
+                    app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'offer', $offer->id);
+                }
             }
         } catch (ValidationException $e) {
             $this->fail($e, ['amount_cents' => 'amount', 'entity' => 'title', 'offer' => 'title', 'media_ids' => 'newImages']);
@@ -360,7 +364,7 @@ class OfferManager extends Component
         return match ($o->moderation) {
             'approved' => 'Published. It is on the floor.',
             'removed' => 'A moderator removed this offer.',
-            default => 'Saved. Waiting for a human: it is not on the floor until a person has looked at it.',
+            default => 'Saved. Waiting for a human: it is not on the floor until a person has looked at it. '.pulse_review_note(),
         };
     }
 

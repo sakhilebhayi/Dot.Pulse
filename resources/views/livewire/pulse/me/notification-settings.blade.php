@@ -27,8 +27,8 @@
     <fieldset class="me-choices">
         <legend class="pk-field__label">How fast email arrives</legend>
         @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'instant', 'model' => 'frequency', 'title' => 'Right away', 'text' => 'One email when it happens.'])
-        @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'daily', 'model' => 'frequency', 'title' => 'Daily', 'text' => 'Held back and folded into your daily summary.'])
-        @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'weekly', 'model' => 'frequency', 'title' => 'Weekly', 'text' => 'Held back and folded into one weekly summary.'])
+        @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'daily', 'model' => 'frequency', 'title' => 'Daily', 'text' => 'No email as things happen. They wait for you in the app. Your summary, if you turn it on below, comes every day.'])
+        @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'weekly', 'model' => 'frequency', 'title' => 'Weekly', 'text' => 'No email as things happen. They wait for you in the app. Your summary, if you turn it on below, comes on Mondays.'])
         @include('livewire.pulse.me.partials.choice', ['name' => 'frequency', 'value' => 'off', 'model' => 'frequency', 'title' => 'Off', 'text' => 'No email from Pulse. Safety messages about your account still reach you.'])
     </fieldset>
 
@@ -46,7 +46,7 @@
             <x-pulse.select name="timezone" label="Your time zone" :options="$this->zones()" :value="$timezone" wire:model="timezone" />
             <x-pulse.button variant="quiet" size="sm" type="button" x-on:click="$wire.useDeviceZone(Intl.DateTimeFormat().resolvedOptions().timeZone)">Use this device's zone</x-pulse.button>
         </div>
-        <p class="me-section__text">During quiet hours Pulse holds email. In app notifications still arrive.</p>
+        <p class="me-section__text">During quiet hours Pulse sends no email. In app notifications still arrive, so nothing is lost.</p>
         <div class="me-quiet">
             <x-pulse.field name="quietStart" type="time" label="Quiet from" wire:model="quietStart" optional />
             <x-pulse.field name="quietEnd" type="time" label="Until" wire:model="quietEnd" optional />

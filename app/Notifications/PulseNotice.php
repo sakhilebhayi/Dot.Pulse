@@ -38,9 +38,15 @@ class PulseNotice extends Notification implements ShouldQueue
     {
         // Titles and bodies carry words other people wrote (a name, what an enquiry is about). In the subject they are
         // one plain line; in the body they are plain text too: Markdown in them (a link, an image) must not become one.
+        // The greeting uses the recipient's own first name only, never a name from the payload: it may be someone they
+        // may not see.
         $title = (string) ($this->payload['title'] ?? '');
+        $first = trim(explode(' ', trim((string) ($notifiable->name ?? '')))[0] ?? '');
+
         $mail = (new MailMessage)
             ->subject(self::oneLine($title) !== '' ? self::oneLine($title) : 'Something on Dot.Pulse')
+            ->greeting($first !== '' ? 'Hi '.self::oneLine($first).',' : 'Hi,')
+            ->salutation('Dot.Pulse')
             ->line(self::literal($title));
 
         if (! empty($this->payload['body'])) {

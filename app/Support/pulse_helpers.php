@@ -70,3 +70,11 @@ if (! function_exists('pulse_route_first')) {
         return '#';
     }
 }
+
+if (! function_exists('pulse_review_note')) {
+    /** The one sentence about what happens to something held for a person: who looks, in what order, how long, how you hear. */
+    function pulse_review_note(): string
+    {
+        return 'A person checks held listings in the order they arrive, aiming for within '.config('pulse.moderation.review_target', 'one working day').'. You are told the moment it is decided.';
+    }
+}

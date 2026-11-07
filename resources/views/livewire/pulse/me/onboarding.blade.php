@@ -80,8 +80,7 @@
             <p class="me-flow__why">Everything shows in the app. Email is for the things you would hate to miss. Pulse never sends you marketing from a business.</p>
             <div class="pk-stack" style="gap: 8px">
                 <x-pulse.toggle name="emailConversations" label="Email me when a conversation or a result needs me" hint="Requests, replies, quotes, outcomes. About things you are part of." :checked="$emailConversations" wire:model="emailConversations" />
-                <x-pulse.toggle name="emailMatches" label="Email me about new matches" hint="Off by default. Matches always show on the Floor." :checked="$emailMatches" wire:model="emailMatches" />
-                <x-pulse.toggle name="digest" label="Send me a daily summary" hint="Off by default. Sent only when there is something real in it." :checked="$digest" wire:model.live="digest" />
+                <x-pulse.toggle name="digest" label="Send me a daily summary" hint="Off by default. Lists new matches, each with its reason. Sent only when there is something real in it." :checked="$digest" wire:model.live="digest" />
             </div>
             @if ($digest)
                 <x-pulse.field name="digestHour" label="When should it arrive?" as="select" :options="array_combine($this->digestHours(), $this->digestHours())" :value="$digestHour" wire:model="digestHour" hint="In your time zone: {{ str_replace('_', ' ', $timezone) }}." />

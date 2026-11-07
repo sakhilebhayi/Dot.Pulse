@@ -1190,15 +1190,29 @@ select.pk-control {
 }
 
 .pk-toast button {
-    margin-left: auto;
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     border: 0;
     border-radius: var(--r-sm);
     background: transparent;
     color: inherit;
     font: inherit;
     font-weight: 700;
+}
+
+.pk-toast > :last-child {
+    margin-left: auto;
+}
+
+.pk-toast .pk-toast__action {
+    padding: 0 12px;
+    margin-left: auto;
+    border: 2px solid currentColor;
+    font-weight: 700;
+}
+
+.pk-toast .pk-toast__action + button {
+    margin-left: 0;
 }
 
 @keyframes pk-toast-in {

@@ -130,7 +130,6 @@ class DigestTest extends TestCase
 
         foreach ([
             ['digest' => false],
-            ['frequency' => 'instant'],
             ['frequency' => 'off'],
             ['channels' => ['in_app' => true, 'email' => false]],
             ['categories' => ['digest' => false]],

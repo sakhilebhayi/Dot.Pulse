@@ -211,6 +211,10 @@ class RoleManager extends Component
 
             if ($publish) {
                 $role = $roles->publish($user, $role);
+
+                if ($role->isLive()) {
+                    app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'role', $role->id);
+                }
             }
         } catch (ValidationException $e) {
             $this->fail($e, ['entity' => 'title', 'role' => 'title']);
@@ -366,7 +370,7 @@ class RoleManager extends Component
         return match ($r->moderation) {
             'approved' => 'Published. It is on the floor.',
             'removed' => 'A moderator removed this role.',
-            default => 'Saved. Waiting for a human: it is not on the floor until a person has looked at it.',
+            default => 'Saved. Waiting for a human: it is not on the floor until a person has looked at it. '.pulse_review_note(),
         };
     }
 

@@ -73,9 +73,18 @@ class PrivacyEraser
             $result['cards'] = PulseConversation::query()->where('initiator_id', $user->id)->whereNotNull('card')->update(['card' => null]);
 
             // Findability: nothing about the profile stays discoverable or readable.
+            // The words go too, not only the visibility: a removed row that still held the headline, skills or need
+            // title would keep the person's text in the index and in database backups of it.
+            $signalIds = PulseSignal::query()->where('owner_id', $user->id)->pluck('id');
             $result['signals'] = PulseSignal::query()->where('owner_id', $user->id)
-                ->update(['status' => 'removed', 'updated_at' => now()]);
-            $result['needs_removed'] = DB::table('pulse_needs')->where('user_id', $user->id)->update(['status' => 'removed', 'details' => null, 'updated_at' => now()]);
+                ->update(['status' => 'removed', 'title' => 'Removed', 'excerpt' => null, 'topics' => null, 'skills' => null, 'updated_at' => now()]);
+            $result['needs_removed'] = DB::table('pulse_needs')->where('user_id', $user->id)
+                ->update(['status' => 'removed', 'title' => 'Removed', 'details' => null, 'tags' => null, 'budget_text' => null, 'updated_at' => now()]);
+            // The other side's line keeps its shape and its outcome, but not a copy of this person's talent card.
+            if ($signalIds->isNotEmpty()) {
+                PulseConversation::query()->where('context_type', 'signal')->whereIn('context_id', $signalIds)
+                    ->update(['context_title' => null, 'context_snapshot' => null]);
+            }
             DB::table('pulse_profiles')->where('user_id', $user->id)->update([
                 'headline' => null, 'bio' => null, 'avatar_url' => null, 'cover_url' => null, 'location' => null,
                 'website' => null, 'skills' => null, 'expertise_tags' => null, 'open_to' => null, 'languages' => null,

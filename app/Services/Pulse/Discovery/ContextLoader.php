@@ -162,6 +162,24 @@ class ContextLoader
             }
         }
 
+        // A page a person blocked, or that blocked them, is hidden from them like a muted page. A page's people are shown
+        // nothing from a person the page blocked.
+        $entityBlocks = DB::table('pulse_entity_blocks')->whereIn('user_id', $userIds)->get(['entity_id', 'user_id']);
+        $blockedByOwnPage = DB::table('pulse_entity_blocks as eb')->join('pulse_entity_members as em', 'em.entity_id', '=', 'eb.entity_id')
+            ->where('eb.side', 'entity')->whereIn('em.user_id', $userIds)->get(['em.user_id as member_id', 'eb.user_id as person_id']);
+
+        foreach ($entityBlocks as $eb) {
+            if (isset($contexts[$eb->user_id])) {
+                $contexts[$eb->user_id]->mutedEntities[(string) $eb->entity_id] = true;
+            }
+        }
+
+        foreach ($blockedByOwnPage as $row) {
+            if (isset($contexts[$row->member_id])) {
+                $contexts[$row->member_id]->blockedUserIds[(int) $row->person_id] = true;
+            }
+        }
+
         foreach ($blocks as $b) {
             if (isset($contexts[$b->blocker_id])) {
                 $contexts[$b->blocker_id]->blockedUserIds[(int) $b->blocked_id] = true;
@@ -203,6 +221,17 @@ class ContextLoader
 
         foreach (DB::table('pulse_blocks')->where('blocker_id', $userId)->orWhere('blocked_id', $userId)->get(['blocker_id', 'blocked_id']) as $b) {
             $ctx->blockedUserIds[(int) ($b->blocker_id === $userId ? $b->blocked_id : $b->blocker_id)] = true;
+        }
+
+        // Pages blocked in either direction are hidden like muted pages; people a page of theirs blocked are hidden too.
+        foreach (DB::table('pulse_entity_blocks')->where('user_id', $userId)->pluck('entity_id') as $entityId) {
+            $ctx->mutedEntities[(string) $entityId] = true;
+        }
+
+        if ($ctx->ownEntityIds !== []) {
+            foreach (DB::table('pulse_entity_blocks')->where('side', 'entity')->whereIn('entity_id', array_keys($ctx->ownEntityIds))->pluck('user_id') as $personId) {
+                $ctx->blockedUserIds[(int) $personId] = true;
+            }
         }
 
         return $ctx;
