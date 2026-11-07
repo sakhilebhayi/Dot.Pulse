@@ -260,7 +260,7 @@ class Matcher
         $history = is_string($history) ? (json_decode($history, true) ?: []) : (array) $history;
 
         foreach ($history as $job) {
-            if (is_array($job) && ! empty($job['hide_from_employer']) && in_array(mb_strtolower((string) ($job['employer'] ?? '')), $ctx->employerNames, true)) {
+            if (is_array($job) && ! empty($job['hide_from_employer']) && in_array(mb_strtolower((string) ($job['employer'] ?? ($job['org'] ?? ''))), $ctx->employerNames, true)) {
                 return false;
             }
         }

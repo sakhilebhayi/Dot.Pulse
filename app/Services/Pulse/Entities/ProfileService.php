@@ -210,9 +210,28 @@ class ProfileService
             'place' => $p->show_place || $self ? $p->place?->name : null,
             'interests' => array_values((array) $p->interests),
             'achievements' => array_values((array) $p->achievements),
-            'work_history' => ($self || $p->discoverability === 'open') ? array_values((array) $p->work_history) : [],
+            'work_history' => ($self || $p->discoverability === 'open') ? $this->workHistoryFor((array) $p->work_history, $self) : [],
             'discoverability' => $self ? $p->discoverability : null,
         ];
+    }
+
+    /**
+     * The hide flag is a private setting. Only the person sees it; everyone else gets the job without it.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function workHistoryFor(array $rows, bool $self): array
+    {
+        return array_values(array_map(function ($row) use ($self) {
+            $row = (array) $row;
+
+            if (! $self) {
+                unset($row['hide_from_employer']);
+            }
+
+            return $row;
+        }, $rows));
     }
 
     // ---- internals ------------------------------------------------------------------------------------------
@@ -290,6 +309,8 @@ class ProfileService
             'work_history' => ['sometimes', 'nullable', 'array', 'max:8'],
             'work_history.*.title' => ['required_with:work_history', 'string', 'max:120'],
             'work_history.*.org' => ['nullable', 'string', 'max:120'],
+            'work_history.*.employer' => ['nullable', 'string', 'max:120'],
+            'work_history.*.hide_from_employer' => ['nullable', 'boolean'],
             'work_history.*.from_year' => ['nullable', 'integer', 'min:1950', 'max:'.(now()->year)],
             'work_history.*.to_year' => ['nullable', 'integer', 'min:1950', 'max:'.(now()->year)],
             'work_history.*.current' => ['nullable', 'boolean'],
@@ -319,13 +340,21 @@ class ProfileService
         }
 
         if (array_key_exists('work_history', $clean)) {
-            $clean['work_history'] = array_values(array_map(fn (array $row) => [
-                'title' => Sanitizer::line($row['title'] ?? null, 80),
-                'org' => Sanitizer::line($row['org'] ?? null, 80),
-                'from_year' => $row['from_year'] ?? null,
-                'to_year' => $row['to_year'] ?? null,
-                'current' => (bool) ($row['current'] ?? false),
-            ], (array) $clean['work_history']));
+            // `employer` is the canonical name the Matcher compares against employer pages; `org` is kept equal to it
+            // so older readers still work. A job can only be hidden from an employer that is named.
+            $clean['work_history'] = array_values(array_map(function (array $row) {
+                $employer = Sanitizer::line($row['employer'] ?? ($row['org'] ?? null), 80);
+
+                return [
+                    'title' => Sanitizer::line($row['title'] ?? null, 80),
+                    'employer' => $employer,
+                    'org' => $employer,
+                    'hide_from_employer' => (bool) ($row['hide_from_employer'] ?? false) && filled($employer),
+                    'from_year' => $row['from_year'] ?? null,
+                    'to_year' => $row['to_year'] ?? null,
+                    'current' => (bool) ($row['current'] ?? false),
+                ];
+            }, (array) $clean['work_history']));
         }
 
         return $clean;

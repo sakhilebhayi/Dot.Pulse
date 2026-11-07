@@ -188,14 +188,15 @@ class ProfileEditor extends Component
 
         $rows = $jobs->map(fn ($j) => [
             'title' => $j['title'],
-            'org' => $j['org'] !== '' ? $j['org'] : null,
+            'employer' => $j['org'] !== '' ? $j['org'] : null,
+            'hide_from_employer' => (bool) ($j['hide'] ?? false),
             'from_year' => filled($j['from_year']) ? (int) $j['from_year'] : null,
             'to_year' => ($j['current'] || blank($j['to_year'])) ? null : (int) $j['to_year'],
             'current' => (bool) $j['current'],
         ])->all();
 
         try {
-            $profile = $service->update($user, [
+            $service->update($user, [
                 'headline' => $this->headline,
                 'bio' => $this->bio,
                 'kind' => $this->kind,
@@ -212,32 +213,8 @@ class ProfileEditor extends Component
             return;
         }
 
-        $this->storeEmployerFlags($profile, $jobs->all());
         unset($this->profile);
         $this->dispatch('toast', message: 'Profile saved.', kind: 'good');
-    }
-
-    /**
-     * ProfileService keeps title, org and years. The Matcher decides who may find you by `employer` (the name an
-     * employer page is known by) and `hide_from_employer`, so those two are written next to the cleaned rows.
-     *
-     * @param  list<array<string, mixed>>  $jobs
-     */
-    private function storeEmployerFlags(PulseProfile $profile, array $jobs): void
-    {
-        $saved = array_values((array) $profile->work_history);
-
-        if ($saved === []) {
-            return;
-        }
-
-        foreach ($saved as $i => $row) {
-            $saved[$i]['employer'] = $row['org'] ?? null;
-            $saved[$i]['hide_from_employer'] = (bool) ($jobs[$i]['hide'] ?? false) && filled($row['org'] ?? null);
-        }
-
-        $profile->work_history = $saved;
-        $profile->save();
     }
 
     public function render(): View
