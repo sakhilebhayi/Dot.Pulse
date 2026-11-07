@@ -11,4 +11,5 @@
 @import "./pulse/kit.css";
 @import "./pulse/public.css";
 @import "./pulse/legacy.css";
+@import "./pulse/business.css";
 @import "tailwindcss/utilities";
