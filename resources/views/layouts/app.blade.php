@@ -21,7 +21,7 @@
         ['label' => 'Saved', 'icon' => 'bookmark', 'href' => pulse_route('saved'), 'match' => ['saved'], 'show' => Route::has('saved')],
         ['label' => 'Open door', 'icon' => 'door', 'href' => pulse_route('door'), 'match' => ['door'], 'show' => Route::has('door')],
         ['label' => 'Moderation', 'icon' => 'shield', 'href' => pulse_route('moderation'), 'match' => ['moderation'], 'show' => $user && Route::has('moderation') && $user->canAccessModeration()],
-        ['label' => 'Operator', 'icon' => 'chart', 'href' => pulse_route('operator'), 'match' => ['operator'], 'show' => $user && Route::has('operator') && $user->canAccessModeration()],
+        ['label' => 'Operator', 'icon' => 'chart', 'href' => pulse_route('operator'), 'match' => ['operator'], 'show' => $user && Route::has('operator') && $user->isPlatformModerator()],
     ], fn ($i) => $i['show']));
     $bellRoute = Route::has('me.notifications');
 @endphp

@@ -44,7 +44,11 @@ class ContentGate
         $verdict = $this->localRules($author, $text, $context);
 
         if ($verdict !== null) {
-            $flags = array_values(array_map('strval', (array) ($verdict['flags'] ?? [])));
+            // LocalRules returns each flag as an array with a `code`; test fakes return plain strings.
+            $flags = array_values(array_map(
+                fn ($f) => is_array($f) ? (string) ($f['code'] ?? $f['reason'] ?? 'flag') : (string) $f,
+                (array) ($verdict['flags'] ?? []),
+            ));
 
             return match ($verdict['verdict'] ?? null) {
                 'allow' => ['moderation' => 'approved', 'source' => 'local_rules', 'flags' => $flags],
