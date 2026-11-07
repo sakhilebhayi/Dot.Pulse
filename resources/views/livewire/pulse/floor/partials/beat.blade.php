@@ -17,9 +17,9 @@
     $aside = $b['aside'] ?? null;
 @endphp
 <x-pulse.beat
-    :kind="$b['kind'] === 'door' ? 'Door' : $b['kind']"
+    :kind="$b['kind']"
     :title="$b['title']"
-    :href="route('signals.show', $sid)"
+    :href="$b['url'] ?? route('signals.show', $sid)"
     :time="$b['when'] ?? null"
     :place="$b['place']['label'] ?? null"
     wire:key="beat-{{ $sid }}"

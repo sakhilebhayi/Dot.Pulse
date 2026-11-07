@@ -14,7 +14,7 @@
 
         <article class="pk-beat pk-beat--open fl-detail__main">
             <div class="pk-beat__top">
-                <x-pulse.kind-word :kind="$b['kind'] === 'door' ? 'Door' : $b['kind']" />
+                <x-pulse.kind-word :kind="$b['kind']" />
                 @if (! empty($b['place']['label']))<x-pulse.place-label :name="$b['place']['label']" />@endif
                 @if (! empty($b['when']))<span class="pk-beat__time pk-mono">{{ $b['when'] }}</span>@endif
             </div>

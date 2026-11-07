@@ -257,7 +257,7 @@ class Thread extends Component
 
         $url = match ($type) {
             'offer' => pulse_route('offers.show', ['entity' => $model->entity->slug, 'offer' => $model->slug]),
-            'role' => pulse_route('roles.show', ['entity' => $model->entity->slug, 'role' => $model->id]),
+            'role' => pulse_route('roles.show', ['entity' => $model->entity->slug, 'role' => $model->slug]),
             'need' => pulse_route('needs.show', ['need' => $model->id]),
         };
 

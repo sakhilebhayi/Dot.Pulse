@@ -83,7 +83,7 @@ class BeatBuilder
             saved: $saved,
             match_id: $match['id'] ?? null,
             card: null,
-            url: $this->url($type, $subject, $entity),
+            url: $this->url($type, $subject, $entity, $s),
             topics: array_values((array) $s->topics),
         );
     }
@@ -207,15 +207,20 @@ class BeatBuilder
         }
     }
 
-    private function url(string $type, ?Model $subject, ?object $entity): ?string
+    /**
+     * The page that tells the whole story where one exists (the offer, the role, the need, the business page, the post),
+     * and the generic signal page for everything else, doors included.
+     */
+    private function url(string $type, ?Model $subject, ?object $entity, PulseSignal $s): ?string
     {
         try {
             return match (true) {
                 $type === 'offer' && $subject instanceof PulseOffer && $entity && Route::has('offers.show') => route('offers.show', ['entity' => $entity->slug, 'offer' => $subject->slug]),
-                $type === 'role' && $subject instanceof PulseRole && $entity && Route::has('roles.show') => route('roles.show', ['entity' => $entity->slug, 'role' => $subject->id]),
+                $type === 'role' && $subject instanceof PulseRole && $entity && Route::has('roles.show') => route('roles.show', ['entity' => $entity->slug, 'role' => $subject->slug]),
                 $type === 'need' && $subject instanceof PulseNeed && Route::has('needs.show') => route('needs.show', ['need' => $subject->id]),
                 $type === 'entity' && $entity && Route::has('entities.show') => route('entities.show', ['entity' => $entity->slug]),
                 $type === 'post' && $subject instanceof PulsePost && Route::has('posts.show') => route('posts.show', ['post' => $subject->id]),
+                Route::has('signals.show') => route('signals.show', ['signal' => $s->id]),
                 default => null,
             };
         } catch (\Throwable) {
