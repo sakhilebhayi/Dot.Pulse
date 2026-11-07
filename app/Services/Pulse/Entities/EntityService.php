@@ -44,12 +44,12 @@ class EntityService
         $text = $this->publicText($clean);
         $decision = $this->gate->decide($by, $text, ['kind' => 'entity']);
 
-        $entity = DB::transaction(function () use ($by, $clean, $decision) {
+        $entity = DB::transaction(function () use ($by, $clean, $decision, $data) {
             $entity = new PulseEntity($this->fields($clean));
             $entity->forceFill([
                 'slug' => Slugger::unique($clean['name'], fn (string $s) => PulseEntity::withTrashed()->where('slug', $s)->exists()),
                 'created_by' => $by->id,
-                'status' => 'live',
+                'status' => ($data['draft'] ?? false) ? 'draft' : 'live',
                 ...$this->gate->stamp($decision),
                 'verification_status' => 'unverified',
                 'claims' => $this->claimsFor($clean, []),
@@ -62,12 +62,32 @@ class EntityService
 
         $this->applyImages($entity, $clean);
         app(VerificationService::class)->recompute($entity->refresh());
-        Audit::record($by, 'entity.create', $entity, ['moderation' => $entity->moderation, 'source' => $decision['source']]);
+        Audit::record($by, 'entity.create', $entity, ['moderation' => $entity->moderation, 'source' => $decision['source'], 'draft' => $entity->status === 'draft']);
 
         return $entity->refresh();
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * A draft goes on the floor: its text is checked again at this moment, exactly as an offer's is. A page that is
+     * archived (taken off) comes back through restore(), not here.
+     */
+    public function publish(User $by, PulseEntity $e): PulseEntity
+    {
+        Gate::forUser($by)->authorize('archive', $e);
+
+        if ($e->status !== 'draft') {
+            throw ValidationException::withMessages(['status' => $e->status === 'live' ? 'This page is already on the floor.' : 'Only a draft is published here.']);
+        }
+
+        $decision = $this->gate->decide($by, $this->publicText($e->only(['name', 'tagline', 'about'])), ['kind' => 'entity']);
+
+        $e->forceFill(['status' => 'live'] + $this->gate->stamp($decision))->save();
+        Audit::record($by, 'entity.publish', $e, ['moderation' => $e->moderation, 'source' => $decision['source']]);
+
+        return $e->refresh();
+    }
+
+    /** @param array<string, mixed> $data  (pass `draft => true` to create it off the floor) */
     public function update(User $by, PulseEntity $e, array $data): PulseEntity
     {
         Gate::forUser($by)->authorize('update', $e);
@@ -184,6 +204,12 @@ class EntityService
     public function restore(User $by, PulseEntity $e): void
     {
         Gate::forUser($by)->authorize('archive', $e);
+
+        if ($e->status === 'draft') {
+            $this->publish($by, $e);
+
+            return;
+        }
 
         if ($e->status === 'suspended') {
             throw ValidationException::withMessages(['status' => 'A suspended page can only be reinstated by a moderator.']);

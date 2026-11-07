@@ -32,8 +32,10 @@
                     <x-pulse.pill tone="good">On the floor</x-pulse.pill>
                 @elseif ($this->entity->status === 'suspended')
                     <x-pulse.pill tone="bad">Suspended</x-pulse.pill>
+                @elseif ($this->entity->status === 'draft')
+                    <x-pulse.pill tone="neutral">Draft</x-pulse.pill>
                 @else
-                    <x-pulse.pill tone="warn">Off the floor</x-pulse.pill>
+                    <x-pulse.pill tone="warn">Taken off the floor</x-pulse.pill>
                 @endif
                 @if ($this->entity->moderation !== 'approved')
                     <x-pulse.pill tone="warn">Waiting for a human</x-pulse.pill>
@@ -43,7 +45,7 @@
                 @if ($this->entity->status === 'live')
                     <x-pulse.button variant="quiet" size="sm" wire:click="takeOff" wire:confirm="Take this page off the floor? Its offers and roles stop being shown too.">Take off the floor</x-pulse.button>
                 @elseif ($this->entity->status !== 'suspended')
-                    <x-pulse.button variant="signal" size="sm" wire:click="putOnFloor">Put on the floor</x-pulse.button>
+                    <x-pulse.button variant="signal" size="sm" wire:click="putOnFloor">{{ $this->entity->status === 'draft' ? 'Publish the page' : 'Put back on the floor' }}</x-pulse.button>
                 @endif
             @endcan
         </div>

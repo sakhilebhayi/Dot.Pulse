@@ -33,6 +33,46 @@ class EntityServiceTest extends EntitiesTestCase
         $this->assertDatabaseHas('pulse_audit_log', ['actor_id' => $owner->id, 'action' => 'entity.create']);
     }
 
+    public function test_a_draft_is_not_indexed_until_it_is_published_and_reads_differently_from_archived(): void
+    {
+        $owner = $this->infodotPerson();
+        $draft = $this->service()->create($owner, ['name' => 'Quiet Studio', 'is_seller' => true, 'draft' => true]);
+
+        $this->assertSame('draft', $draft->status);
+        $this->assertNull(PulseSignal::where('subject_type', 'entity')->where('subject_id', $draft->id)->first());
+        $this->assertFalse($draft->isLive());
+
+        $live = $this->service()->publish($owner, $draft);
+        $this->assertSame('live', $live->status);
+        $this->assertSame('live', PulseSignal::where('subject_type', 'entity')->where('subject_id', $draft->id)->first()->status);
+
+        $this->service()->archive($owner, $live);
+        $this->assertSame('archived', $live->fresh()->status);
+        $this->assertNotSame($draft->fresh()->status, 'draft');
+
+        $second = $this->service()->create($owner, ['name' => 'Second Draft', 'is_seller' => true, 'draft' => true]);
+        $this->service()->restore($owner, $second);
+        $this->assertSame('live', $second->fresh()->status, 'restore on a draft publishes it');
+    }
+
+    public function test_only_an_owner_publishes_and_a_live_page_cannot_be_published_twice(): void
+    {
+        $owner = $this->infodotPerson();
+        $draft = $this->service()->create($owner, ['name' => 'Quiet Studio', 'is_seller' => true, 'draft' => true]);
+        $admin = $this->member($draft, 'admin');
+
+        try {
+            $this->service()->publish($admin, $draft);
+            $this->fail('an admin may not publish');
+        } catch (AuthorizationException) {
+            $this->assertSame('draft', $draft->fresh()->status);
+        }
+
+        $live = $this->service()->publish($owner, $draft);
+        $this->expectException(ValidationException::class);
+        $this->service()->publish($owner, $live);
+    }
+
     public function test_slugs_stay_unique_and_never_collide_with_routes(): void
     {
         $a = $this->service()->create($this->person(), ['name' => 'Same Name', 'is_seller' => true]);

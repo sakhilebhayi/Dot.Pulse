@@ -135,6 +135,8 @@ class EntityView
 
         if ($e->status === 'suspended') {
             $todos[] = ['text' => 'A moderator suspended this page. Contact support.', 'href' => $to('entities.manage')];
+        } elseif ($e->status === 'draft') {
+            $todos[] = ['text' => 'Publish the page. It is a draft, so only your team can see it.', 'href' => $to('entities.manage.page')];
         } elseif ($e->status !== 'live') {
             $todos[] = ['text' => 'Put the page on the floor. Right now only your team can see it.', 'href' => $to('entities.manage.page')];
         } elseif ($e->moderation !== 'approved') {

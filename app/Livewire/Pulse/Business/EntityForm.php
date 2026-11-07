@@ -222,7 +222,7 @@ class EntityForm extends Component
 
         try {
             if ($this->entityId === null) {
-                $entity = $entities->create($user, $data);
+                $entity = $entities->create($user, $data + ['draft' => $draft]);
                 $this->entityId = $entity->id;
             } else {
                 $entity = $entities->update($user, PulseEntity::findOrFail($this->entityId), $data);
@@ -260,10 +260,6 @@ class EntityForm extends Component
             }
         }
 
-        if ($draft && $entity->status === 'live') {
-            $entities->archive($user, $entity->refresh());
-        }
-
         unset($this->entity);
         $this->logo = $this->cover = null;
         $this->remove_logo = $this->remove_cover = false;
@@ -290,8 +286,9 @@ class EntityForm extends Component
         $entity = PulseEntity::findOrFail($this->entityId);
 
         try {
+            $wasDraft = $entity->status === 'draft';
             $entities->restore(auth()->user(), $entity);
-            $this->notice = 'Your page is back on the floor.';
+            $this->notice = $wasDraft ? 'Your page is on the floor.' : 'Your page is back on the floor.';
         } catch (AuthorizationException) {
             $this->notice = 'Only an owner can put the page back on the floor.';
         } catch (ValidationException $e) {
@@ -428,7 +425,8 @@ class EntityForm extends Component
     private function summary(PulseEntity $e, bool $draft, ?string $linked): string
     {
         $text = match (true) {
-            $draft || $e->status === 'archived' => 'Saved off the floor. Only your team can see it. Put it on the floor from here when it is ready.',
+            $e->status === 'draft' => 'Saved as a draft. Only your team can see it. Put it on the floor from here when it is ready.',
+            $e->status === 'archived' => 'Saved. The page is off the floor. Only your team can see it.',
             $e->moderation !== 'approved' => 'Saved. A person has to look at the page before the public sees it.',
             default => 'Your page is live.',
         };

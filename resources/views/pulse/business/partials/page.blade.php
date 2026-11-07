@@ -20,6 +20,8 @@
             <div class="bz-notice bz-notice--bad" role="status"><x-pulse.icon name="alert" :size="18" /><p>This page is suspended by a moderator. Only your team can see it.</p></div>
         @elseif ($entity->moderation !== 'approved')
             @include('livewire.pulse.business.partials.held', ['state' => $entity->moderation, 'what' => 'page', 'reason' => $entity->moderation_reason])
+        @elseif ($entity->status === 'draft')
+            <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This page is a draft. Only your team can see it until you publish it.</p></div>
         @else
             <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>This page is off the floor. Only your team can see it.</p></div>
         @endif

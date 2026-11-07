@@ -45,9 +45,12 @@ class EntityFormTest extends BusinessTestCase
             ->assertHasNoErrors();
 
         $page = PulseEntity::where('name', 'Quiet Studio')->firstOrFail();
-        $this->assertSame('archived', $page->status);
+        $this->assertSame('draft', $page->status);
         $this->app['auth']->forgetGuards();
         $this->get(route('entities.show', ['entity' => $page->slug]))->assertNotFound();
+
+        Livewire::actingAs($owner)->test(EntityForm::class, ['entity' => $page])->assertSee('Draft')->assertSee('Publish the page')->call('putOnFloor');
+        $this->assertSame('live', $page->fresh()->status);
     }
 
     public function test_a_new_author_without_an_infodot_company_is_waiting_for_a_human(): void
