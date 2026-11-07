@@ -349,4 +349,29 @@ class AbuseTest extends TestCase
         }
         $this->assertSame(429, $last);
     }
+
+    public function test_an_anonymous_professional_cannot_be_invited_or_probed_by_user_id(): void
+    {
+        $employer = $this->w('employer');
+        $owner = $this->w('employerOwner');
+        $pro = $this->w('pro');
+        $lines = app(LineService::class);
+
+        // The id of someone who is not on Pulse at all, and the id of someone who is anonymous, answer in the same words.
+        $words = [];
+        foreach ([999999, $pro->id] as $id) {
+            try {
+                $lines->knock($owner, ['user' => $id, 'as_entity' => $employer->id], 'invite', ['what' => 'We would like to talk about a role']);
+                $this->fail("invited user {$id} by id");
+            } catch (LineException $e) {
+                $words[] = $e->getMessage();
+            }
+        }
+        $this->assertSame($words[0], $words[1], 'the refusal tells an anonymous professional apart from an unknown id');
+
+        // Only the signal addresses them, and only with an invitation.
+        $this->assertSame(1, PulseConversation::query()->where('kind', 'invite')->count()); // the world's own invite
+        $this->expectException(LineException::class);
+        $lines->knock($owner, ['signal' => $this->w('talentSignal')->id], 'enquiry', $this->card());
+    }
 }

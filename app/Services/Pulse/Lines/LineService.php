@@ -637,6 +637,12 @@ class LineService
         }
 
         if ($t['signal'] === null) {
+            // An anonymous professional is addressed by their signal alone. Accepting a user id here would let an employer who
+            // learned an id elsewhere (a community post, a link) confirm that this person is the anonymous card they are looking at.
+            if ($discoverability === 'anonymous') {
+                throw LineException::because('unavailable', 'They cannot be contacted right now.');
+            }
+
             $t['signal'] = PulseSignal::query()->with('place')->where('owner_id', $t['user']->id)->where('kind', 'talent')->where('status', 'live')->first();
             if ($t['signal'] === null) {
                 throw LineException::because('unavailable', 'They cannot be contacted right now.');
