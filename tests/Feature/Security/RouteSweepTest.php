@@ -218,4 +218,23 @@ class RouteSweepTest extends TestCase
         $this->actingAs($responder->fresh())->get('/b/'.$this->w('seller')->slug.'/manage/lines')->assertNotFound();
         $this->actingAs($responder->fresh())->get('/lines/'.$this->w('line')->id)->assertNotFound();
     }
+
+    public function test_scraping_the_public_business_page_is_throttled_and_robots_keeps_crawlers_out_of_the_rest(): void
+    {
+        $slug = $this->w('seller')->slug;
+        $last = 200;
+        for ($i = 0; $i < 125; $i++) {
+            $last = $this->get('/b/'.$slug)->getStatusCode();
+            if ($last === 429) {
+                break;
+            }
+        }
+        $this->assertSame(429, $last);
+
+        $robots = file_get_contents(public_path('robots.txt'));
+        foreach (['/media/', '/lines/', '/me/', '/api/', '/u/', '/s/'] as $path) {
+            $this->assertStringContainsString('Disallow: '.$path, $robots);
+        }
+        $this->assertDoesNotMatchRegularExpression('~^Disallow: /b/\\s*$~m', $robots, 'the public business page stays crawlable');
+    }
 }
