@@ -289,7 +289,9 @@ class PerformanceGuardTest extends TestCase
 
         $this->assertNull(Cache::get(PulseMatch::RESUME), 'finished: nothing left to resume');
         $this->assertNotNull(Cache::get(PulseMatch::MARK));
-        $this->assertSame($signals->count(), DB::table('pulse_matches')->distinct()->count('signal_id'), 'every signal was matched, none dropped by the limit');
+        // The page's own business signal is indexed too now, so count the live signals rather than the offers made here.
+        $this->assertGreaterThanOrEqual($signals->count(), DB::table('pulse_signals')->where('status', 'live')->count());
+        $this->assertSame(DB::table('pulse_signals')->where('status', 'live')->count(), DB::table('pulse_matches')->distinct()->count('signal_id'), 'every signal was matched, none dropped by the limit');
     }
 
     // ---- the migration -----------------------------------------------------------------------------------------

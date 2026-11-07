@@ -462,6 +462,7 @@ class LineService
         $page->getCollection()->filter(fn (PulseConversation $c) => ! $c->identity_hidden)->load('recipient:id,name,profile_photo_path');
 
         $snippets = $this->snippets($page->getCollection()->pluck('id'));
+        $this->presenter->preloadLinkable($page->getCollection()->flatMap(fn (PulseConversation $c) => [$c->initiator_id, $c->recipient_id]));
 
         $page->getCollection()->transform(function (PulseConversation $c) use ($u, $snippets, $entityIds) {
             return $this->presenter->present($u, $c, $snippets[$c->id] ?? null, $entityIds);

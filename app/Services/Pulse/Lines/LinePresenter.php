@@ -167,6 +167,26 @@ class LinePresenter
     /** @var array<int, bool> */
     private array $linkable = [];
 
+    /**
+     * One query for a whole page of lines, so presenting twenty lines does not look up twenty profiles.
+     *
+     * @param  iterable<int|null>  $userIds
+     */
+    public function preloadLinkable(iterable $userIds): void
+    {
+        $ids = collect($userIds)->filter()->map(fn ($id) => (int) $id)->unique()->reject(fn ($id) => isset($this->linkable[$id]))->values()->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $anonymous = PulseProfile::query()->whereIn('user_id', $ids)->where('discoverability', 'anonymous')->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+
+        foreach ($ids as $id) {
+            $this->linkable[$id] = ! in_array($id, $anonymous, true);
+        }
+    }
+
     /** False for someone whose page does not exist for others (an anonymous professional): no link is drawn. */
     private function linkable(?int $userId): bool
     {
