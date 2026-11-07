@@ -4,9 +4,6 @@ namespace App\Livewire\Pulse\Floor;
 
 use App\Enums\ReportReason;
 use App\Models\PulseEntity;
-use App\Models\PulseNeed;
-use App\Models\PulseOffer;
-use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Lines\BlockService;

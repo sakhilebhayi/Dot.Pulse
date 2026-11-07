@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Floor;
 
-use App\Models\PulseEntity;
 use App\Models\PulsePlace;
 use App\Models\PulseSignal;
 use App\Models\User;

@@ -31,7 +31,7 @@ class ResponsiveShellTest extends TestCase
         $post = $this->postIn($community, ['title' => 'Responsive shell fixture post title']);
 
         return [
-            'dashboard' => route('dashboard'),
+            'community feed' => route('community.feed'),
             'post' => route('posts.show', $post),
             'community' => route('communities.show', $community),
             'user profile' => route('users.show', $post->author),
@@ -71,7 +71,7 @@ class ResponsiveShellTest extends TestCase
         $user = $this->pulseUser();
 
         $this->actingAs($user)
-            ->get(route('dashboard'))
+            ->get(route('community.feed'))
             ->assertOk()
             ->assertDontSee('Responsive Navigation Menu', false)
             ->assertDontSee('Primary Navigation Menu', false);
@@ -81,7 +81,7 @@ class ResponsiveShellTest extends TestCase
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
         $menu = $this->between($html, 'id="user-menu"', '</header>');
 
         $this->assertStringContainsString('action="'.route('logout').'"', $menu);
@@ -100,7 +100,7 @@ class ResponsiveShellTest extends TestCase
         ]);
         $user->teams()->attach($second, ['role' => 'editor']);
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
         $menu = $this->between($html, 'id="user-menu"', '</header>');
 
         $this->assertStringContainsString('Switch team', $menu);
@@ -113,7 +113,7 @@ class ResponsiveShellTest extends TestCase
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
 
         $this->assertStringContainsString('class="pulse-page"', $html);
         $this->assertStringContainsString('class="kpi-grid"', $html);
@@ -124,7 +124,7 @@ class ResponsiveShellTest extends TestCase
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
 
         $this->assertStringContainsString('data-pulse-check="'.url('/api/pulse/pulse-check').'"', $html);
         $this->assertStringContainsString('data-pulse-badge="lines"', $html);
@@ -135,7 +135,7 @@ class ResponsiveShellTest extends TestCase
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
         $masthead = $this->between($html, '<header class="sh-mast', '</header>');
 
         // Until the notifications page route exists the legacy Livewire bell is shown; either way it is named "Notifications".

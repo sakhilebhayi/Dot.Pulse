@@ -1,11 +1,11 @@
-<div class="fl-search" x-data="{ open: true }" x-on:click.outside="open = false" x-on:keydown.escape="open = false" x-on:input="open = true">
+<div class="fl-search" x-data="{ open: true }" x-on:click.outside="open = false" x-on:keydown.escape="open = false">
     <div class="fl-draw" wire:loading.delay.shortest wire:target="q,kind,mode,place,remote,priceMin,priceMax,employment,more,submit,pick,pickPlace,clearPlace,clearFilters" aria-hidden="true"></div>
 
     <form class="fl-search__bar" role="search" wire:submit="submit">
         <div class="fl-search__field">
             <label for="fl-q" class="sr-only">Search the floor</label>
             <x-pulse.icon name="search" :size="18" />
-            <input id="fl-q" type="search" class="pk-control" name="q" wire:model.live.debounce.300ms="q" placeholder="Search offers, needs, roles, businesses" autocomplete="off" autofocus aria-describedby="fl-q-hint">
+            <input id="fl-q" type="search" class="pk-control" name="q" wire:model.live.debounce.300ms="q" x-on:input="open = true" placeholder="Search offers, needs, roles, businesses" autocomplete="off" autofocus aria-describedby="fl-q-hint">
             <p id="fl-q-hint" class="sr-only">Results update as you type.</p>
         </div>
         <x-pulse.button variant="primary" type="submit">Search</x-pulse.button>

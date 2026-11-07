@@ -3,6 +3,7 @@
 namespace Tests\Feature\Floor;
 
 use App\Livewire\Pulse\Floor\Round;
+use App\Models\PulseDoor;
 use App\Models\PulseMatch;
 use App\Models\PulseMute;
 use App\Models\PulseSave;
@@ -321,7 +322,7 @@ class RoundTest extends FloorTestCase
     public function test_a_door_beat_shows_when_it_closes_and_has_a_knock(): void
     {
         $owner = $this->person();
-        $door = \App\Models\PulseDoor::create([
+        $door = PulseDoor::create([
             'owner_id' => $owner->id, 'opened_by' => $owner->id, 'purpose' => 'Looking for a baker for Saturday', 'length' => 'week', 'status' => 'open',
             'opens_at' => now(), 'closes_at' => now()->addDays(3), 'knock_cap' => 10,
         ]);

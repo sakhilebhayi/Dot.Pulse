@@ -15,6 +15,7 @@ use App\Models\PulseRole;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Discovery\Beat;
 use App\Services\Pulse\Discovery\BeatBuilder;
 use App\Services\Pulse\Discovery\ContextLoader;
 use App\Services\Pulse\Discovery\Matcher;
@@ -158,9 +159,9 @@ class BeatDetail extends Component
     }
 
     /** The business behind the beat: its ladder, its response record. Never for an anonymous professional. */
-    private function loadSource(\App\Services\Pulse\Discovery\Beat $beat, User $viewer): void
+    private function loadSource(Beat $beat, User $viewer): void
     {
-        if ($beat->from['anonymous'] ?? false) {
+        if (($beat->from['anonymous'] ?? false) || $this->mine) {
             return;
         }
 

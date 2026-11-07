@@ -107,7 +107,7 @@ class InfoDotRedeemTest extends TestCase
         $this->post(route('ecosystem.auth'), ['token' => 'one-time-token'], $this->fromInfodot())->assertRedirect();
         $user = User::where('email', 'amara@example.test')->firstOrFail();
 
-        $this->get(route('dashboard'))->assertOk();
+        $this->get(route('community.feed'))->assertOk();
 
         Livewire::actingAs($user)->test(CreatePost::class)
             ->set('body', 'My very first post arriving through InfoDot sign-in.')

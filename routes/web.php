@@ -5,6 +5,7 @@ use App\Http\Controllers\Pulse\MediaController;
 use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
+use App\Models\PulseSignal;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -81,7 +82,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/'.$name, fn () => view('pages.pulse.floor.floor', ['mode' => $mode]))->name($name);
     }
 
-    Route::get('/s/{signal}', fn (\App\Models\PulseSignal $signal) => view('pages.pulse.floor.detail', ['signal' => $signal]))
+    Route::get('/s/{signal}', fn (PulseSignal $signal) => view('pages.pulse.floor.detail', ['signal' => $signal]))
         ->whereNumber('signal')->name('signals.show');
     Route::get('/search', fn () => view('pages.pulse.floor.search'))->name('search');
     Route::get('/saved', fn () => view('pages.pulse.floor.saved'))->name('saved');

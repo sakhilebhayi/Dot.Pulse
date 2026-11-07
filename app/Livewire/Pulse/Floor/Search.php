@@ -74,9 +74,7 @@ class Search extends Component
 
     public function updated(string $name): void
     {
-        if ($name === 'q') {
-            $this->suggestOpen = mb_strlen(trim($this->q)) >= 2;
-        }
+        $this->suggestOpen = $name === 'q' && mb_strlen(trim($this->q)) >= 2;
 
         if (in_array($name, ['q', 'kind', 'mode', 'place', 'remote', 'priceMin', 'priceMax', 'employment'], true)) {
             $this->clean();

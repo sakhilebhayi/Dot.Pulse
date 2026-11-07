@@ -90,7 +90,6 @@ class Door extends Component
 
         $doors = PulseDoor::query()->open()
             ->where(fn ($q) => $q->where('owner_id', $user->id)->orWhereIn('entity_id', $pages->pluck('id')->all() ?: [0]))
-            ->withCount('knocks')
             ->latest('id')
             ->get();
 

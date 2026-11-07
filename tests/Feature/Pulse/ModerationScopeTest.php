@@ -115,9 +115,9 @@ class ModerationScopeTest extends TestCase
         $communityModerator = $this->joined($community, null, 'moderator');
         $member = $this->joined($community);
 
-        $this->actingAs($communityModerator)->get('/dashboard')->assertSee(route('moderation'));
-        $this->actingAs($this->platformModerator())->get('/dashboard')->assertSee(route('moderation'));
-        $this->actingAs($member)->get('/dashboard')->assertDontSee(route('moderation'));
+        $this->actingAs($communityModerator)->get('/community')->assertSee(route('moderation'));
+        $this->actingAs($this->platformModerator())->get('/community')->assertSee(route('moderation'));
+        $this->actingAs($member)->get('/community')->assertDontSee(route('moderation'));
     }
 
     public function test_the_creator_of_a_community_counts_as_its_moderator(): void

@@ -6,7 +6,7 @@ class RoutesTest extends FloorTestCase
 {
     public function test_every_floor_page_needs_a_signed_in_person(): void
     {
-        foreach (['/floor', '/trade', '/work', '/local', '/learn', '/search', '/saved', '/door'] as $url) {
+        foreach (['/dashboard', '/floor', '/trade', '/work', '/local', '/learn', '/search', '/saved', '/door'] as $url) {
             $this->get($url)->assertRedirect('/login');
         }
 
