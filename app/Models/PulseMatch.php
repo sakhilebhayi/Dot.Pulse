@@ -9,6 +9,9 @@ class PulseMatch extends Model
 {
     protected $table = 'pulse_matches';
 
+    // The table has computed_at, seen_at and dismissed_at, and no created_at/updated_at.
+    public $timestamps = false;
+
     protected $fillable = [
         'user_id',
         'signal_id',

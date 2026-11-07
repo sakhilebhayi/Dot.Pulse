@@ -252,6 +252,10 @@ class Floor
     /**
      * Best first, but never more than RUN_LIMIT in a row of one kind or one business while anything else is left.
      *
+     * Greedy by score, with one look ahead: a pick is skipped if it would leave a kind (or a business) with more
+     * items than can still be spread out between everything else, which is what makes a long tail of one kind
+     * unavoidable. Only when no such pick exists does the rule give way, and then only for what is genuinely left.
+     *
      * @param  list<array{signal: PulseSignal, id: int}>  $items
      * @return list<array{signal: PulseSignal, id: int}>
      */
@@ -260,24 +264,86 @@ class Floor
         $out = [];
         $remaining = array_values($items);
 
+        $kindLeft = $entityLeft = [];
+        foreach ($remaining as $item) {
+            $kindLeft[$item['signal']->kind] = ($kindLeft[$item['signal']->kind] ?? 0) + 1;
+            if ($item['signal']->entity_id !== null) {
+                $entityLeft[(int) $item['signal']->entity_id] = ($entityLeft[(int) $item['signal']->entity_id] ?? 0) + 1;
+            }
+        }
+
         while ($remaining !== []) {
-            $pick = null;
+            $total = count($remaining);
+            $pick = $fallback = null;
 
             foreach ($remaining as $i => $item) {
-                if (! $this->breaksRun($out, $item['signal'])) {
+                $signal = $item['signal'];
+
+                if ($this->breaksRun($out, $signal)) {
+                    continue;
+                }
+
+                $fallback ??= $i;
+                $kLeft = $kindLeft;
+                $eLeft = $entityLeft;
+                $kLeft[$signal->kind]--;
+                if ($signal->entity_id !== null) {
+                    $eLeft[(int) $signal->entity_id]--;
+                }
+
+                $tail = array_merge($out, [$item]);
+
+                if ($this->spreadable($tail, $kLeft, $total - 1, fn ($s) => $s->kind)
+                    && $this->spreadable($tail, $eLeft, $total - 1, fn ($s) => $s->entity_id === null ? null : (int) $s->entity_id)) {
                     $pick = $i;
                     break;
                 }
             }
 
-            // Everything left would extend a run and there is nothing else to interleave: take the best.
-            $pick ??= array_key_first($remaining);
+            $pick ??= $fallback ?? array_key_first($remaining);
 
-            $out[] = $remaining[$pick];
+            $chosen = $remaining[$pick];
+            $out[] = $chosen;
+            $kindLeft[$chosen['signal']->kind]--;
+            if ($chosen['signal']->entity_id !== null) {
+                $entityLeft[(int) $chosen['signal']->entity_id]--;
+            }
             unset($remaining[$pick]);
         }
 
         return $out;
+    }
+
+    /**
+     * Whether what is left of each group can still be placed without a run longer than RUN_LIMIT: a group of n items
+     * fits when n is at most the room left in the current run plus RUN_LIMIT for every item that is not in the group.
+     *
+     * @param  list<array{signal: PulseSignal, id: int}>  $out  the sequence so far, including the candidate pick
+     * @param  array<int|string, int>  $left  items left per group after the pick
+     */
+    private function spreadable(array $out, array $left, int $totalLeft, callable $key): bool
+    {
+        $last = $out === [] ? null : $key(end($out)['signal']);
+        $run = 0;
+
+        for ($i = count($out) - 1; $i >= 0 && $key($out[$i]['signal']) === $last && $last !== null; $i--) {
+            $run++;
+        }
+
+        foreach ($left as $group => $n) {
+            if ($n <= self::RUN_LIMIT) {
+                continue;
+            }
+
+            $others = $totalLeft - $n;
+            $room = ($last !== null && (string) $last === (string) $group) ? max(0, self::RUN_LIMIT - $run) : self::RUN_LIMIT;
+
+            if ($n > $room + self::RUN_LIMIT * $others) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param list<array{signal: PulseSignal, id: int}> $out */
