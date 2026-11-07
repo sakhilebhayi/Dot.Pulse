@@ -477,6 +477,9 @@ jobs:
           $PHP artisan migrate:status --pending 2>&1 | tail -25 || true
           if [ "$MIGRATE" = "yes" ]; then
             $PHP artisan migrate --force
+            # The gazetteer (countries, provinces, cities) is data the product needs to match people by place. The
+            # command is idempotent, so it runs on every release; a failure here must not take the release down.
+            $PHP artisan pulse:places:seed || echo "::warning::pulse:places:seed failed; places can be loaded later with the same command."
           else
             echo "== Migrations NOT run (takeover). Read the list above; the next confirm=deploy runs them, or re-run with migrate=migrate."
           fi
