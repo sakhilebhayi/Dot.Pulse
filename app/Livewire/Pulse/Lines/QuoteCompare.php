@@ -60,7 +60,10 @@ class QuoteCompare extends Component
     /** A slip that belongs to this request, or a 404. */
     private function quote(int $id): PulseQuote
     {
-        return PulseQuote::query()->whereIn('pulse_conversation_id', $this->conversations()->pluck('id'))->findOrFail($id);
+        $quote = PulseQuote::query()->whereIn('pulse_conversation_id', $this->conversations()->pluck('id'))->find($id);
+        abort_if($quote === null, 404);
+
+        return $quote;
     }
 
     /**

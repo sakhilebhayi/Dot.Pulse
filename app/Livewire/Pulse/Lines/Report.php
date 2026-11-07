@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\Pulse\Lines\Access;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\ReportService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Gate;
@@ -93,6 +94,10 @@ class Report extends Component
 
         try {
             $reports->report(auth()->user(), $subject, $this->reason, $this->note !== '' ? $this->note : null);
+        } catch (AuthorizationException) {
+            $this->failure = 'You cannot report that.';
+
+            return;
         } catch (LineException $e) {
             $this->failure = $e->getMessage();
 

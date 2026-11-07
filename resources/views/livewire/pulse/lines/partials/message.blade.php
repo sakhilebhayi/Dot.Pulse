@@ -16,7 +16,7 @@
 @elseif ($quote)
     <div class="ln-msg ln-msg--wide {{ $mine ? 'ln-msg--mine' : 'ln-msg--theirs' }}" id="m-{{ $m['id'] }}">
         <div class="ln-msg__from">{{ $you ? 'You' : $m['from'] }}<time class="pk-mono" datetime="{{ $m['created_at']?->toIso8601String() }}">{{ Words::time($m['created_at']) }}</time></div>
-        @include('livewire.pulse.lines.partials.quote-slip', ['quote' => $quote, 'canDecide' => $canDecide])
+        @include('livewire.pulse.lines.partials.quote-slip', ['quote' => $quote, 'canDecide' => $canDecide, 'closedReason' => $closedReason ?? null])
     </div>
 @else
     <div class="ln-msg {{ $mine ? 'ln-msg--mine' : 'ln-msg--theirs' }}{{ ! empty($m['meta']['card']) ? ' ln-msg--card' : '' }}" id="m-{{ $m['id'] }}">

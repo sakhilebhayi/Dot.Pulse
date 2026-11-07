@@ -7,8 +7,12 @@
     $stats = $stats ?? null;
     $lapsed = $quote->status === 'sent' && $quote->valid_until->lt(today());
     $status = $lapsed ? 'expired' : $quote->status;
-    $words = ['sent' => 'Holding', 'accepted' => 'Accepted', 'declined' => 'Declined', 'expired' => 'Expired', 'superseded' => 'Replaced by a newer slip'];
-    $tone = ['sent' => 'good', 'accepted' => 'good', 'declined' => 'neutral', 'expired' => 'warn', 'superseded' => 'neutral'][$status] ?? 'neutral';
+    // When the person went with another business, this slip was not declined by them: say what happened.
+    if (($closedReason ?? null) === 'not_chosen' && $status === 'declined') {
+        $status = 'not_chosen';
+    }
+    $words = ['sent' => 'Holding', 'accepted' => 'Accepted', 'declined' => 'Declined', 'expired' => 'Expired', 'superseded' => 'Replaced by a newer slip', 'not_chosen' => 'Not chosen'];
+    $tone = ['sent' => 'good', 'accepted' => 'good', 'declined' => 'neutral', 'expired' => 'warn', 'superseded' => 'neutral', 'not_chosen' => 'neutral'][$status] ?? 'neutral';
     $days = today()->diffInDays($quote->valid_until, false);
 @endphp
 <article class="ln-slip" aria-label="Quote slip{{ ! empty($name) ? ' from '.$name : '' }}">
@@ -41,9 +45,11 @@
     </dl>
 
     @if ($stats && $stats['received'] > 0)
-        <p class="ln-slip__stats">
-            Answered {{ $stats['answered'] }} of {{ $stats['received'] }} requests in the last {{ $stats['window_days'] }} days@if ($stats['median_first_response_seconds'] !== null), usually within {{ $stats['median_first_response_seconds'] < 3600 ? max(1, intdiv($stats['median_first_response_seconds'], 60)).' min' : ($stats['median_first_response_seconds'] < 172800 ? round($stats['median_first_response_seconds'] / 3600).' h' : round($stats['median_first_response_seconds'] / 86400).' days') }}@endif.
-        </p>
+        @php
+            $secs = $stats['median_first_response_seconds'];
+            $usually = $secs === null ? null : ($secs < 3600 ? max(1, intdiv($secs, 60)).' min' : ($secs < 172800 ? round($secs / 3600).' h' : round($secs / 86400).' days'));
+        @endphp
+        <p class="ln-slip__stats">Answered {{ $stats['answered'] }} of {{ $stats['received'] }} requests in the last {{ $stats['window_days'] }} days{{ $usually ? ', usually within '.$usually : '' }}.</p>
     @endif
 
     @if ($canDecide && $status === 'sent')

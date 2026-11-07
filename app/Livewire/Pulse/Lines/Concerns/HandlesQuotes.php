@@ -109,7 +109,10 @@ trait HandlesQuotes
     /** A slip on this line only: an id from another line is a 404. */
     protected function quoteOnThisLine(int $quoteId): PulseQuote
     {
-        return PulseQuote::query()->where('pulse_conversation_id', $this->conversationId)->findOrFail($quoteId);
+        $quote = PulseQuote::query()->where('pulse_conversation_id', $this->conversationId)->find($quoteId);
+        abort_if($quote === null, 404);
+
+        return $quote;
     }
 
     /** @return Collection<int, PulseQuote> slips on the line, keyed by id */

@@ -19,7 +19,7 @@
         @foreach ($columns as $col)
             <section class="ln-col" wire:key="col-{{ $col['conversation']->id }}" aria-label="{{ $col['entity']?->name }}">
                 @if ($col['quote'])
-                    @include('livewire.pulse.lines.partials.quote-slip', ['quote' => $col['quote'], 'canDecide' => true, 'name' => $col['entity']?->name, 'stats' => $col['stats']])
+                    @include('livewire.pulse.lines.partials.quote-slip', ['quote' => $col['quote'], 'canDecide' => true, 'name' => $col['entity']?->name, 'stats' => $col['stats'], 'closedReason' => $col['line']['closed_reason'] ?? null])
                 @else
                     @php $state = Words::state($col['line']); @endphp
                     <article class="ln-slip ln-slip--empty" aria-label="No slip from {{ $col['entity']?->name }}">

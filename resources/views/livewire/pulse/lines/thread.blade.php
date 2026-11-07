@@ -148,7 +148,7 @@
                 <h2 class="ln-day">{{ $m['created_at']?->isToday() ? 'Today' : ($m['created_at']?->isYesterday() ? 'Yesterday' : Words::date($m['created_at'])) }}</h2>
             @endif
             <div wire:key="m-{{ $m['id'] }}">
-                @include('livewire.pulse.lines.partials.message', ['m' => $m, 'viewerSide' => $side, 'quotes' => $quotes, 'canDecide' => $canDecide, 'canReport' => $canReport])
+                @include('livewire.pulse.lines.partials.message', ['m' => $m, 'viewerSide' => $side, 'quotes' => $quotes, 'canDecide' => $canDecide, 'canReport' => $canReport, 'closedReason' => $line['closed_reason'] ?? null])
             </div>
         @empty
             <p class="ln-muted">Nothing said yet.</p>
