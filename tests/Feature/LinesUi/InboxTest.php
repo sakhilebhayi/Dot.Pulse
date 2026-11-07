@@ -250,11 +250,11 @@ class InboxTest extends TestCase
         $this->lines()->send($other, $line, 'Are you still free on Thursday?');
 
         $component = Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'open']);
-        $component->assertSee('unread')->assertSee('Are you still free on Thursday?');
+        $component->assertSeeHtml('class="ln-count"')->assertSee('Are you still free on Thursday?');
 
         $this->lines()->markRead($owner, $line->fresh());
 
-        Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'open'])->assertDontSee('unread');
+        Livewire::actingAs($owner)->test(Inbox::class, ['startTab' => 'open'])->assertDontSeeHtml('class="ln-count"');
     }
 
     public function test_the_unread_filter_leaves_out_lines_with_nothing_new(): void
