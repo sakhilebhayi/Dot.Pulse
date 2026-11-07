@@ -52,3 +52,12 @@ Route::middleware([
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// --- discovery digest (D2) ---
+// Signed link in the digest email: switches the digest off for the user in the URL. GET (click) and POST (a mail
+// client's one-click List-Unsubscribe-Post). No sign-in needed; the signature is the proof.
+Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Controllers\Pulse\DigestUnsubscribeController::class)
+    ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
+    ->middleware(['signed', 'throttle:20,1'])
+    ->name('pulse.digest.unsubscribe');
+// --- end discovery digest (D2) ---

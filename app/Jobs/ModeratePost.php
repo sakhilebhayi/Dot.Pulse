@@ -10,10 +10,12 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 
 /**
- * Automated review of a new post, off the web request. The HTTP call itself
- * is capped at services.anthropic.timeout (10s); the job gets three tries
- * with backoff, and when they run out -- or there is no key at all -- the
- * post is held for a human. It is never approved by default.
+ * Automated review of a new post, off the web request. The deterministic local
+ * rules decide first (no model key needed): allow publishes, hold queues for a
+ * human, block rejects with a reason. A configured model only adds a second
+ * opinion on a hold; its HTTP call is capped at services.anthropic.timeout
+ * (10s). If anything unexpected goes wrong the job retries with backoff and, when
+ * the tries run out, the post is held for a human -- never approved by default.
  */
 class ModeratePost implements ShouldQueue
 {
@@ -42,13 +44,6 @@ class ModeratePost implements ShouldQueue
 
         // Already decided (approved by a person, removed, deleted...).
         if ($post === null || $post->status !== 'pending') {
-            return;
-        }
-
-        if (! $moderation->isConfigured()) {
-            // Retrying cannot help.
-            $moderation->holdForHumanReview($post, 'no API key configured');
-
             return;
         }
 

@@ -15,3 +15,11 @@ Schedule::command('pulse:sweep-pending')->everyFiveMinutes()->withoutOverlapping
 // One signed, aggregate-only snapshot a day for Dot.Analytics. Does nothing until the url, secret and
 // company uuid are all configured; an Analytics outage only ever affects the queued job.
 Schedule::command('pulse:publish-metrics')->dailyAt('00:10')->timezone('UTC')->withoutOverlapping();
+
+// --- R-41 discovery (D2) ---
+// The host has ONE shared crontab, so every entry here is guarded against overlapping itself.
+Schedule::command('pulse:index')->hourly()->withoutOverlapping();
+Schedule::command('pulse:match')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('pulse:digest')->hourly()->withoutOverlapping();
+Schedule::command('pulse:expire')->hourly()->withoutOverlapping();
+// --- end R-41 discovery (D2) ---
