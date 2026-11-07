@@ -98,6 +98,26 @@ class SearchTest extends TestCase
         $this->assertEqualsCanonicalizing(['Welding for a fence', 'Welding for a gate'], $this->titles($this->search('welding')));
     }
 
+    public function test_not_for_me_on_a_search_result_sticks_even_when_there_was_no_match_row(): void
+    {
+        $owner = $this->dUser();
+        $keep = $this->dSignal(['title' => 'Tiling for a bathroom', 'owner_id' => $owner->id]);
+        $drop = $this->dSignal(['title' => 'Tiling for a patio', 'owner_id' => $owner->id]);
+
+        $this->assertEqualsCanonicalizing(['Tiling for a bathroom', 'Tiling for a patio'], $this->titles($this->search('tiling')));
+
+        app(\App\Services\Pulse\Discovery\Floor::class)->dismiss($this->me, $drop, 'not_interested');
+
+        $this->assertDatabaseHas('pulse_matches', ['user_id' => $this->me->id, 'signal_id' => $drop->id]);
+        $this->assertNotNull(DB::table('pulse_matches')->where('user_id', $this->me->id)->where('signal_id', $drop->id)->value('dismissed_at'));
+        $this->assertSame(['Tiling for a bathroom'], $this->titles($this->search('tiling')));
+
+        // A matching run never reopens a dismissed row.
+        app(\App\Services\Pulse\Discovery\Matcher::class)->forUser($this->me);
+        $this->assertNotNull(DB::table('pulse_matches')->where('user_id', $this->me->id)->where('signal_id', $drop->id)->value('dismissed_at'));
+        $this->assertNotNull($keep->id);
+    }
+
     public function test_held_removed_expired_and_paused_never_appear(): void
     {
         $owner = $this->dUser();

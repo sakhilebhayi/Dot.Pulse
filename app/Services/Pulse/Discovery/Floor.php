@@ -90,6 +90,16 @@ class Floor
         $count = DB::table('pulse_matches')->where('user_id', $u->id)->where('signal_id', $s->id)->whereNull('dismissed_at')
             ->update(['dismissed_at' => now(), 'dismissed_reason' => $reason]);
 
+        // A card found by search may have no match row yet. "Not for me" must still stick, so the dismissal is recorded
+        // as a match row that is already dismissed (matching never reopens a dismissed row, see Matcher::persist).
+        if ($count === 0 && ! DB::table('pulse_matches')->where('user_id', $u->id)->where('signal_id', $s->id)->exists()) {
+            DB::table('pulse_matches')->insert([
+                'user_id' => $u->id, 'signal_id' => $s->id, 'score' => 0, 'reasons' => '[]', 'computed_at' => now(),
+                'dismissed_at' => now(), 'dismissed_reason' => $reason,
+            ]);
+            $count = 1;
+        }
+
         if ($count > 0) {
             Audit::record($u, 'pulse.floor.dismiss', $s, ['reason' => $reason]);
         }

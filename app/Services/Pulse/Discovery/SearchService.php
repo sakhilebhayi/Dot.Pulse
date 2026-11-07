@@ -66,8 +66,13 @@ class SearchService
         $matchedNeeds = null;
         $seesAllNeeds = null;
 
+        // "Not for me" sticks in search too (a mute-driven dismissal does not: the muted input already filters those).
+        $dismissed = PulseMatch::query()->where('user_id', $u->id)->whereNotNull('dismissed_at')
+            ->where(fn ($q) => $q->whereNull('dismissed_reason')->orWhere('dismissed_reason', '!=', 'muted'))
+            ->whereIn('signal_id', $signals->pluck('id')->all() ?: [0])->pluck('signal_id')->flip();
+
         foreach ($signals as $signal) {
-            if (! $this->matcher->eligible($ctx, $signal, $pack)) {
+            if (isset($dismissed[$signal->id]) || ! $this->matcher->eligible($ctx, $signal, $pack)) {
                 continue;
             }
 
