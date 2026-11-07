@@ -67,5 +67,76 @@ return [
         ],
     ],
     // --- end entities ---
+    // --- lines ---
+    // Agent D3: contact, conversations, trust. Edited only inside this block.
+
+    /*
+    |--------------------------------------------------------------------------
+    | Age gate
+    |--------------------------------------------------------------------------
+    |
+    | Pulse is for people this age and over (D25). Declared at onboarding (pulse_profiles.age_confirmed_at); nobody
+    | without the declaration can contact or be contacted, and no profile under this age is ever discoverable.
+    |
+    */
+    'age_min' => 18,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Safe handover guidance (D26)
+    |--------------------------------------------------------------------------
+    |
+    | Shown beside lines about buying, selling and hiring. Worded as guidance, never as protection.
+    |
+    */
+    'safety' => [
+        'trade' => [
+            'Pay inside your own banking app. Never trust a screenshot of a payment.',
+            'Meet in a public place, in daylight where you can, for any hand over.',
+            'Tell one person you trust where you are going and who you are meeting.',
+            'If someone pushes you to pay quickly or to move to another app, stop and report it.',
+        ],
+        'work' => [
+            'A real employer never asks you to pay to be considered or to start.',
+            'Keep your ID number, bank details and home address out of the chat until you have checked who you are talking to.',
+            'Meet or interview somewhere public or on a call you set up yourself.',
+        ],
+    ],
+
+    'lines' => [
+        // Attempts per minute per person. Messages 30; first contacts are also bounded by the knock budget.
+        'rate_limits' => [
+            'message' => (int) env('PULSE_LIMIT_MESSAGE', 30),
+            'knock' => (int) env('PULSE_LIMIT_KNOCK', 20),
+            'report' => (int) env('PULSE_LIMIT_LINES_REPORT', 10),
+        ],
+
+        // First contacts to strangers per window (D18). A reply from a stranger refills one, up to bonus_cap.
+        'knock_budget' => [
+            'established' => 7,
+            'new' => 3,
+            'new_days' => 7,
+            'window_days' => 7,
+            'bonus_cap' => 5,
+        ],
+
+        'request_expiry_days' => 14,        // an unanswered request closes as expired and the sender is told
+        'redeclined_cooldown_days' => 30,   // after "not now", the same ask waits this long
+        'message_max' => 2000,
+        'review_max' => 1000,
+        'review_window_days' => 60,         // how long after a confirmed result a review can be written
+        'quote_max_validity_days' => 90,
+        'door_knock_cap' => 10,
+        'spam_shrink' => 2,                 // knock budget lost when a moderator confirms spam
+
+        // What the sender is shown when a request is declined. The first is the default.
+        'decline_reasons' => [
+            'not_now' => 'Not now',
+            'not_a_fit' => 'Not a fit',
+            'no_capacity' => 'No capacity right now',
+            'out_of_area' => 'Outside my area',
+        ],
+    ],
+    // --- end lines ---
 
 ];

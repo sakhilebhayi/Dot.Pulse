@@ -18,6 +18,8 @@ class PulseNotificationPref extends Model
         'digest_hour',
         'timezone',
         'last_digest_at',
+        'quiet_start',
+        'quiet_end',
     ];
 
     protected function casts(): array

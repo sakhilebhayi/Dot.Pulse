@@ -70,3 +70,9 @@ if (app()->environment('local', 'testing')) {
     Route::view('/dev/floor', 'dev.floor')->name('dev.floor');
 }
 // --- /shell ---
+// --- lines ---
+// The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1'])
+    ->get('/api/pulse/pulse-check', 'App\\Http\\Controllers\\Pulse\\PulseCheckController')
+    ->name('pulse.check');
+// --- end lines ---
