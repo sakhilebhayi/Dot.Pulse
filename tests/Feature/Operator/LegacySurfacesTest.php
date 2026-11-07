@@ -38,7 +38,7 @@ class LegacySurfacesTest extends TestCase
         $user = $this->pulseUser();
         $this->aPost();
 
-        $this->actingAs($user)->get('/dashboard')->assertOk()
+        $this->actingAs($user)->get('/community')->assertOk()
             ->assertSee('sh-stage--floor', false)
             ->assertSee('Trending')
             ->assertSee('A distinctive restyled post title')
