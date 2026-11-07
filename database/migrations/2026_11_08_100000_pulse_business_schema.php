@@ -339,6 +339,9 @@ return new class extends Migration
             $t->dropColumn(['side', 'muted', 'archived_at']);
         });
         Schema::table('pulse_conversations', function (Blueprint $t) {
+            // SQLite cannot drop a column that an index still uses: drop the indexes first.
+            $t->dropIndex(['status', 'last_message_at']);
+            $t->dropIndex(['context_type', 'context_id']);
             $t->dropConstrainedForeignId('initiator_id');
             $t->dropConstrainedForeignId('entity_id');
             $t->dropColumn(['kind', 'status', 'context_type', 'context_id', 'context_title', 'identity_hidden', 'outcome', 'outcome_initiator_at', 'outcome_recipient_at', 'first_response_at', 'last_message_at', 'closed_at']);

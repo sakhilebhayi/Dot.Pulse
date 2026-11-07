@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\PulseEntityMemberFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PulseEntityMember extends Model
 {
+    /** @use HasFactory<PulseEntityMemberFactory> */
+    use HasFactory;
+
     protected $table = 'pulse_entity_members';
 
     protected $fillable = [
@@ -14,12 +19,6 @@ class PulseEntityMember extends Model
         'user_id',
         'role',
     ];
-
-    protected function casts(): array
-    {
-        return [
-        ];
-    }
 
     public function entity(): BelongsTo
     {
