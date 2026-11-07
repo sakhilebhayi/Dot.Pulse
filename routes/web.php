@@ -239,5 +239,8 @@ if (app()->environment('local', 'testing')) {
 
         return redirect(str_starts_with($to, '/') && ! str_starts_with($to, '//') ? $to : '/floor');
     })->whereNumber('id')->name('dev.login-b');
+
+    // A page that throws, to see the 500 page in a real browser.
+    Route::get('/dev/boom-b', fn () => throw new RuntimeException('Acceptance B: deliberate failure'));
 }
 // --- end dev-b ---

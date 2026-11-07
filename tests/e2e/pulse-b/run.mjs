@@ -90,6 +90,7 @@ for (const f of specs) {
     const t0 = Date.now();
     await boot(firstSpec);
     firstSpec = false;
+    globalThis.__lastSpec = null;
     console.log(`\n=== ${f}`);
     try {
         const mod = await import(pathToFileURL(join(here, 'specs', f)).href);
@@ -97,7 +98,7 @@ for (const f of specs) {
         report.push({ spec: f, ms: Date.now() - t0, ...res });
     } catch (e) {
         console.error(e);
-        report.push({ spec: f, ms: Date.now() - t0, crashed: String(e.stack || e) });
+        report.push({ spec: f, ms: Date.now() - t0, crashed: String(e.stack || e), ...(globalThis.__lastSpec ? globalThis.__lastSpec.result() : {}) });
     }
 }
 

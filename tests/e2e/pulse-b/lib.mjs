@@ -23,6 +23,7 @@ export class Spec {
         this.notes = [];
         this.axeFindings = [];
         this.consoleErrors = [];
+        globalThis.__lastSpec = this; // lets the runner keep partial results when a spec crashes
     }
 
     check(name, ok, detail = '') {

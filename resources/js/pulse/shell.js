@@ -121,11 +121,28 @@ window.pulseToast = function pulseToast(message, options = {}) {
     close.setAttribute('aria-label', 'Dismiss');
     close.textContent = '×';
     close.addEventListener('click', () => toast.remove());
-    toast.append(text, close);
+    toast.append(text);
+    // An action ("Reload") makes the message something a person can answer, not only read.
+    if (options.action && options.action.label) {
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'pk-toast__action';
+        action.textContent = options.action.label;
+        action.addEventListener('click', () => {
+            toast.remove();
+            if (typeof options.action.onClick === 'function') options.action.onClick();
+        });
+        toast.append(action);
+    }
+    toast.append(close);
+    if (options.kind === 'bad') toast.setAttribute('role', 'alert');
     region.appendChild(toast);
     while (region.children.length > 3) region.firstElementChild.remove();
-    const timer = setTimeout(() => toast.remove(), options.timeout || 6000);
-    toastTimer.set(toast, timer);
+    // Sticky toasts stay until answered or dismissed (a stale session is not something to read in six seconds).
+    if (!options.sticky) {
+        const timer = setTimeout(() => toast.remove(), options.timeout || 6000);
+        toastTimer.set(toast, timer);
+    }
 };
 
 /* ---------- Sync meter: draw once on first view ---------- */
@@ -310,6 +327,32 @@ window.addEventListener('pulse-toast', (event) => {
     window.pulseToast(detail.message || '', detail);
 });
 
+/*
+ * A request that never reaches the server (offline, dropped, blocked) leaves Livewire's wire:loading state on for ever:
+ * its "response arrived" callback never runs, so a submit button stays disabled and the person cannot try again.
+ * After such a failure, put the loading UI back to rest by hand.
+ */
+function clearStuckLoading() {
+    $$('[wire\\:loading\\.attr]').forEach((el) => {
+        const name = el.getAttribute('wire:loading.attr');
+        if (name) el.removeAttribute(name);
+    });
+    $$('[wire\\:loading\\.class]').forEach((el) => {
+        (el.getAttribute('wire:loading.class') || '').split(/\s+/).filter(Boolean).forEach((c) => el.classList.remove(c));
+    });
+    $$('[wire\\:loading]').forEach((el) => {
+        el.style.display = 'none';
+    });
+    // Livewire also locks a submitted form (buttons, selects, checkboxes, radios disabled; text fields read only) and only
+    // unlocks it when a response arrives. After a failure give the person their form back.
+    $$('form[wire\\:submit] button[type=submit][disabled], form[wire\\:submit] select[disabled], form[wire\\:submit] input[type=checkbox][disabled], form[wire\\:submit] input[type=radio][disabled]').forEach((el) => {
+        el.disabled = false;
+    });
+    $$('form[wire\\:submit] input[readonly], form[wire\\:submit] textarea[readonly]').forEach((el) => {
+        el.readOnly = false;
+    });
+}
+
 document.addEventListener('livewire:init', () => {
     if (!window.Livewire) return;
 
@@ -318,21 +361,41 @@ document.addEventListener('livewire:init', () => {
         if (data && data.message) window.pulseToast(data.message, data);
     });
 
-    // Rate-limited actions answer HTTP 429. Livewire would show its raw error overlay; say it in a toast.
+    // A failed Livewire call must never end in the library's raw overlay or a browser confirm box. Every failure is
+    // said in the Floor's voice, with what to do next, and the page stays exactly as it was.
     window.Livewire.hook('request', ({ respond, fail }) => {
         let retryAfter = null;
         respond(({ response }) => {
             retryAfter = response && response.headers ? response.headers.get('Retry-After') : null;
         });
-        fail(({ status, preventDefault }) => {
-            if (status !== 429) return;
-            preventDefault();
-            window.pulseToast(
-                retryAfter
-                    ? 'Slow down. Try again in ' + retryAfter + ' seconds.'
-                    : 'Slow down. Try again in a moment.',
-                { kind: 'bad' },
-            );
+        fail(({ status, content, preventDefault }) => {
+            // Livewire does not unlock the page after a failed call (a locked form is the worst way to meet an error).
+            setTimeout(clearStuckLoading, 0);
+            const reload = { label: 'Reload', onClick: () => window.location.reload() };
+
+            if (status === 429) {
+                preventDefault();
+                window.pulseToast(retryAfter ? 'Slow down. Try again in ' + retryAfter + ' seconds.' : 'Slow down. Try again in a moment.', { kind: 'bad' });
+            } else if (status === 419) {
+                preventDefault();
+                window.pulseToast('Your session timed out while this page sat open. Nothing was sent. Reload and say it again.', { kind: 'bad', sticky: true, action: reload });
+            } else if (status === 401) {
+                preventDefault();
+                window.pulseToast('You were signed out. Sign in through InfoDot and you land back here.', { kind: 'bad', sticky: true, action: { label: 'Sign in', onClick: () => { window.location.href = '/login'; } } });
+            } else if (status === 503 && (content === null || content === undefined || navigator.onLine === false)) {
+                // Livewire reports a request that never reached the server (offline, dropped, blocked) as 503 with no body.
+                preventDefault();
+                window.pulseToast('No connection. That was not sent. Check your network, then try again.', { kind: 'bad', sticky: true });
+            } else if (status === 503) {
+                preventDefault();
+                window.pulseToast('Pulse is being updated. Try again in a minute.', { kind: 'bad' });
+            } else if (status >= 500) {
+                preventDefault();
+                window.pulseToast('Something broke on our side, not yours. Your page is as you left it. Try again in a minute.', { kind: 'bad', action: reload });
+            } else if (status === 403 || status === 404) {
+                preventDefault();
+                window.pulseToast('That is gone, or no longer yours to change. Reload to see where things stand.', { kind: 'bad', action: reload });
+            }
         });
     });
 });
