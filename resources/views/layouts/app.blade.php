@@ -28,7 +28,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @include('layouts.partials.head', ['title' => $pageTitle, 'description' => $description, 'csrf' => true, 'legacyIcons' => true])
+    @include('layouts.partials.head', ['title' => $pageTitle, 'description' => $description, 'csrf' => true])
     @livewireStyles
 </head>
 {{-- data-community-channels: the private communities this user belongs to, one realtime channel each (resources/js/pulse-realtime.js). --}}

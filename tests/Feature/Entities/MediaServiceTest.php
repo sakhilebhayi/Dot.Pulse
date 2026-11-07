@@ -291,6 +291,48 @@ class MediaServiceTest extends EntitiesTestCase
         $this->assertStringContainsString('public', $response->headers->get('Cache-Control'));
     }
 
+    public function test_a_public_sized_image_is_cached_for_a_week_with_an_etag_and_revalidates_to_304_after_the_same_checks(): void
+    {
+        $owner = $this->person();
+        $entity = $this->page($owner);
+        $id = $this->service()->store($owner, $this->upload($this->jpeg()), 'logo', $entity);
+        $entity->forceFill(['logo_media_id' => $id])->save();
+
+        $first = $this->get($this->service()->url($id, 'medium'));
+        $first->assertOk();
+        $cache = $first->headers->get('Cache-Control');
+        $this->assertStringContainsString('public', $cache);
+        $this->assertStringContainsString('max-age=604800', $cache);
+        $this->assertStringContainsString('immutable', $cache);
+        $etag = $first->headers->get('ETag');
+        $this->assertNotEmpty($etag);
+
+        // The tag is per size, so a thumb is never answered with a medium's 304.
+        $this->assertNotSame($etag, $this->get($this->service()->url($id, 'thumb'))->headers->get('ETag'));
+
+        $again = $this->withHeaders(['If-None-Match' => $etag])->get($this->service()->url($id, 'medium'));
+        $again->assertStatus(304);
+        $this->assertSame('', (string) $again->getContent());
+
+        // A 304 is still behind the authorisation check: once the page is not public the answer is a 404, not a 304.
+        $entity->forceFill(['status' => 'draft'])->save();
+        $this->withHeaders(['If-None-Match' => $etag])->get($this->service()->url($id, 'medium'))->assertNotFound();
+    }
+
+    public function test_a_signed_in_person_gets_the_same_week_but_never_a_shared_cache(): void
+    {
+        $owner = $this->person();
+        $entity = $this->page($owner);
+        $id = $this->service()->store($owner, $this->upload($this->jpeg()), 'logo', $entity);
+        $entity->forceFill(['logo_media_id' => $id])->save();
+
+        $cache = $this->actingAs($this->person())->get($this->service()->url($id, 'thumb'))->assertOk()->headers->get('Cache-Control');
+
+        $this->assertStringContainsString('private', $cache);
+        $this->assertStringNotContainsString('public', $cache);
+        $this->assertStringContainsString('max-age=604800', $cache);
+    }
+
     public function test_an_image_that_is_not_used_yet_or_whose_page_is_not_live_is_private(): void
     {
         $owner = $this->person();

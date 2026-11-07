@@ -27,7 +27,7 @@
 
     <header class="bz-hero">
         @if ($d['cover'])
-            <div class="bz-cover"><img src="{{ $d['cover'] }}" alt="" decoding="async"></div>
+            <div class="bz-cover"><img src="{{ $d['cover'] }}" alt="" decoding="async" fetchpriority="high"></div>
         @endif
         <div class="bz-id">
             <x-pulse.avatar :name="$entity->name" :src="$d['logo']" size="xl" entity />
