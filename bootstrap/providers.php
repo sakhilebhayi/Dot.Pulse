@@ -6,6 +6,7 @@ use App\Providers\FortifyServiceProvider;
 use App\Providers\HealthCheckServiceProvider;
 use App\Providers\JetstreamServiceProvider;
 use App\Providers\PulseEntitiesServiceProvider;
+use App\Providers\PulseShellServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -15,4 +16,5 @@ return [
     JetstreamServiceProvider::class,
     // --- entities ---
     PulseEntitiesServiceProvider::class,
+    PulseShellServiceProvider::class,
 ];

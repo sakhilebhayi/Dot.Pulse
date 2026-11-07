@@ -63,3 +63,10 @@ Route::get('/media/{mediaFile}/{size?}', MediaController::class)
     ->middleware('throttle:300,1')
     ->name('pulse.media');
 // --- end media ---
+// --- shell ---
+// Component gallery for development, QA and screenshots. Registered only locally and under test.
+if (app()->environment('local', 'testing')) {
+    Route::view('/dev/kit', 'dev.kit')->name('dev.kit');
+    Route::view('/dev/floor', 'dev.floor')->name('dev.floor');
+}
+// --- /shell ---

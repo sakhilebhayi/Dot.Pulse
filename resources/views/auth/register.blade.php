@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="Come in">
+    <x-authentication-card heading="Come in." lead="Pulse introduces the people and businesses that fit, and always says why.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

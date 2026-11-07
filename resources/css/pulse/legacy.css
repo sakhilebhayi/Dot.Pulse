@@ -1,0 +1,487 @@
+/*
+ * Compatibility layer for the pre-R-41 screens (home feed, posts, communities, moderation, profile and team
+ * settings). Those views were written against the old dark shell and use .dot-* classes and inline dark-theme
+ * colours. This file maps them onto the Floor tokens so they stay readable in light and dark until each one is
+ * rebuilt on the kit. Delete a block when the last view that needs it is gone. New screens must not use it.
+ */
+
+/* Inline colour remaps: the old views hardcode these hexes in style="color:...". */
+.sh-stage [style*="color:#f4f4f5"],
+.sh-stage [style*="color:#d4d4d8"],
+.sh-stage [style*="color: #f4f4f5"] {
+    color: var(--c-ink) !important;
+}
+
+.sh-stage [style*="color:#a1a1aa"],
+.sh-stage [style*="color:#71717a"],
+.sh-stage [style*="color:#52525b"],
+.sh-stage [style*="color:#3f3f46"] {
+    color: var(--c-muted) !important;
+}
+
+.sh-stage [style*="color:#f87171"] {
+    color: var(--c-bad) !important;
+}
+
+.sh-stage [style*="color:#f1c62e"] {
+    color: var(--c-link) !important;
+}
+
+.sh-stage [style*="background:#f1c62e"] {
+    background: var(--c-signal) !important;
+    color: var(--c-on-signal) !important;
+}
+
+.sh-stage [style*="background:rgba(255,255,255,0.04)"],
+.sh-stage [style*="background:rgba(241,198,46,0.06)"] {
+    background: var(--c-raised) !important;
+}
+
+.sh-stage [style*="border:1px solid rgba(255,255,255"],
+.sh-stage [style*="border-bottom:1px solid rgba(255,255,255"],
+.sh-stage [style*="border-top:1px solid rgba(255,255,255"] {
+    border-color: var(--c-line) !important;
+}
+
+.sh-stage [style*="font-family:'Syne'"] {
+    font-family: var(--f-ui) !important;
+    font-stretch: 110%;
+}
+
+.sh-stage [style*="font-family:'Inter'"] {
+    font-family: var(--f-ui) !important;
+}
+
+.sh-stage [style*="font-family:'JetBrains Mono'"] {
+    font-family: var(--f-mono) !important;
+}
+
+/* Old component classes. */
+.dot-card {
+    background: var(--c-sheet);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+}
+
+.dot-card:hover {
+    border-color: var(--c-line-strong);
+}
+
+.metric-val {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dot-input {
+    width: 100%;
+    min-height: var(--tap);
+    padding: 8px 12px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    color: var(--c-ink);
+    font: inherit;
+    font-size: var(--t-ui);
+}
+
+.dot-input:hover {
+    border-color: var(--c-ink);
+}
+
+.dot-input:focus {
+    border-color: var(--c-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-focus) 30%, transparent);
+    outline: 2px solid transparent;
+}
+
+.dot-input::placeholder {
+    color: var(--c-muted);
+}
+
+textarea.dot-input {
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.dot-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 2px solid transparent;
+    border-radius: var(--r-md);
+    font: inherit;
+    font-stretch: 106%;
+    font-size: var(--t-small);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--d-quick) var(--ease), color var(--d-quick) var(--ease);
+}
+
+.dot-btn-primary {
+    background: var(--c-field);
+    color: var(--c-field-ink);
+}
+
+.dot-btn-primary:hover {
+    background: var(--c-field-deep);
+}
+
+.dot-btn-ghost {
+    background: var(--c-raised);
+    border-color: var(--c-line);
+    color: var(--c-ink);
+}
+
+.dot-btn-ghost:hover {
+    border-color: var(--c-ink);
+}
+
+.dot-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: var(--t-small);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dot-badge-accent {
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+}
+
+.dot-badge-success {
+    background: var(--c-good-wash);
+    color: var(--c-good);
+}
+
+.dot-badge-danger {
+    background: var(--c-bad-wash);
+    color: var(--c-bad);
+}
+
+.dot-badge-neutral {
+    background: var(--c-raised);
+    color: var(--c-muted);
+    border: 1px solid var(--c-line);
+}
+
+.dot-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--c-raised);
+    border: 1px solid var(--c-line-strong);
+    color: var(--c-ink);
+    font-stretch: 112%;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.dot-row {
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+}
+
+.dot-row:hover {
+    border-color: var(--c-line-strong);
+}
+
+.pulse-page {
+    padding: 0 0 var(--s-xl);
+    max-width: 1100px;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: var(--s-lg);
+}
+
+.kpi-card {
+    padding: 16px 20px;
+}
+
+.kpi-label {
+    margin-bottom: 8px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.kpi-value {
+    font-size: 1.75rem;
+    color: var(--c-ink);
+}
+
+.feed-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 20px;
+    margin-top: 20px;
+    align-items: start;
+}
+
+.feed-grid > * {
+    min-width: 0;
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.section-head h3 {
+    margin: 0;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-bottom: 2px;
+}
+
+.action-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+}
+
+.inline-form-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.inline-form-row > input {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.reply-thread {
+    margin-left: 32px;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-left: 2px solid var(--c-line);
+    padding-left: 16px;
+}
+
+.reply-form {
+    margin-left: 32px;
+    margin-top: 12px;
+}
+
+.search-field {
+    width: 200px;
+}
+
+.bell-panel {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    z-index: 90;
+    padding: 12px;
+    color: var(--c-ink);
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+.popover-form {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 30;
+    margin-top: 6px;
+    width: 300px;
+    max-width: calc(100vw - 2rem);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+.modal-card {
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.profile-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.profile-head-main {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 14px;
+    font-size: var(--t-small);
+    color: var(--c-muted);
+}
+
+.table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.live-dot {
+    display: none;
+}
+
+.tap {
+    min-height: 36px;
+}
+
+/* The notification bell panel inside the masthead (legacy Livewire bell). */
+.topbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-field-ink);
+}
+
+.topbar-btn:hover {
+    background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
+}
+
+.material-symbols-rounded {
+    font-family: var(--f-icons);
+    font-weight: normal;
+    font-style: normal;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    -webkit-font-feature-settings: "liga";
+    font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+}
+
+@media (max-width: 1099.98px) {
+    .feed-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 859.98px) {
+    .dot-input {
+        font-size: 16px !important;
+    }
+
+    .search-field {
+        width: 100%;
+    }
+
+    .tap {
+        min-height: var(--tap);
+    }
+
+    .bell-panel {
+        position: fixed;
+        top: 68px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-height: calc(100dvh - 140px);
+    }
+
+    .popover-form {
+        position: fixed;
+        left: 1rem;
+        right: 1rem;
+        top: auto;
+        bottom: 5rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        z-index: 95;
+    }
+
+    .reply-thread {
+        margin-left: 12px;
+        padding-left: 12px;
+    }
+
+    .reply-form {
+        margin-left: 12px;
+    }
+}
+
+@media (max-width: 559.98px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .kpi-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .kpi-label {
+        margin-bottom: 0;
+    }
+
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Jetstream form sections (profile, teams, API tokens) come out of Tailwind; give them the Floor's surface. */
+.sh-stage .jet-surface,
+.sh-stage .bg-white.shadow,
+.sh-stage .bg-white.shadow-xl {
+    border: 1px solid var(--c-line);
+    box-shadow: none;
+}

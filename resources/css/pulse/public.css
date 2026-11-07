@@ -1,0 +1,558 @@
+/*
+ * Public surfaces: the landing page, sign-in and the error pages. Cobalt field on top, chalk below,
+ * one yellow thing leading each screen. The sync meter is the hero, drawn from sample text that is
+ * labelled as an example wherever it appears.
+ */
+
+.pub-wrap {
+    width: min(100% - 2 * var(--s-lg), 1180px);
+    margin-inline: auto;
+}
+
+@media (max-width: 859.98px) {
+    .pub-wrap {
+        width: min(100% - 2 * var(--s-md), 1180px);
+    }
+}
+
+/* ---------- Landing hero ---------- */
+.lp-hero {
+    background: var(--c-field);
+    color: var(--c-field-ink);
+    padding: clamp(32px, 6vw, 72px) 0 clamp(40px, 6vw, 80px);
+}
+
+.lp-hero h1 {
+    max-width: 11ch;
+    color: var(--c-field-ink);
+}
+
+.lp-hero__lead {
+    max-width: 40ch;
+    margin-top: 20px;
+    font-size: var(--t-lead);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.lp-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+
+.lp-hero__stage {
+    margin-top: clamp(28px, 5vw, 56px);
+}
+
+/* The meter on the field: your line white, their line ink. */
+.pk-on-field .pk-meter {
+    --meter-h: clamp(72px, 12vw, 132px);
+    color: var(--c-field-ink);
+}
+
+.pk-on-field .pk-meter__line--you {
+    stroke: var(--c-field-ink);
+}
+
+.pk-on-field .pk-meter__line--them {
+    stroke: var(--c-ink-fixed);
+}
+
+.pk-on-field .pk-meter__ends,
+.pk-on-field .pk-meter__ends span:first-child {
+    color: var(--c-field-ink);
+}
+
+.pk-on-field .pk-meter__reason {
+    color: var(--c-field-ink);
+    font-weight: 600;
+}
+
+.pk-on-field .pk-meter__node,
+.pk-on-field .pk-meter__tick {
+    border-color: var(--c-ink-fixed);
+}
+
+.lp-example {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: var(--r-sm);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+/* ---------- Landing sections ---------- */
+.lp-section {
+    padding: clamp(48px, 8vw, 104px) 0;
+}
+
+.lp-section--raised {
+    background: var(--c-sheet);
+    border-block: 1px solid var(--c-line);
+}
+
+.lp-section h2 {
+    max-width: 18ch;
+    font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3rem);
+    font-stretch: 116%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.lp-split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(24px, 5vw, 72px);
+    align-items: start;
+}
+
+.lp-split__text > p {
+    margin-top: 18px;
+    max-width: 44ch;
+    color: var(--c-ink-2);
+    font-size: var(--t-lead);
+}
+
+.lp-split__text > p + p {
+    margin-top: 12px;
+}
+
+@media (max-width: 859.98px) {
+    .lp-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.lp-tag {
+    margin-bottom: 10px;
+}
+
+/* The worked example sits inside a beat; the example label is part of the beat. */
+.lp-sample {
+    position: relative;
+}
+
+.lp-sample__note {
+    display: block;
+    margin-top: 10px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+/* The four steps of a knock: a real sequence. */
+.lp-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin: 40px 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    border-top: 3px solid var(--c-ink);
+}
+
+.lp-steps li {
+    position: relative;
+    padding: 20px 20px 0 0;
+    counter-increment: step;
+}
+
+.lp-steps li::before {
+    content: counter(step);
+    position: absolute;
+    top: -17px;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--c-ink);
+    border-radius: 50%;
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+    font-weight: 700;
+}
+
+.lp-steps li > strong {
+    display: block;
+    margin-top: 18px;
+    font-size: 1.25rem;
+    font-stretch: 114%;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.lp-steps li > p {
+    margin-top: 6px;
+    max-width: 28ch;
+    color: var(--c-ink-2);
+}
+
+@media (max-width: 859.98px) {
+    .lp-steps {
+        position: relative;
+        grid-template-columns: minmax(0, 1fr);
+        border-top: 0;
+        margin-left: 15px;
+    }
+
+    .lp-steps::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 3px;
+        background: var(--c-ink);
+    }
+
+    .lp-steps li {
+        padding: 0 0 28px 28px;
+    }
+
+    .lp-steps li::before {
+        top: 0;
+        left: -18px;
+    }
+
+    .lp-steps li > strong {
+        margin-top: 2px;
+    }
+}
+
+.lp-consent {
+    display: grid;
+    gap: 10px;
+    margin-top: 36px;
+    max-width: 640px;
+}
+
+/* Promise list: plain sentences, no cards. */
+.lp-promises {
+    margin: 36px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--c-line-strong);
+}
+
+.lp-promises li {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 8px 32px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--c-line-strong);
+}
+
+.lp-promises strong {
+    font-size: 1.25rem;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+}
+
+.lp-promises span {
+    color: var(--c-ink-2);
+}
+
+@media (max-width: 700px) {
+    .lp-promises li {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.lp-final {
+    background: var(--c-field);
+    color: var(--c-field-ink);
+    padding: clamp(48px, 8vw, 96px) 0;
+}
+
+.lp-final h2 {
+    max-width: 14ch;
+    color: var(--c-field-ink);
+    font-size: clamp(2rem, 1.2rem + 3.2vw, 3.75rem);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+}
+
+.lp-final p {
+    max-width: 42ch;
+    margin-top: 16px;
+    font-size: var(--t-lead);
+}
+
+.lp-final .pk-btn {
+    margin-top: 24px;
+}
+
+.lp-foot {
+    padding: 28px 0 40px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.lp-foot .pub-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    align-items: center;
+}
+
+.lp-foot a {
+    color: var(--c-ink-2);
+    font-weight: 600;
+}
+
+.lp-foot__right {
+    margin-left: auto;
+}
+
+/* ---------- Auth ---------- */
+.au-main {
+    min-height: calc(100dvh - var(--mast-h));
+    padding: clamp(24px, 6vw, 64px) 0;
+}
+
+.au-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+    gap: clamp(24px, 6vw, 96px);
+    align-items: start;
+}
+
+.au-aside h1 {
+    font-size: clamp(2.25rem, 1.2rem + 4vw, 4rem);
+    max-width: 9ch;
+}
+
+.au-aside p {
+    max-width: 38ch;
+    margin-top: 16px;
+    color: var(--c-ink-2);
+    font-size: var(--t-lead);
+}
+
+.au-card {
+    padding: 28px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+}
+
+.au-card h2 {
+    margin-bottom: 6px;
+}
+
+.au-card .pk-stack {
+    gap: 18px;
+}
+
+.au-or {
+    margin: 24px 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--c-line);
+}
+
+.au-or summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    color: var(--c-ink-2);
+    font-weight: 600;
+}
+
+.au-or[open] summary {
+    margin-bottom: 8px;
+}
+
+.au-status {
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: var(--c-good-wash);
+    color: var(--c-good);
+    font-weight: 600;
+}
+
+.au-errors {
+    padding: 12px 14px;
+    border: 1px solid var(--c-bad);
+    border-radius: var(--r-md);
+    background: var(--c-bad-wash);
+    color: var(--c-bad);
+    font-weight: 600;
+}
+
+.au-errors ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.au-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--tap);
+    cursor: pointer;
+}
+
+.au-check input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--c-field);
+}
+
+@media (max-width: 859.98px) {
+    .au-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .au-card {
+        padding: 20px;
+    }
+}
+
+/* ---------- Errors ---------- */
+.er-main {
+    min-height: calc(100dvh - var(--mast-h));
+    display: grid;
+    align-content: center;
+    padding: clamp(32px, 7vw, 96px) 0;
+}
+
+.er-code {
+    display: inline-block;
+    margin-bottom: 18px;
+}
+
+.er-main h1 {
+    max-width: 12ch;
+}
+
+.er-main p {
+    max-width: 44ch;
+    margin-top: 18px;
+    color: var(--c-ink-2);
+    font-size: var(--t-lead);
+}
+
+.er-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+/* The line that does not meet: two lines run toward each other, miss, and no node appears. */
+.er-miss {
+    margin-top: clamp(28px, 5vw, 56px);
+    max-width: 760px;
+}
+
+.er-miss svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.er-miss__you,
+.er-miss__them {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.er-miss__you {
+    stroke: var(--c-you);
+}
+
+.er-miss__them {
+    stroke: var(--c-them);
+}
+
+.er-miss__ghost {
+    fill: none;
+    stroke: var(--c-line-strong);
+    stroke-width: 2;
+    stroke-dasharray: 3 6;
+    vector-effect: non-scaling-stroke;
+}
+
+.er-miss__you,
+.er-miss__them {
+    stroke-dasharray: 1;
+    animation: er-draw 900ms var(--ease) both;
+}
+
+.er-miss__them {
+    animation-delay: 120ms;
+}
+
+@keyframes er-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Policy and terms */
+.doc-main {
+    padding: clamp(24px, 5vw, 56px) 0 var(--s-xl);
+}
+
+.doc-card {
+    max-width: 760px;
+    margin-inline: auto;
+    padding: clamp(20px, 4vw, 40px);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+}
+
+.doc-card h1 {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    margin-bottom: 16px;
+}
+
+.doc-prose {
+    color: var(--c-ink-2);
+    line-height: 1.65;
+}
+
+.doc-prose h1,
+.doc-prose h2,
+.doc-prose h3 {
+    margin: 28px 0 8px;
+    color: var(--c-ink);
+}
+
+.doc-prose p,
+.doc-prose ul,
+.doc-prose ol {
+    margin: 12px 0;
+}
+
+.doc-prose ul {
+    list-style: disc;
+    padding-left: 22px;
+}
+
+.doc-prose ol {
+    list-style: decimal;
+    padding-left: 22px;
+}
+
+.doc-prose li {
+    margin: 4px 0;
+}

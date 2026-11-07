@@ -29,13 +29,14 @@ name: Deploy to Production
 #      loads resources/css/app.css and resources/js/app.js through @vite, so a
 #      missing or incomplete manifest would 500 those pages ("Vite manifest not
 #      found", InfoDot 2026-10-17); the build step fails first if either entry
-#      is missing. The signed-in layout loads Tailwind from a CDN at runtime
-#      and does not use the manifest.
+#      is missing. Since R-41 the signed-in layout uses the same built CSS and
+#      JS (no Tailwind CDN), and every page loads the self-hosted fonts from
+#      /fonts (public/fonts).
 #   3. On the host: rollback copy, maintenance mode, code to origin/main,
 #      composer install, production invariants (APP_DEBUG forced false; APP_ENV
 #      forced to production; a warning, not a change, for an http APP_URL), swap
-#      in the new public/build, keep the docroot's build/ in step, migrations,
-#      caches, back up.
+#      in the new public/build, keep the docroot's build/, fonts/ and images/ in
+#      step (when the docroot is not <app>/public), migrations, caches, back up.
 #   4. Installs TWO cron lines through the shared crontab block, with its
 #      lock and verified read-back (first run: the account total grows by 2):
 #        schedule:run  every minute; routes/console.php schedules
@@ -52,8 +53,10 @@ name: Deploy to Production
 #                      App\Jobs\SendAnalyticsSnapshot. A retry of a failed job
 #                      waits for the next cron minute at the earliest.
 #   5. Smoke check from the runner, like a browser: / and /login answer 200,
-#      the built CSS answers 200, /up answers 200, and a harmless POST /up (a
-#      405) does not return a debug page.
+#      the built CSS answers 200 as CSS, one self-hosted font answers 200 with a
+#      real body, the font link in /login carries the site's own origin (APP_URL
+#      matches), /up answers 200, and a harmless POST /up (a 405) does not
+#      return a debug page.
 #
 # A failure after maintenance mode starts LEAVES the site down on purpose, with
 # the rollback copy's name in the log, rather than guessing at an automatic
@@ -402,6 +405,40 @@ jobs:
             echo "== docroot build/ did not exist; linked to $APPDIR/public/build"
           fi
 
+          # ---- static files: public/fonts, public/images and the favicons must answer at /fonts, /images, /favicon.svg
+          # R-41 (The Floor) self-hosts Archivo and JetBrains Mono in public/fonts. They are tracked files, so git refreshes
+          # public/, but a docroot that is NOT <app>/public (still ~/<host>/, the layout Dot.Press and Dot.Doc 404'd on) never
+          # sees them. Same rule as build/ above: a symlink is left alone, a real directory is rsynced, a missing one is linked.
+          # Skipped once the docroot has moved to <app>/public (the host's own answer, or the marker file), where public/ IS
+          # the docroot. Tolerant: the smoke check below is what turns a miss into a red run, not this block.
+          (
+            set +e
+            APP_REAL="$(cd "$DEPLOY_PATH" 2>/dev/null && pwd -P)" || APP_REAL=""
+            CURRENT_DOCROOT="$(uapi --output=json DomainInfo single_domain_data domain=pulse.infodot.co.za 2>/dev/null | sed -n 's/.*"documentroot" *: *"\([^"]*\)".*/\1/p' | head -1)"
+            if [ -n "$APP_REAL" ] && { [ "$CURRENT_DOCROOT" = "$APP_REAL/public" ] || [ -f "$DEPLOY_PATH/.docroot-is-public" ]; }; then
+              echo "== static files: skipped (the document root is $APP_REAL/public)"
+            elif [ "$DOCROOT" = "$HOME" ]; then
+              echo "== static files: skipped ($APPDIR is directly in the home folder, no docroot above it)"
+            else
+              for NAME in fonts images; do
+                [ -d "public/$NAME" ] || continue
+                DEST="$DOCROOT/$NAME"
+                if [ -L "$DEST" ]; then
+                  echo "== docroot $NAME/ is a symlink; nothing to copy"
+                elif [ -d "$DEST" ]; then
+                  rsync -a --delete "public/$NAME/" "$DEST/" && echo "== docroot $NAME/ is a real directory; mirrored from public/$NAME"
+                elif [ ! -e "$DEST" ]; then
+                  ln -s "$APPDIR/public/$NAME" "$DEST" && echo "== docroot $NAME/ did not exist; linked to $APPDIR/public/$NAME"
+                else
+                  echo "::warning::$DEST exists and is not a directory; $NAME/ was not mirrored"
+                fi
+              done
+              for FILE in favicon.svg favicon.ico; do
+                [ -f "public/$FILE" ] && cp -p "public/$FILE" "$DOCROOT/$FILE" && echo "== docroot $FILE refreshed"
+              done
+            fi
+          ) || true
+
           # ---- PHP settings files: carry .user.ini / php.ini into public/ (tolerant, never fails the deploy)
           # The owner is moving each subdomain's document root from ~/<host>/ to ~/<host>/<app>/public. The old docroot may hold
           # cPanel/MultiPHP per-directory PHP settings (.user.ini and/or php.ini: upload sizes, memory limits). PHP reads
@@ -558,6 +595,32 @@ jobs:
             CODE=$(curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$SITE_URL/build/$ASSET" || true)
             if [ "$CODE" = "200" ]; then echo "200 $SITE_URL/build/$ASSET"; else echo "::error::$SITE_URL/build/$ASSET answered ${CODE:-no response} (expected 200): the docroot is not serving the new build"; FAILED=1; fi
           done
+          # R-41: the Floor's fonts and the built stylesheet must be served by the docroot, not just present in the app folder.
+          # (1) one self-hosted font answers 200 with a real body, not an HTML error page.
+          FONT="public/fonts/archivo-latin-wdth-normal.woff2"
+          if [ ! -f "$FONT" ]; then
+            echo "::error::$FONT is missing from the checkout: the build has no fonts to ship."; FAILED=1
+          else
+            OUT=$(curl -s --max-time 30 -o "$WORK/font.bin" -w '%{http_code} %{content_type}' "$SITE_URL/fonts/$(basename "$FONT")" || true)
+            SIZE=$(wc -c < "$WORK/font.bin" 2>/dev/null | tr -d ' ')
+            if [ "${OUT%% *}" = "200" ] && [ "${SIZE:-0}" -gt 10000 ] && ! printf '%s' "$OUT" | grep -qi 'text/html'; then
+              echo "200 $SITE_URL/fonts/$(basename "$FONT") (${SIZE} bytes)"
+            else
+              echo "::error::$SITE_URL/fonts/$(basename "$FONT") answered '${OUT:-no response}', ${SIZE:-0} bytes (expected 200, a font): the docroot is not serving public/fonts."; FAILED=1
+            fi
+          fi
+          # (2) the built stylesheet named by the manifest answers 200 as CSS (the loop above checked the status; this checks the type).
+          CSS="$(python3 -c "import json; m=json.load(open('public/build/manifest.json')); print(m['resources/css/app.css']['file'])")"
+          CTYPE=$(curl -s --max-time 30 -o /dev/null -w '%{content_type}' "$SITE_URL/build/$CSS" || true)
+          if printf '%s' "$CTYPE" | grep -qi 'css'; then echo "css $SITE_URL/build/$CSS ($CTYPE)"; else echo "::error::$SITE_URL/build/$CSS is not served as CSS (content type '${CTYPE:-none}')."; FAILED=1; fi
+          # (3) APP_URL on the host matches the site: the font preload link in /login is built from APP_URL, so a mismatch shows here.
+          curl -s --max-time 30 -o "$WORK/login.html" "$SITE_URL/login" || true
+          PRELOAD="$(grep -o 'href="[^"]*archivo-latin-wdth-normal.woff2"' "$WORK/login.html" | head -1 | sed 's/^href="//; s/"$//')"
+          if [ "$PRELOAD" = "$SITE_URL/fonts/archivo-latin-wdth-normal.woff2" ]; then
+            echo "APP_URL matches $SITE_URL (font preload: $PRELOAD)"
+          else
+            echo "::error::The font link in /login is '${PRELOAD:-missing}', not $SITE_URL/fonts/...: APP_URL in the host .env does not match $SITE_URL (assets would load from the wrong origin)."; FAILED=1
+          fi
           # A GET-only route answering POST is a harmless 405: ~1 KB in
           # production, an ~840 KB stack-trace page when APP_DEBUG is on.
           curl -s --max-time 30 -o "$WORK/probe.html" -X POST "$SITE_URL/up" || true
