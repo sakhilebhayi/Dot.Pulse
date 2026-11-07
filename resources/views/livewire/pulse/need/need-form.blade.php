@@ -6,9 +6,7 @@
         </div>
     @endif
 
-    @if ($errors->any())
-        <div class="bz-notice bz-notice--bad" role="alert"><x-pulse.icon name="alert" :size="18" /><p>{{ $errors->first() }}</p></div>
-    @endif
+    <x-pulse.error-banner :inline="['title', 'details', 'kind', 'tags', 'budget_text', 'needed_by', 'place_query', 'reach', 'visibility', 'entity_id']" />
 
     <form class="bz-form" wire:submit="save" novalidate>
         <section class="bz-block" aria-labelledby="nd-what">

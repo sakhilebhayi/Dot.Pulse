@@ -69,9 +69,7 @@
                 <x-pulse.button type="button" variant="quiet" wire:click="cancel">Back to offers</x-pulse.button>
             </div>
 
-            @if ($errors->any())
-                <div class="bz-notice bz-notice--bad" role="alert"><x-pulse.icon name="alert" :size="18" /><p>{{ $errors->first() }}</p></div>
-            @endif
+            <x-pulse.error-banner :inline="['title', 'summary', 'description', 'kind', 'category', 'tags_text', 'price_mode', 'amount', 'unit', 'availability', 'expires_at', 'place_query', 'newImages']" />
 
             <section class="bz-block" aria-labelledby="of-what">
                 <h3 id="of-what">What it is</h3>

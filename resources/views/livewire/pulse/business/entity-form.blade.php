@@ -18,12 +18,7 @@
         <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>{{ $notice }}</p></div>
     @endif
 
-    @if ($errors->any())
-        <div class="bz-notice bz-notice--bad" role="alert">
-            <x-pulse.icon name="alert" :size="18" />
-            <p>{{ $errors->first() }}</p>
-        </div>
-    @endif
+    <x-pulse.error-banner :inline="['name', 'tagline', 'about', 'industry', 'website', 'public_email', 'public_phone', 'founded_year', 'team_size', 'contact_policy', 'registration_number', 'infodot_team', 'logo', 'cover', 'service_area_text', 'place_query']" />
 
     @if ($editing && $this->entity)
         <div class="bz-state">

@@ -207,9 +207,16 @@ class NeedForm extends Component
             'entity_id' => $this->entity_id ?: null,
         ];
 
+        // Both are said at once, so fixing one does not uncover the other on the next try.
+        if (trim($this->title) === '') {
+            $this->addError('title', 'Say what you need in a line.');
+        }
+
         if (in_array($this->reach, ['local', 'region'], true) && $this->place_id === null) {
             $this->addError('place_query', 'Pick a place so Pulse knows what "near" means. Or choose "Anywhere".');
+        }
 
+        if ($this->getErrorBag()->isNotEmpty()) {
             return null;
         }
 

@@ -233,7 +233,7 @@ class OfferManager extends Component
                 }
             }
         } catch (ValidationException $e) {
-            $this->fail($e, ['amount_cents' => 'amount', 'entity' => 'title', 'offer' => 'title', 'media_ids' => 'newImages']);
+            $this->fail($e, ['amount_cents' => 'amount', 'entity' => 'title', 'offer' => 'title', 'media_ids' => 'newImages', 'tags' => 'tags_text']);
 
             return;
         }

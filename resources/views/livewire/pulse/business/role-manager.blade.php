@@ -89,9 +89,7 @@
                 <x-pulse.button type="button" variant="quiet" wire:click="cancel">Back to roles</x-pulse.button>
             </div>
 
-            @if ($errors->any())
-                <div class="bz-notice bz-notice--bad" role="alert"><x-pulse.icon name="alert" :size="18" /><p>{{ $errors->first() }}</p></div>
-            @endif
+            <x-pulse.error-banner :inline="['title', 'summary', 'description', 'employment_type', 'work_mode', 'seniority', 'skills_text', 'pay_text', 'place_query', 'apply_mode', 'apply_url', 'closes_at']" />
 
             <section class="bz-block" aria-labelledby="ro-what">
                 <h3 id="ro-what">The role</h3>

@@ -328,6 +328,16 @@ class EntityService
             'hiring_skills' => ['sometimes', 'nullable', 'array', 'max:15'],
             'logo_media_id' => ['sometimes', 'nullable', 'integer'],
             'cover_media_id' => ['sometimes', 'nullable', 'integer'],
+        ], [
+            'name.required' => 'Give the page a name.',
+            'name.min' => 'A name needs at least 2 letters.',
+            'name.max' => 'Keep the name to 140 characters.',
+            'website.url' => 'Give a full address, starting with https://.',
+            'public_email.email' => 'Use a real email address, like hello@yourshop.co.za.',
+            'public_phone.regex' => 'Use digits, spaces and + only, like +27 11 555 0100.',
+            'founded_year.min' => 'Use a year like 2015.',
+            'founded_year.max' => 'Use a year that has happened.',
+            'founded_year.integer' => 'Use a year like 2015.',
         ])->validate();
 
         $isSeller = (bool) ($clean['is_seller'] ?? $entity?->is_seller ?? ($creating && ! array_key_exists('is_employer', $clean)));

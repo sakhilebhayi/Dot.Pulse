@@ -32,7 +32,7 @@
         @if($editingPost)
             <form wire:submit="saveEdit" class="pk-stack">
                 <x-pulse.field id="edit-title" name="editTitle" label="Title" aria-label="Title" optional wire:model="editTitle" />
-                <x-pulse.field as="textarea" id="edit-body" name="editBody" label="Edit body" aria-label="Editbody" rows="5" wire:model="editBody" />
+                <x-pulse.field as="textarea" id="edit-body" name="editBody" label="Edit body" rows="5" wire:model="editBody" />
                 <div class="pk-cluster">
                     <x-pulse.button type="submit" size="sm">Save</x-pulse.button>
                     <x-pulse.button variant="quiet" size="sm" wire:click="cancelEdit">Cancel</x-pulse.button>

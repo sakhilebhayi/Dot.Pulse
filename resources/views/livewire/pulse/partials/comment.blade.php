@@ -14,7 +14,7 @@
 
         @if($editingCommentId === $comment->id)
             <form wire:submit="saveEdit" class="pk-stack">
-                <x-pulse.field as="textarea" :id="'edit-comment-'.$comment->id" name="editBody" label="Edit comment" aria-label="Editbody" rows="3" wire:model="editBody" />
+                <x-pulse.field as="textarea" :id="'edit-comment-'.$comment->id" name="editBody" label="Edit comment" rows="3" wire:model="editBody" />
                 <div class="pk-cluster">
                     <x-pulse.button type="submit" size="sm">Save</x-pulse.button>
                     <x-pulse.button variant="quiet" size="sm" wire:click="cancelEdit">Cancel</x-pulse.button>

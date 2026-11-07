@@ -167,6 +167,12 @@ class OfferService
             'media_ids' => ['sometimes', 'nullable', 'array', 'max:'.(int) config('pulse.entities.max_offer_images', 8)],
             'media_ids.*' => ['integer'],
             'expires_at' => ['sometimes', 'nullable', 'date', 'after:now'],
+        ], [
+            'title.required' => 'Name the offer in a few words.',
+            'title.min' => 'Name the offer in a few more words.',
+            'title.max' => 'Keep the title to 140 characters.',
+            'summary.max' => 'Keep the summary to 400 characters.',
+            'expires_at.after' => 'Pick a day in the future.',
         ])->validate();
 
         foreach (['title' => 140, 'category' => 80, 'unit' => 24] as $key => $max) {

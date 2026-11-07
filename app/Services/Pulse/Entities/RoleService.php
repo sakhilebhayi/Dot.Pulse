@@ -162,6 +162,12 @@ class RoleService
             'apply_mode' => ['sometimes', Rule::in(['on_pulse', 'external_url'])],
             'apply_url' => ['sometimes', 'nullable', 'string', 'max:255', 'url:http,https'],
             'closes_at' => ['sometimes', 'nullable', 'date', 'after:now'],
+        ], [
+            'title.required' => 'Name the role in a few words.',
+            'title.min' => 'Name the role in a few more words.',
+            'title.max' => 'Keep the title to 140 characters.',
+            'closes_at.after' => 'Pick a day in the future.',
+            'apply_url.url' => 'Give a full address, starting with https://.',
         ])->validate();
 
         foreach (['title' => 140, 'pay_text' => 80] as $key => $max) {
