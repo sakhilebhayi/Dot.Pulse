@@ -822,12 +822,6 @@
     }
 }
 
-/* The shell's floating Compose button would sit on the Send button, so a line page leaves it out. */
-body:has(.ln-thread) .sh-fab,
-body:has(.ln-compare-page) .sh-fab {
-    display: none;
-}
-
 .ln-composer .pk-field > label {
     position: absolute;
     width: 1px;

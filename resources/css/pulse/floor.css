@@ -107,9 +107,28 @@
 }
 
 /* Lighter beats: up to three reason chips, the full thread on expand (DESIGN.md: the first card carries the signature, the rest carry the reasons) */
-.fl-beat--compact .pk-beat__meter {
+.fl-beat--compact .pk-beat__meter,
+.fl-beat--lead .pk-beat__meter {
     padding: 0;
     background: none;
+}
+
+.fl-lead-phone {
+    display: none;
+}
+
+/* The lead card: the whole thread on a wide screen (always open), chips and an expand on a phone. */
+@media (max-width: 859.98px) {
+    .fl-lead-phone {
+        display: block;
+    }
+}
+
+@media (min-width: 860px) {
+    .fl-beat--lead .fl-thread {
+        display: block !important;
+        margin-top: 0;
+    }
 }
 
 .fl-chips {

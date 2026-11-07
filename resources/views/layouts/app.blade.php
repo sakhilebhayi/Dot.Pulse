@@ -90,6 +90,8 @@
                 @endauth
             @endif
 
+            <button type="button" class="sh-iconbtn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>
+
             <button type="button" class="sh-iconbtn sh-theme sh-hide-phone" data-pk-theme aria-pressed="false" aria-label="Switch theme">
                 <x-pulse.icon name="moon" class="sh-theme__moon" />
                 <x-pulse.icon name="sun" class="sh-theme__sun" />
@@ -225,7 +227,6 @@
             </a>
         @endforeach
     </nav>
-    <x-pulse.button variant="signal" class="sh-fab pk-btn--float" data-pk-dialog="compose" icon="plus" aria-label="Compose">Compose</x-pulse.button>
 
     <x-pulse.drawer id="compose" title="Say what you want" side="bottom" description="Pick the thing that is true. Pulse does the introducing.">
         <div class="pk-stack" style="gap: 8px">

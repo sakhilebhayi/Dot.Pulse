@@ -17,6 +17,7 @@
     $meter = \App\Livewire\Pulse\Floor\Support\MeterHtml::render($reasons, $b['match_id'] ?? null, $mode === 'floor' && ! empty($b['match_id']));
     $sid = (int) $b['signal_id'];
     $aside = $b['aside'] ?? null;
+    $lead = ($lead ?? false) && $meter->toHtml() !== '';
     $compact = ($compact ?? false) && $meter->toHtml() !== '';
     $quiet = $quiet ?? false;
     $chips = collect($reasons)->pluck('text')->filter()->values();
@@ -30,7 +31,7 @@
     wire:key="beat-{{ $sid }}"
     data-beat="{{ $sid }}"
     tabindex="-1"
-    class="fl-beat{{ $quiet ? ' fl-beat--quiet' : '' }}{{ $compact ? ' fl-beat--compact' : '' }}"
+    class="fl-beat{{ $quiet ? ' fl-beat--quiet' : '' }}{{ $compact ? ' fl-beat--compact' : '' }}{{ $lead ? ' fl-beat--lead' : '' }}"
     x-data="{ thread: false }"
 >
     @if ($anon)
@@ -67,16 +68,19 @@
             @endif
             <p class="fl-why">{{ implode(' ', $why) }}</p>
         </x-slot>
-    @elseif ($compact)
+    @elseif ($compact || $lead)
+        {{-- Compact: three reason chips, the thread on expand. The lead card shows the whole thread on a wide screen and the chips on a phone. --}}
         <x-slot name="meter">
-            <ul class="fl-chips" aria-label="Why this fits">
-                @foreach ($chips->take(3) as $text)
-                    <li class="fl-chip">{{ $text }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="fl-link fl-thread-toggle" x-on:click="thread = ! thread" x-bind:aria-expanded="thread" aria-controls="thread-{{ $sid }}">
-                <span x-show="! thread">Show how it fits</span><span x-show="thread" x-cloak>Hide how it fits</span>
-            </button>
+            <div @class(['fl-lead-phone' => $lead])>
+                <ul class="fl-chips" aria-label="Why this fits">
+                    @foreach ($chips->take(3) as $text)
+                        <li class="fl-chip">{{ $text }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="fl-link fl-thread-toggle" x-on:click="thread = ! thread" x-bind:aria-expanded="thread" aria-controls="thread-{{ $sid }}">
+                    <span x-show="! thread">Show how it fits</span><span x-show="thread" x-cloak>Hide how it fits</span>
+                </button>
+            </div>
             <div id="thread-{{ $sid }}" class="fl-thread" x-show="thread" x-cloak>{{ $meter }}</div>
         </x-slot>
     @elseif ($meter->toHtml() !== '')

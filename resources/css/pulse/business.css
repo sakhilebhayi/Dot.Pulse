@@ -690,3 +690,8 @@
         scroll-behavior: auto;
     }
 }
+
+.bz-askfirst {
+    justify-self: start;
+    min-height: var(--tap);
+}

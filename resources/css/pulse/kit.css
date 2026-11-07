@@ -1442,3 +1442,61 @@ select.pk-control {
 .pk-muted {
     color: var(--c-muted);
 }
+
+/* ---------- Overflow menu (pulse/more) ---------- */
+.pk-more {
+    position: relative;
+    display: inline-block;
+}
+
+.pk-more > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.pk-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+.pk-more__panel {
+    position: absolute;
+    z-index: 30;
+    right: 0;
+    top: calc(100% + 6px);
+    display: grid;
+    min-width: 200px;
+    padding: 6px;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    box-shadow: 0 14px 34px var(--c-shadow-float);
+}
+
+.pk-more__item {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    font-size: var(--t-ui);
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pk-more__item:hover,
+.pk-more__item:focus-visible {
+    background: var(--c-raised);
+}
+
+/* The destructive item is set apart, 24px of air from the rest, in the danger colour with a word, not by colour alone. */
+.pk-more__item--danger {
+    margin-top: 12px;
+    color: var(--c-bad);
+    box-shadow: 0 -12px 0 -11px var(--c-line);
+}

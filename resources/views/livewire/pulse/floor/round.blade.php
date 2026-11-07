@@ -28,7 +28,7 @@
             <h2 class="sr-only">The round</h2>
             <div class="pk-enter fl-list">
                 @foreach ($fresh as $b)
-                    @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => ! $loop->first])
+                    @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => ! $loop->first, 'lead' => $loop->first])
                 @endforeach
             </div>
         @endif

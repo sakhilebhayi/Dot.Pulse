@@ -75,7 +75,10 @@ if (app()->environment('local', 'testing')) {
     Route::get('/dev/login/{who}', function (Illuminate\Http\Request $request, string $who) {
         abort_unless(app()->environment('local', 'testing'), 404);
 
-        $user = ctype_digit($who) ? User::find((int) $who) : User::where('email', $who)->first();
+        // `new` makes a brand new person with no Pulse profile, so the welcome flow can be walked from the start.
+        $user = $who === 'new'
+            ? User::factory()->withPersonalTeam()->create(['name' => 'Newcomer '.random_int(100, 999), 'email' => 'new-'.bin2hex(random_bytes(3)).'@demo.pulse.test'])
+            : (ctype_digit($who) ? User::find((int) $who) : User::where('email', $who)->first());
         abort_if($user === null, 404);
 
         Illuminate\Support\Facades\Auth::login($user);

@@ -549,9 +549,9 @@
     }
 }
 
-/* Phone: bottom bar of five, compose floats. */
+/* Phone: bottom bar of five; Compose is a yellow plus in the masthead, never a floating button over the cards. */
 .sh-bar,
-.sh-fab.pk-btn {
+.sh-compose-top {
     display: none;
 }
 
@@ -633,12 +633,10 @@
         right: calc(50% - 26px);
     }
 
-    .sh-fab.pk-btn {
-        position: fixed;
-        z-index: 75;
-        right: var(--s-md);
-        bottom: calc(76px + env(safe-area-inset-bottom));
+    .sh-compose-top {
         display: inline-flex;
+        background: var(--c-signal);
+        color: var(--c-on-signal);
     }
 }
 
