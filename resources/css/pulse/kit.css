@@ -260,7 +260,13 @@
 }
 
 .pk-price--lg {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+}
+
+/* Words are not figures: mono is for digits only. */
+.pk-price__words {
+    font-family: var(--f-ui);
+    font-weight: 600;
 }
 
 /* ---------- Avatar ---------- */
@@ -293,7 +299,7 @@
 .pk-avatar--sm {
     width: 28px;
     height: 28px;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
 }
 
 .pk-avatar--lg {
@@ -967,7 +973,7 @@ select.pk-control {
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--f-mono);
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--c-muted);
 }
@@ -1038,6 +1044,13 @@ select.pk-control {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1.1;
+}
+
+.pk-stat__value--text {
+    font-family: var(--f-ui);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .pk-stat__note {
@@ -1149,7 +1162,7 @@ select.pk-control {
     background: var(--c-signal);
     color: var(--c-on-signal);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 18px;
 }

@@ -66,7 +66,8 @@
         @if ($showDial)
             <div class="sh-mast__dial"><x-pulse.mode-dial :selected="$selectedMode" /></div>
         @else
-            <div class="sh-mast__page">{{ $title }}</div>
+            {{-- A spacer: the page already says its own name in its h1, so the masthead does not say it twice. --}}
+            <div class="sh-mast__page" aria-hidden="true"></div>
         @endif
 
         <div class="sh-mast__tools">

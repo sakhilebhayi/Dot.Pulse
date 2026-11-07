@@ -320,7 +320,7 @@
     border: 1px solid var(--c-line-strong);
     border-radius: 999px;
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 16px;
 }
@@ -1169,7 +1169,7 @@
 
 .ln-rate small {
     color: var(--c-muted);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.1;
 }

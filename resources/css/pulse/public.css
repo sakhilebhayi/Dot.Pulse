@@ -43,8 +43,38 @@
 }
 
 
+.lp-hero__grid {
+    display: grid;
+    gap: clamp(28px, 5vw, 48px);
+    align-items: center;
+}
+
 .lp-hero__stage {
-    margin-top: clamp(28px, 5vw, 56px);
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+}
+
+.lp-hero__sheet {
+    width: 100%;
+    padding: clamp(16px, 3vw, 28px);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+    color: var(--c-ink);
+}
+
+.lp-hero__sheet .pk-meter {
+    --meter-h: clamp(72px, 10vw, 112px);
+}
+
+.lp-hero .lp-example {
+    margin-top: 0;
+}
+
+@media (min-width: 1000px) {
+    .lp-hero__grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    }
 }
 
 /* The meter on the field: your line white, their line ink. */

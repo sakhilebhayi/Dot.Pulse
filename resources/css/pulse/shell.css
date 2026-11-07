@@ -165,7 +165,7 @@
     background: var(--c-signal);
     color: var(--c-on-signal);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 20px;
     text-align: center;
@@ -612,7 +612,7 @@
         min-height: 60px;
         padding: 6px 2px;
         color: var(--c-muted);
-        font-size: 0.6875rem;
+        font-size: 0.75rem;
         font-weight: 600;
         text-decoration: none;
     }

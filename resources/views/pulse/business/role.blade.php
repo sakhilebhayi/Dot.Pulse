@@ -42,7 +42,7 @@
                 @if ($role->summary)<p class="bz-tagline">{{ $role->summary }}</p>@endif
             </div>
             @if ($role->pay_text)
-                <div class="bz-priceblock"><span class="pk-price bz-pay"><span>{{ $role->pay_text }}</span></span><p class="pk-muted">As the employer wrote it</p></div>
+                <div class="bz-priceblock"><span class="pk-price pk-price--lg bz-pay"><span class="pk-price__words">{{ $role->pay_text }}</span></span><p class="pk-muted">As the employer wrote it</p></div>
             @endif
         </header>
 

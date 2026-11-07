@@ -45,7 +45,9 @@
     @endif
 
     <x-slot name="from">
-        @if ($row)
+        @if ($row && ($b['kind'] ?? '') === 'business')
+            {{-- a business result is the business: no second line naming it --}}
+        @elseif ($row)
             <span class="pk-beat__from-text fl-rowfrom">
                 <span class="pk-beat__from-name">{{ $anon ? 'Anonymous professional' : ($b['from']['name'] ?? 'Someone on Pulse') }}</span>
                 @if (! $anon && ! empty($b['verification']))<span class="fl-small">{{ $b['verification']['label'] }}</span>@endif

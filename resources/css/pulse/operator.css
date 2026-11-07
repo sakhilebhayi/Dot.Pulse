@@ -104,7 +104,7 @@
     flex: none;
     color: var(--c-muted);
     font-family: var(--f-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
 }
 
 .op-metric__value {

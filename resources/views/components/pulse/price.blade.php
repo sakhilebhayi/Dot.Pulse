@@ -11,7 +11,7 @@
 @endphp
 <span {{ $attributes->merge(['class' => 'pk-price'.($large ? ' pk-price--lg' : '')]) }}>
     @if ($amount === null)
-        <span>On request</span>
+        <span class="pk-price__words">On request</span>
     @else
         <span>{{ $fmt($amount) }}@if ($to !== null && (float) $to !== (float) $amount) to {{ $fmt($to) }}@endif</span>
         @if ($unit)<small>{{ $unit }}</small>@endif
