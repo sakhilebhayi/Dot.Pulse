@@ -35,7 +35,8 @@ class ResponsiveShellTest extends TestCase
             'post' => route('posts.show', $post),
             'community' => route('communities.show', $community),
             'user profile' => route('users.show', $post->author),
-            'profile settings' => route('profile.show'),
+            'profile settings' => route('me.profile'),
+            'account and security' => route('me.account'),
             'team settings' => route('teams.show', $user->currentTeam),
         ];
     }
