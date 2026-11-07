@@ -391,7 +391,9 @@ class LineService
     // ---------------------------------------------------------------- reading
 
     /**
-     * Filters: tab (requests|open|sent|closed|ignored|all, default open), kind, entity_id, unread (bool), per_page.
+     * Filters: tab (requests|open|sent|closed|ignored|all, default open), kind, entity_id (a page id, or 'none' for
+     * only the lines that are the person's own and not a page's), unread (bool), archived (bool: only the lines the
+     * person archived; without it archived lines are left out of every tab), per_page.
      * Items are arrays from present(): safe to send to a client.
      *
      * @param  array<string, mixed>  $filters
@@ -424,8 +426,24 @@ class LineService
             $query->unreadFor($u, [PulseConversation::REQUESTED, PulseConversation::OPEN]);
         }
 
-        if (! empty($filters['entity_id'])) {
+        if (($filters['entity_id'] ?? null) === 'none') {
+            // Me only: a line I am on as myself, not through a page I answer for.
+            $query->where(fn ($w) => $w
+                ->where(fn ($a) => $a->where('recipient_id', $u->id)->whereNull('entity_id'))
+                ->orWhere(fn ($a) => $a->where('initiator_id', $u->id)->whereNull('initiator_entity_id')));
+        } elseif (! empty($filters['entity_id'])) {
             $query->where(fn ($w) => $w->where('entity_id', $filters['entity_id'])->orWhere('initiator_entity_id', $filters['entity_id']));
+        }
+
+        // Archive is the person's own shelf (pulse_conversation_user.archived_at), applied in the query so a page of
+        // results is never shortened after it was counted.
+        $archivedRows = fn ($q) => $q->select(DB::raw(1))->from('pulse_conversation_user as cu')
+            ->whereColumn('cu.pulse_conversation_id', 'pulse_conversations.id')
+            ->where('cu.user_id', $u->id)->whereNotNull('cu.archived_at');
+        if (! empty($filters['archived'])) {
+            $query->whereExists($archivedRows);
+        } else {
+            $query->whereNotExists($archivedRows);
         }
 
         // A sender never sees the lines their recipient marked as spam in the closed tab as spam: present() maps it to closed.
@@ -442,6 +460,32 @@ class LineService
         });
 
         return $page;
+    }
+
+    /** Put a line on the person's own shelf: it leaves every tab for them and nobody else is told. */
+    public function archive(User $by, PulseConversation $c): void
+    {
+        $this->setArchived($by, $c, true);
+    }
+
+    public function unarchive(User $by, PulseConversation $c): void
+    {
+        $this->setArchived($by, $c, false);
+    }
+
+    private function setArchived(User $by, PulseConversation $c, bool $archived): void
+    {
+        Gate::forUser($by)->authorize('view', $c);
+
+        $side = Access::side($by, $c);
+        if ($side === null) {
+            throw new AuthorizationException; // staff reviewing a report have no shelf
+        }
+
+        DB::table('pulse_conversation_user')->updateOrInsert(
+            ['pulse_conversation_id' => $c->id, 'user_id' => $by->id],
+            ['archived_at' => $archived ? now() : null, 'side' => $side, 'entity_id' => $side === 'recipient' ? $c->entity_id : $c->initiator_entity_id],
+        );
     }
 
     /** @return array<string, mixed> */
@@ -501,7 +545,13 @@ class LineService
         ]);
 
         if ($touch && $side !== null) {
-            $stamp = ['last_message_at' => now(), 'last_message_side' => $side, $side.'_read_at' => now(), 'updated_at' => now()];
+            // Read marks are second precise and markRead sets one just past the last message. A reply that lands in
+            // that same second would look older than the mark and be counted as read, so the message time is never
+            // earlier than the other side's mark: equal means new (see LinePresenter::unread).
+            $otherMark = PulseConversation::query()->whereKey($c->id)->value(Access::otherSide($side).'_read_at');
+            $at = $otherMark !== null && ($mark = Carbon::parse($otherMark))->gt(now()) ? $mark : now();
+
+            $stamp = ['last_message_at' => $at, 'last_message_side' => $side, $side.'_read_at' => $at, 'updated_at' => now()];
             PulseConversation::query()->whereKey($c->id)->update($stamp);
         }
 

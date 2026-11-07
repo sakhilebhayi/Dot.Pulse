@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Lines;
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseMessage;
+use App\Models\PulseProfile;
 use App\Models\User;
 
 /**
@@ -43,6 +44,11 @@ class LinePresenter
             'card' => $c->card ?? [],
             'counterpart' => $this->counterpart($c, $side),
             'identity_hidden' => $hiddenFromViewer,
+            // Structural facts the screens need so they never read columns off the model: who spoke last, the group a
+            // quote request belongs to (the asking side only: the compare screen is theirs), and the viewer's own page.
+            'last_message_side' => $c->last_message_side,
+            'quote_group' => $side === 'initiator' ? $c->quote_group : null,
+            'page' => $this->ownPage($c, $side),
             'snippet' => $snippet,
             'unread' => $this->unread($c, $side),
             'created_at' => $c->created_at,
@@ -145,6 +151,31 @@ class LinePresenter
         return $party['alias'] ?? $party['name'];
     }
 
+    /** The business page the viewer answers for on this line, if any. @return array{id: int, name: string, slug: string}|null */
+    private function ownPage(PulseConversation $c, ?string $side): ?array
+    {
+        $entity = match ($side) {
+            'recipient' => $c->entity,
+            'initiator' => $c->initiatorEntity,
+            default => null,
+        };
+
+        return $entity instanceof PulseEntity ? ['id' => (int) $entity->id, 'name' => $entity->name, 'slug' => $entity->slug] : null;
+    }
+
+    /** @var array<int, bool> */
+    private array $linkable = [];
+
+    /** False for someone whose page does not exist for others (an anonymous professional): no link is drawn. */
+    private function linkable(?int $userId): bool
+    {
+        if ($userId === null) {
+            return false;
+        }
+
+        return $this->linkable[$userId] ??= PulseProfile::query()->where('user_id', $userId)->value('discoverability') !== 'anonymous';
+    }
+
     /** @return array<string, mixed> */
     private function party(PulseConversation $c, string $partySide, ?string $viewerSide): array
     {
@@ -171,6 +202,7 @@ class LinePresenter
         return [
             'kind' => 'person', 'hidden' => false, 'name' => $user?->name ?? 'Someone',
             'user_id' => $user?->id, 'avatar_url' => $user?->profile_photo_url,
+            'linkable' => $this->linkable($user?->id),
         ];
     }
 

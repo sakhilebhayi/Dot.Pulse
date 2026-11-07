@@ -164,10 +164,7 @@ class Thread extends Component
         $c = $this->line();
         abort_if(Access::side(auth()->user(), $c) === null, 404);
 
-        DB::table('pulse_conversation_user')->updateOrInsert(
-            ['pulse_conversation_id' => $c->id, 'user_id' => auth()->id()],
-            ['archived_at' => $this->pivot('archived_at') ? null : now(), 'side' => Access::side(auth()->user(), $c)],
-        );
+        $this->pivot('archived_at') ? app(LineService::class)->unarchive(auth()->user(), $c) : app(LineService::class)->archive(auth()->user(), $c);
 
         $this->dispatch('toast', message: $this->pivot('archived_at') ? 'Archived. It will not show in your tabs.' : 'Back in your tabs.', kind: 'good');
     }
@@ -271,16 +268,15 @@ class Thread extends Component
         $line = $lines->present($user, $c);
         $messages = $lines->thread($user, $c);
 
-        $siblings = $c->quote_group !== null && $line['side'] === 'initiator'
-            ? PulseConversation::query()->where('quote_group', $c->quote_group)->count()
-            : 0;
+        $group = $line['quote_group'];
+        $siblings = $group !== null ? PulseConversation::query()->where('quote_group', $group)->count() : 0;
 
         return view('livewire.pulse.lines.thread', [
             'line' => $line,
             'messages' => $messages,
             'model' => $c,
             'quotes' => $this->quotesFor($c),
-            'compareUrl' => $siblings > 1 ? route('lines.quotes', $c->quote_group) : null,
+            'compareUrl' => $siblings > 1 ? route('lines.quotes', $group) : null,
             'subject' => $this->liveSubject($line),
             'muted' => (bool) $this->pivot('muted'),
             'archived' => $this->pivot('archived_at') !== null,

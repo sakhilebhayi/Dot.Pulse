@@ -1,5 +1,5 @@
 {{--
-    A request, as a card with its four fields and the honest ways to answer. Needs: $line, $facts (optional), $ignored (bool).
+    A request, as a card with its four fields and the honest ways to answer. Needs: $line, $ignored (bool).
     The sender is named only as far as they may be: an anonymous professional is an alias and a card, never a name.
 --}}
 @php
@@ -8,15 +8,14 @@
     $partyName = $cp['kind'] === 'anonymous' ? ($cp['alias'] ?? 'Anonymous professional') : $cp['name'];
     $ignored = $ignored ?? false;
     $snap = $line['context']['snapshot'] ?? [];
-    $mine = $facts[$line['id']] ?? null;
-    $forPage = $mine?->entity_id ? $mine->entity?->name : null;
+    $forPage = $line['side'] === 'recipient' ? ($line['page']['name'] ?? null) : null;
 @endphp
 <article class="pk-card ln-request" aria-labelledby="req-{{ $line['id'] }}">
     <header class="ln-request__head">
         @include('livewire.pulse.lines.partials.party', ['cp' => $cp, 'size' => 'md'])
         <div class="ln-request__who">
             <div class="ln-who">
-                @if ($cp['kind'] === 'person' && ! empty($cp['user_id']) && Route::has('users.show'))
+                @if ($cp['kind'] === 'person' && ! empty($cp['user_id']) && ($cp['linkable'] ?? true) && Route::has('users.show'))
                     <a href="{{ route('users.show', $cp['user_id']) }}">{{ $partyName }}</a>
                 @elseif ($cp['kind'] === 'entity' && ! empty($cp['slug']) && Route::has('entities.show'))
                     <a href="{{ route('entities.show', $cp['slug']) }}">{{ $partyName }}</a>

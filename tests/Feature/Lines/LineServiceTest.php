@@ -10,6 +10,7 @@ use App\Services\Pulse\Lines\LineService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\LinesFixtures;
@@ -428,6 +429,95 @@ class LineServiceTest extends TestCase
         $this->assertTrue($this->lines()->inbox($sender)->items()[0]['unread']);
         $this->lines()->markRead($sender, $c->fresh());
         $this->assertFalse($this->lines()->inbox($sender)->items()[0]['unread']);
+    }
+
+    public function test_present_carries_the_structural_facts_so_screens_do_not_read_the_model(): void
+    {
+        $sender = $this->person();
+        $page = $this->page(null, ['contact_policy' => 'requests']);
+        $owner = $this->responderOf($page);
+        $c = $this->openLine($sender, $page);
+        $this->lines()->send($owner, $c->fresh(), 'Thursday works');
+
+        $mine = $this->lines()->present($owner, $c->fresh());
+        $theirs = $this->lines()->present($sender, $c->fresh());
+
+        $this->assertSame('recipient', $mine['last_message_side']);
+        $this->assertSame(['id' => $page->id, 'name' => $page->name, 'slug' => $page->slug], $mine['page'], 'the page the viewer answers for');
+        $this->assertNull($theirs['page'], 'a person asking as themselves has no page');
+        $this->assertNull($mine['quote_group']);
+
+        $group = (string) Str::uuid();
+        PulseConversation::whereKey($c->id)->update(['quote_group' => $group]);
+        $this->assertSame($group, $this->lines()->present($sender, $c->fresh())['quote_group'], 'the asking side may open the comparison');
+        $this->assertNull($this->lines()->present($owner, $c->fresh())['quote_group'], 'the page answering never learns the group');
+    }
+
+    public function test_archive_takes_a_line_out_of_the_query_not_out_of_a_page_after_the_count(): void
+    {
+        $sender = $this->person();
+        $page = $this->page(null, ['contact_policy' => 'requests']);
+        $lines = collect(range(1, 5))->map(fn () => $this->openLine($sender, $this->page(null, ['contact_policy' => 'requests'])));
+
+        $inbox = $this->lines()->inbox($sender, ['tab' => 'open', 'per_page' => 2]);
+        $this->assertSame(5, $inbox->total());
+
+        $this->lines()->archive($sender, $lines[0]->fresh());
+        $this->lines()->archive($sender, $lines[1]->fresh());
+
+        $inbox = $this->lines()->inbox($sender, ['tab' => 'open', 'per_page' => 2]);
+        $this->assertSame(3, $inbox->total(), 'the count is right because archived lines are not in the query');
+        $this->assertCount(2, $inbox->items(), 'and a full page is still full');
+        $this->assertNotContains($lines[0]->id, array_column($inbox->items(), 'id'));
+
+        $archived = $this->lines()->inbox($sender, ['tab' => 'open', 'archived' => true]);
+        $this->assertEqualsCanonicalizing([$lines[0]->id, $lines[1]->id], array_column($archived->items(), 'id'));
+
+        $this->lines()->unarchive($sender, $lines[0]->fresh());
+        $this->assertSame(4, $this->lines()->inbox($sender, ['tab' => 'open'])->total());
+
+        $stranger = $this->person();
+        $this->expectException(AuthorizationException::class);
+        $this->lines()->archive($stranger, $lines[2]->fresh());
+    }
+
+    public function test_the_me_only_filter_leaves_out_the_lines_that_belong_to_a_page(): void
+    {
+        $me = $this->person();
+        $page = $this->page($me, ['contact_policy' => 'requests']);
+        $stranger = $this->person();
+        $otherPage = $this->page(null, ['contact_policy' => 'requests']);
+
+        $forMyPage = $this->openLine($stranger, $page);
+        $mineAsPerson = $this->openLine($me, $otherPage);
+
+        $all = array_column($this->lines()->inbox($me, ['tab' => 'open'])->items(), 'id');
+        $this->assertEqualsCanonicalizing([$forMyPage->id, $mineAsPerson->id], $all);
+
+        $justMe = array_column($this->lines()->inbox($me, ['tab' => 'open', 'entity_id' => 'none'])->items(), 'id');
+        $this->assertSame([$mineAsPerson->id], $justMe);
+
+        $onlyPage = array_column($this->lines()->inbox($me, ['tab' => 'open', 'entity_id' => $page->id])->items(), 'id');
+        $this->assertSame([$forMyPage->id], $onlyPage);
+    }
+
+    public function test_a_message_in_the_same_second_as_a_read_still_counts_as_new(): void
+    {
+        $this->freezeTime();
+        $sender = $this->person();
+        $page = $this->page(null, ['contact_policy' => 'requests']);
+        $owner = $this->responderOf($page);
+        $c = $this->openLine($sender, $page);
+
+        $this->lines()->send($owner, $c->fresh(), 'first');
+        $this->lines()->markRead($sender, $c->fresh());
+        $this->assertFalse($this->lines()->present($sender, $c->fresh())['unread']);
+
+        // The clock has not moved: the reply is in the very same second as the read.
+        $this->lines()->send($owner, $c->fresh(), 'second, same second');
+
+        $this->assertTrue($this->lines()->present($sender, $c->fresh())['unread'], 'not counted read');
+        $this->assertSame(1, PulseConversation::query()->unreadFor($sender)->count(), 'and the query agrees');
     }
 
     public function test_new_messages_fold_into_one_unread_notification(): void

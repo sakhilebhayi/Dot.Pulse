@@ -6,12 +6,9 @@ use App\Livewire\Pulse\Lines\Concerns\AnswersRequests;
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
-use App\Models\User;
 use App\Services\Pulse\Lines\Access;
 use App\Services\Pulse\Lines\LineService;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -35,6 +32,9 @@ class Inbox extends Component
     public string $tab = 'requests';
 
     public ?int $entityId = null;
+
+    /** Only the lines that are mine as a person, not the ones I answer for through a page. */
+    public bool $meOnly = false;
 
     public string $kind = '';
 
@@ -70,6 +70,14 @@ class Inbox extends Component
     public function switchTo(?int $entityId): void
     {
         $this->entityId = $entityId !== null && $this->answersFor()->has($entityId) ? $entityId : null;
+        $this->meOnly = false;
+        $this->page = 1;
+    }
+
+    public function switchToMe(): void
+    {
+        $this->entityId = null;
+        $this->meOnly = true;
         $this->page = 1;
     }
 
@@ -142,44 +150,25 @@ class Inbox extends Component
         });
     }
 
-    /**
-     * Lines the person has archived are left out of every tab; the page they are on still opens by link.
-     *
-     * @param  LengthAwarePaginator<int, array<string, mixed>>  $page
-     */
-    private function withoutArchived(User $user, $page): void
-    {
-        $archived = DB::table('pulse_conversation_user')->where('user_id', $user->id)->whereNotNull('archived_at')
-            ->whereIn('pulse_conversation_id', $page->getCollection()->pluck('id'))->pluck('pulse_conversation_id')->all();
-
-        if ($archived !== []) {
-            $page->setCollection($page->getCollection()->reject(fn ($l) => in_array($l['id'], $archived, true))->values());
-        }
-    }
-
     public function render(LineService $lines): View
     {
         $user = auth()->user();
-        $base = array_filter(['entity_id' => $this->entityId, 'kind' => $this->kind ?: null, 'unread' => $this->unreadOnly ?: null]);
+        $scope = $this->meOnly ? 'none' : $this->entityId;
+        $base = array_filter(['entity_id' => $scope, 'kind' => $this->kind ?: null, 'unread' => $this->unreadOnly ?: null]);
 
         // The service paginates from the request's page number; a Livewire update has none, so say which page this is.
         request()->merge(['page' => $this->page]);
         $paginator = $lines->inbox($user, $base + ['tab' => $this->tab, 'per_page' => 20]);
-        $this->withoutArchived($user, $paginator);
 
         $items = $paginator->getCollection();
-        // Structural facts the presenter leaves out: who spoke last, and which of my pages a line is for. No names of people.
-        $facts = PulseConversation::query()->whereIn('id', $items->pluck('id'))
-            ->with(['entity:id,name', 'initiatorEntity:id,name'])
-            ->get(['id', 'last_message_side', 'entity_id', 'initiator_entity_id'])->keyBy('id');
 
-        $pending = $lines->inbox($user, array_filter(['entity_id' => $this->entityId]) + ['tab' => 'requests', 'per_page' => 1])->total();
-        $fresh = $lines->inbox($user, array_filter(['entity_id' => $this->entityId]) + ['tab' => 'open', 'unread' => true, 'per_page' => 1])->total();
+        $pending = $lines->inbox($user, array_filter(['entity_id' => $scope]) + ['tab' => 'requests', 'per_page' => 1])->total();
+        $fresh = $lines->inbox($user, array_filter(['entity_id' => $scope]) + ['tab' => 'open', 'unread' => true, 'per_page' => 1])->total();
 
         return view('livewire.pulse.lines.inbox', [
             'lines' => $items,
             'paginator' => $paginator,
-            'facts' => $facts,
+            'meOnly' => $this->meOnly,
             'pending' => $pending,
             'fresh' => $fresh,
             'pages' => $this->answersFor(),

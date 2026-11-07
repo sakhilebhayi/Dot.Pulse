@@ -13,7 +13,8 @@
         <div class="ln-switch" role="group" aria-label="Whose lines">
             <span class="ln-switch__label" id="ln-switch-label">Showing lines for</span>
             <div class="ln-switch__list" aria-labelledby="ln-switch-label">
-                <button type="button" class="ln-chip" wire:click="switchTo(null)" aria-pressed="{{ $entityId === null ? 'true' : 'false' }}">All</button>
+                <button type="button" class="ln-chip" wire:click="switchTo(null)" aria-pressed="{{ $entityId === null && ! $meOnly ? 'true' : 'false' }}">All</button>
+                <button type="button" class="ln-chip" wire:click="switchToMe" aria-pressed="{{ $meOnly ? 'true' : 'false' }}">Just me</button>
                 @foreach ($pages as $page)
                     <button type="button" class="ln-chip" wire:click="switchTo({{ $page->id }})" aria-pressed="{{ $entityId === $page->id ? 'true' : 'false' }}" wire:key="sw-{{ $page->id }}">{{ $page->name }}</button>
                 @endforeach
@@ -70,9 +71,9 @@
             @foreach ($lines as $line)
                 <div wire:key="line-{{ $tab }}-{{ $line['id'] }}">
                     @if (in_array($tab, ['requests', 'ignored'], true))
-                        @include('livewire.pulse.lines.partials.request-card', ['line' => $line, 'facts' => $facts, 'ignored' => $tab === 'ignored'])
+                        @include('livewire.pulse.lines.partials.request-card', ['line' => $line, 'ignored' => $tab === 'ignored'])
                     @else
-                        @include('livewire.pulse.lines.partials.line-row', ['line' => $line, 'facts' => $facts])
+                        @include('livewire.pulse.lines.partials.line-row', ['line' => $line])
                     @endif
                 </div>
             @endforeach

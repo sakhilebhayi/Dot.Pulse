@@ -182,6 +182,25 @@ class InboxTest extends TestCase
             ->assertSee('Fix a leaking geyser');
     }
 
+    public function test_just_me_shows_the_lines_that_are_mine_and_not_my_pages(): void
+    {
+        [$owner, , $page] = $this->request('Moyo Plumbing');
+        $otherOwner = $this->person();
+        $theirPage = $this->page($otherOwner, ['name' => 'Karoo Books', 'contact_policy' => 'requests']);
+        $this->lines()->knock($owner, ['entity' => $theirPage->id], 'enquiry', $this->card(['what' => 'Need my books done']), $this->offer($theirPage));
+
+        Livewire::actingAs($owner)->test(Inbox::class)
+            ->assertSee('Just me')
+            ->call('setTab', 'sent')->call('switchToMe')
+            ->assertSet('meOnly', true)
+            ->assertSee('Need my books done')
+            ->call('setTab', 'requests')
+            ->assertDontSee('Fix a leaking geyser')
+            ->call('switchTo', $page->id)
+            ->assertSet('meOnly', false)
+            ->assertSee('Fix a leaking geyser');
+    }
+
     public function test_the_switcher_refuses_a_page_the_person_does_not_answer_for(): void
     {
         [$owner] = $this->request();

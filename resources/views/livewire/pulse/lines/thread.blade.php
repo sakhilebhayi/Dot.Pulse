@@ -19,7 +19,7 @@
         @include('livewire.pulse.lines.partials.party', ['cp' => $cp, 'size' => 'lg'])
         <div class="ln-head__who">
             <div class="ln-who ln-who--lg">
-                @if ($cp['kind'] === 'person' && ! empty($cp['user_id']) && Route::has('users.show'))
+                @if ($cp['kind'] === 'person' && ! empty($cp['user_id']) && ($cp['linkable'] ?? true) && Route::has('users.show'))
                     <a href="{{ route('users.show', $cp['user_id']) }}">{{ $partyName }}</a>
                 @elseif ($cp['kind'] === 'entity' && ! empty($cp['slug']) && Route::has('entities.show'))
                     <a href="{{ route('entities.show', $cp['slug']) }}">{{ $partyName }}</a>
