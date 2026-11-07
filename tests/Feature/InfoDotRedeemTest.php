@@ -115,8 +115,8 @@ class InfoDotRedeemTest extends TestCase
             ->assertHasNoErrors();
 
         $post = PulsePost::where('user_id', $user->id)->firstOrFail();
-        // Held for moderation (pending, or flagged when no AI key is set): never published unchecked.
-        $this->assertNotSame('published', $post->status);
+        // R-41: the local rules check it (no model key needed) and an ordinary first post goes live.
+        $this->assertSame('published', $post->status);
         $this->assertSame($user->personalTeam()->id, $post->team_id);
         $this->assertSame(1, PulseProfile::where('user_id', $user->id)->count(), 'still one profile after the dashboard visit');
     }
