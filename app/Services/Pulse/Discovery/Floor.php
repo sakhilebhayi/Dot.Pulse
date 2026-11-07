@@ -176,7 +176,20 @@ class Floor
         PulseMute::firstOrCreate(['user_id' => $u->id, 'kind' => $kind, 'target' => $target]);
         Audit::record($u, 'pulse.floor.reason_removed', $m->signal ?? null, ['code' => $code, 'mute' => "{$kind}:{$target}"]);
 
-        // Re-judge this one match with the new mute so the Floor changes at once.
+        // Re-judge this match, and every other one of theirs still waiting to be seen, with the new mute, so the Floor
+        // changes at once: a match whose only reason was the muted input goes, one with other reasons is re-scored.
+        $this->rejudge($u, $m);
+
+        PulseMatch::query()
+            ->where('user_id', $u->id)->where('id', '!=', $m->id)
+            ->whereNull('dismissed_at')->whereNull('seen_at')
+            ->orderByDesc('score')->limit(self::POOL)
+            ->get()
+            ->each(fn (PulseMatch $other) => $this->rejudge($u, $other));
+    }
+
+    private function rejudge(User $u, PulseMatch $m): void
+    {
         $signal = PulseSignal::find($m->signal_id);
         $fresh = $signal ? $this->matcher->forPair($u, $signal) : null;
 

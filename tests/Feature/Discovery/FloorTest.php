@@ -364,6 +364,31 @@ class FloorTest extends TestCase
         $this->assertSame([], $this->ids($this->floor()->round($this->me)));
     }
 
+    public function test_removing_a_reason_re_judges_the_other_unseen_matches_that_leaned_on_the_same_input(): void
+    {
+        $topic = fn () => [['code' => 'topic', 'text' => 'News about bookkeeping.', 'weight' => 24, 'ref' => 'bookkeeping']];
+        DB::table('pulse_profiles')->where('user_id', $this->me->id)->update(['interests' => json_encode(['Bookkeeping', 'Welding'])]);
+
+        $a = $this->dSignal(['owner_id' => $this->dUser()->id, 'kind' => 'news', 'subject_type' => 'post', 'topics' => ['bookkeeping']]);
+        $b = $this->dSignal(['owner_id' => $this->dUser()->id, 'kind' => 'news', 'subject_type' => 'post', 'topics' => ['bookkeeping']]);
+        $other = $this->dSignal(['owner_id' => $this->dUser()->id, 'kind' => 'news', 'subject_type' => 'post', 'topics' => ['welding']]);
+        $seen = $this->dSignal(['owner_id' => $this->dUser()->id, 'kind' => 'news', 'subject_type' => 'post', 'topics' => ['bookkeeping']]);
+
+        $ma = $this->dMatch($this->me, $a, 50, $topic());
+        $mb = $this->dMatch($this->me, $b, 45, $topic());
+        $mo = $this->dMatch($this->me, $other, 40, [['code' => 'topic', 'text' => 'News about welding.', 'weight' => 24, 'ref' => 'welding']]);
+        $ms = $this->dMatch($this->me, $seen, 44, $topic());
+        $ms->forceFill(['seen_at' => now()])->save();
+
+        $this->floor()->removeReason($this->me, $ma, 'topic');
+
+        $this->assertNotNull($ma->fresh()->dismissed_at);
+        $this->assertNotNull($mb->fresh()->dismissed_at, 'the other unseen match whose only reason was this topic goes too');
+        $this->assertNull($mo->fresh()->dismissed_at, 'a match on another topic stays');
+        $this->assertNull($ms->fresh()->dismissed_at, 'something already seen is left alone');
+        $this->assertSame([$other->id], $this->ids($this->floor()->round($this->me)));
+    }
+
     public function test_removing_other_inputs_mutes_places_businesses_and_people_but_not_fresh(): void
     {
         $entity = $this->dEntity($this->dUser());
