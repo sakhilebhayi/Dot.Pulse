@@ -37,6 +37,9 @@ export default {
     const found = await j.text(viewer);
     j.check('search labels a claimed business "Not checked", an InfoDot-linked one "InfoDot member"', /Claims a registration number\. Not checked\./.test(found) && /InfoDot member/.test(found) && !/verified business/i.test(found));
     await j.snap(viewer, 'search-trust-labels', { full: false });
+    await j.go(viewer, '/search?q=bakery');
+    const bakery = await viewer.locator('article', { has: viewer.getByRole('heading', { name: 'Marmalade Moon Bakery', exact: true }) }).first().innerText();
+    j.check('a business that only claimed a website is not said to claim a registration number', /Details claimed\. Not checked\./.test(bakery) && !/registration number/.test(bakery), bakery.replace(/\s+/g, ' ').slice(0, 200));
 
     // --- the owner changes what is real, and the ladder follows ---
     const rudo = await j.as('rudo');

@@ -182,7 +182,8 @@ class BeatBuilder
         $label = match (true) {
             in_array($status, ['verified', 'infodot_verified'], true) && $checked => 'Checked through InfoDot',
             $status === 'infodot_member' => 'InfoDot member',
-            $status === 'claimed', ! empty($entity->registration_number) => 'Claims a registration number. Not checked.',
+            ! empty($entity->registration_number) => 'Claims a registration number. Not checked.',
+            $status === 'claimed' => 'Details claimed. Not checked.',
             default => null,
         };
 

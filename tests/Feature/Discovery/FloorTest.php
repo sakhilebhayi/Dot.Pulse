@@ -271,6 +271,18 @@ class FloorTest extends TestCase
         $this->assertArrayHasKey('reasons', $b->toArray());
     }
 
+    public function test_a_page_that_only_claims_a_website_is_not_said_to_claim_a_registration_number(): void
+    {
+        $seller = $this->dUser();
+        $entity = $this->dEntity($seller, ['name' => 'Web Only Bakery', 'verification_status' => 'claimed', 'website' => 'https://webonly.example', 'registration_number' => null]);
+        $signal = $this->dOfferSignal($entity, ['baking'], ['place' => $this->geo->jhb]);
+        $this->dMatch($this->me, $signal, 61, [['code' => 'need_offer', 'text' => 'You need baking, they offer baking.', 'weight' => 40, 'ref' => 'baking']]);
+
+        $b = $this->floor()->round($this->me)['beats'][0];
+
+        $this->assertSame('Details claimed. Not checked.', $b->from['ladder']['label']);
+    }
+
     public function test_a_page_that_takes_no_contact_cannot_be_knocked(): void
     {
         $entity = $this->dEntity($this->dUser(), ['contact_policy' => 'nobody']);
