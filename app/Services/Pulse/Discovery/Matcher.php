@@ -121,6 +121,28 @@ class Matcher
         return $this->persist($user->id, $scored, replace: true);
     }
 
+    /**
+     * Right after a person publishes something (a need, an offer, a role) or finishes setting up: match the new signal
+     * against the people it fits and refresh their own matches, so the Floor is not empty until the next ten minute
+     * job. Never fails the action that called it: the scheduled run does the same work and catches up.
+     */
+    public function refreshAfter(User $by, ?string $subjectType = null, ?int $subjectId = null): void
+    {
+        try {
+            if ($subjectType !== null && $subjectId !== null) {
+                $signal = PulseSignal::query()->where('subject_type', $subjectType)->where('subject_id', $subjectId)->where('status', 'live')->first();
+
+                if ($signal !== null) {
+                    $this->forSignal($signal);
+                }
+            }
+
+            $this->forUser($by);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     /** A new or changed signal: match it against the people who might care. Returns match rows written. */
     public function forSignal(PulseSignal $signal): int
     {

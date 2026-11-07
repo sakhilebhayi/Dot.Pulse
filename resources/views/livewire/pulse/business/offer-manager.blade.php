@@ -37,7 +37,7 @@
                             <p class="pk-muted" style="margin-top: 6px">Removed: {{ $offer->moderation_reason }}</p>
                         @endif
                         @if ($offer->status !== 'draft' && in_array($offer->moderation, ['pending', 'held'], true))
-                            <p class="pk-muted" style="margin-top: 6px">Waiting for a human: {{ $offer->moderation_reason ?: ($offer->moderation === 'held' ? 'The automatic check flagged something in the text.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.') }}</p>
+                            <p class="pk-muted" style="margin-top: 6px">Waiting for a human: {{ $offer->moderation_reason ?: ($offer->moderation === 'held' ? 'The automatic check flagged something in the text.' : 'Pulse needs a person to look at this before it shows. Linking an InfoDot company helps next time.') }} {{ pulse_review_note() }}</p>
                         @endif
                         <x-slot name="end">
                             <div class="pk-cluster">

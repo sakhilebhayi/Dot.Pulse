@@ -230,6 +230,9 @@ class Onboarding extends Component
             return;
         }
 
+        // The first Floor should already hold what fits, not wait for the next scheduled run.
+        app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user);
+
         session()->put('pulse.onboarded.'.$user->id, true);
         $this->redirect(session()->pull('url.intended', pulse_route_first(['floor', 'dashboard'])), navigate: false);
     }

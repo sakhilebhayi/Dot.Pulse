@@ -163,6 +163,8 @@ return [
             'escort service', 'sugar daddy', 'sugar mummy', 'hookup', 'miracle cure', 'cure for cancer',
             'fixed matches', 'betting tips', 'adult content', 'xxx',
         ], array_map('trim', explode(',', (string) env('PULSE_HOLD_TERMS', '')))))),
+        // What a person who is waiting for a human is told about how long it takes. A target, said as a target.
+        'review_target' => env('PULSE_REVIEW_TARGET', 'one working day'),
         'max_links' => (int) env('PULSE_MOD_MAX_LINKS', 3),
         'block_links' => (int) env('PULSE_MOD_BLOCK_LINKS', 6),
         'new_account_hours' => (int) env('PULSE_MOD_NEW_ACCOUNT_HOURS', 24),
