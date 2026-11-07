@@ -39,3 +39,19 @@ Read after `R41_DOMAIN_SPEC.md`. Where this file and the spec differ, this file 
 ## Shell
 - Layout `<x-app-layout title width="wide|floor" :dial>` with slots `header` and `context`; kit components under `resources/views/components/pulse/` (props documented at the top of each file); `pulse_route($name)` returns `#` when a route is not registered; dev pages `/dev/kit` and `/dev/floor` (local/testing only).
 - Rail/Compose links point at `#` until their routes exist: UI agents register the route names listed in the spec.
+
+## Integration fixes (feat/r41-fix): what changed and what the UI may now rely on
+- Preferences are private by default and reading never writes. `NotificationPrefs::get()` returns an unsaved row; digest off; email off for matches, digest and system; in app on everywhere; email on for lines and outcomes. Stored rows are never rewritten.
+- Work history rows hold `employer` (canonical), `org` (kept equal), `hide_from_employer`. Matcher falls back to `org`. `ProfileService::card()` gives the hide flag to the person only.
+- `ContentGate::decide()` also returns `reason` and `details`; `stamp()` turns a decision into `moderation`, `moderation_reason`, `moderation_flags`. Approving clears the reason.
+- `EntityService::create(..., ['draft' => true])` and `publish()`. `restore()` on a draft publishes it. Draft and archived read differently.
+- Hiring signals lapse after `pulse.entities.hiring_signal_days` (60) unless `renewHiringSignal()`; `pulse:expire` switches stale ones off and tells owners and admins. `PulseEntity::hasHiringSignal()` is the check.
+- `TalentCohort::countFor()` returns null below 5, otherwise the band floor 5, 10 or 25; `label()` words it.
+- Who answers lines: owner, admin, responder (`Access::RESPONDER_ROLES`), also what `PulseEntityPolicy::respond` says. Editors edit listings only.
+- `pulse.onboarded` is on every signed-in page except the welcome flow, notifications, privacy and export. A profile with a headline, bio, place or open-to counts as onboarded; older profiles were backfilled. Sign-in lands on the Floor.
+- Anonymous professionals: `PulseProfile::isHiddenFrom / isLinkable / publicName / publicHeadline` are the one helper. People lists, suggestions and follow notifications never name, describe or link them. A post or comment they wrote keeps their handle (posting is public by their own act and is not the talent card), is not linked to their page (a 404 for everyone else) and never carries the talent headline. The talent card itself is reached only through signals.
+- `LineService::present()` also returns `last_message_side`, `quote_group` (asking side only) and `page` (the viewer's own page). `archive()`, `unarchive()`, `inbox(['archived' => true])`, `inbox(['entity_id' => 'none'])` for lines that are the person's own. A reply in the same second as a read stays unread.
+- `ReviewService::submit()` forces pseudonymous for a professional who has not revealed themselves on an anonymous line.
+- `PulseNeedPolicy::view` is the only rule for matched needs. Beat urls point at the offer, role (by slug), need, page or post, and fall back to `signals.show`; doors use `signals.show`.
+- `PulseProfile::OPEN_TO` gains `suppliers` and `learning`. Matching does not use them yet (only `collab` is read); they are displayed and stored.
+- Intentionally not done: a column default change for `pulse_notification_prefs.digest` (every writer sets it, and a SQLite column change is a table rebuild).
