@@ -15,10 +15,8 @@
     <header class="mq-item__head">
         <div class="mq-item__who">
             <x-pulse.kind-word :kind="$d['kind']" />
-            <span class="mq-item__by">
-                @if ($d['by']) by {{ $d['by'] }} @elseif ($d['where']) {{ $d['where'] }} @endif
-                @if ($d['by'] && $d['where']) <span class="pk-muted">{{ $d['where'] }}</span> @endif
-            </span>
+            @if ($d['by'])<span class="mq-item__by">by {{ $d['by'] }}</span>@endif
+            @if ($d['where'])<span class="pk-muted">{{ $d['where'] }}</span>@endif
             @if ($group['community'])
                 <span class="pk-muted">{{ $group['community'] }}@if ($group['private']) (private)@endif</span>
             @endif

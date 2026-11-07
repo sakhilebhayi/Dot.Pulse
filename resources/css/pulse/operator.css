@@ -6,7 +6,14 @@
 .op,
 .mq {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-lg);
+}
+
+.op > *,
+.mq > *,
+.mq-body > * {
+    min-width: 0;
 }
 
 .op-head,
@@ -107,6 +114,7 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1.1;
+    word-spacing: -0.3em;
 }
 
 .op-metric__none {
@@ -238,7 +246,7 @@
 .op-tick {
     fill: var(--c-muted);
     font-family: var(--f-mono);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .op-bar {
@@ -298,6 +306,7 @@
 /* Moderation queue */
 .mq-body {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s-md);
     max-width: 780px;
 }
@@ -326,6 +335,7 @@
 
 .mq-item {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
 }
 

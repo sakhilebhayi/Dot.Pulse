@@ -10,7 +10,7 @@
     $top = (int) (ceil($peak / $step) * $step);
     if ($top / $step > 5) { $step *= 2; $top = (int) (ceil($peak / $step) * $step); }
     if ($top % 2 === 1) { $top += 1; }
-    $W = 640; $H = 190; $L = 38; $R = 6; $T = 10; $B = 28;
+    $W = 480; $H = 180; $L = 34; $R = 6; $T = 10; $B = 28;
     $plotW = $W - $L - $R; $plotH = $H - $T - $B;
     $slot = $plotW / max(1, $n);
     $gap = $n > 45 ? 1 : 2;
