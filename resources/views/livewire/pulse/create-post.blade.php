@@ -1,4 +1,4 @@
-<div class="pk-card lg-compose">
+<div class="pk-card lg-compose" id="share">
     <button type="button" wire:click="$toggle('showForm')" class="lg-compose__open" aria-expanded="{{ $showForm ? 'true' : 'false' }}" aria-controls="compose-form">
         Share something with the community
     </button>

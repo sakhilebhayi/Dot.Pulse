@@ -25,6 +25,12 @@ class CreatePost extends Component
 
     public bool $showForm = false;
 
+    /** The compose drawer links here with ?compose=1: the form is open when the page loads. */
+    public function mount(): void
+    {
+        $this->showForm = request()->boolean('compose');
+    }
+
     protected array $rules = [
         'type' => 'required|string|in:discussion,announcement,question,idea,bug_report,release,success_story,showcase,tutorial,agent,integration,event,article,poll,video,job,marketplace',
         'title' => 'nullable|string|max:200',

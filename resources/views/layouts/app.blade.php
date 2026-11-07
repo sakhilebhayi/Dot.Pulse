@@ -189,12 +189,12 @@
     <x-pulse.drawer id="compose" title="Say what you want" side="bottom" description="Pick the thing that is true. Pulse does the introducing.">
         <div class="pk-stack" style="gap: 8px">
             @foreach ([
-                ['I need something', 'Say what you need and where. Sellers who fit will see it.', 'needs.create'],
-                ['I offer something', 'Set up a business page, then publish offers and roles.', 'entities.create'],
-                ['I want to open a door', 'Let strangers knock once, for a day or a week, about one thing.', 'door'],
-                ['I have a question or news', 'Ask the community or share an update.', 'dashboard'],
-            ] as [$name, $text, $route])
-                <a class="pk-row" href="{{ pulse_route($route) }}" style="text-decoration: none; color: inherit">
+                ['I need something', 'Say what you need and where. Sellers who fit will see it.', 'needs.create', null],
+                ['I offer something', 'Set up a business page, then publish offers and roles.', 'entities.create', null],
+                ['I want to open a door', 'Let strangers knock once, for a day or a week, about one thing.', 'door', null],
+                ['I have a question or news', 'Ask the community or share an update.', 'community.feed', '?compose=1#share'],
+            ] as [$name, $text, $route, $anchor])
+                <a class="pk-row" href="{{ pulse_route($route) }}{{ $anchor }}" style="text-decoration: none; color: inherit">
                     <span class="pk-row__main"><span class="pk-row__title">{{ $name }}</span><span class="pk-row__meta">{{ $text }}</span></span>
                 </a>
             @endforeach
