@@ -67,6 +67,36 @@ if (app()->environment('local', 'testing')) {
     Route::view('/dev/floor', 'dev.floor')->name('dev.floor');
 }
 // --- /shell ---
+// --- dev ---
+// Local-only sign-in for the demo world (php artisan pulse:demo-seed) and the end-to-end journeys. Registered only
+// locally and under test: in any other environment this route does not exist (a 404). `{who}` is a user id or email,
+// `?to=/path` an optional landing path on this app.
+if (app()->environment('local', 'testing')) {
+    Route::get('/dev/login/{who}', function (Illuminate\Http\Request $request, string $who) {
+        abort_unless(app()->environment('local', 'testing'), 404);
+
+        $user = ctype_digit($who) ? User::find((int) $who) : User::where('email', $who)->first();
+        abort_if($user === null, 404);
+
+        Illuminate\Support\Facades\Auth::login($user);
+        $request->session()->regenerate();
+
+        $to = (string) $request->query('to', '');
+        $safe = $to !== '' && $to[0] === '/' && ! str_starts_with($to, '//') && ! str_contains($to, '\\');
+
+        return redirect($safe ? $to : route('floor'));
+    })->name('dev.login');
+
+    // Ends the dev session so a journey can sign in as someone else in the same browser context.
+    Route::get('/dev/logout', function (Illuminate\Http\Request $request) {
+        Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    })->name('dev.logout');
+}
+// --- end dev ---
 // --- lines ---
 // The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1'])
