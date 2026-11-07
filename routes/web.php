@@ -139,3 +139,66 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         ->name('me.export');
 });
 // --- end me ---
+// --- business ---
+// Business pages, offers, roles and needs (UI agent U2). Every page re-checks its policy; a page, offer, role or need
+// a person may not see is a 404, never a 403, so the route does not confirm that it exists.
+Route::get('/b/{entity:slug}', function (App\Models\PulseEntity $entity) {
+    abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity), 404);
+
+    return view('pulse.business.show', [
+        'entity' => $entity,
+        'data' => App\Livewire\Pulse\Business\Support\EntityView::data($entity, auth()->user()),
+    ]);
+})->name('entities.show');
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');
+
+    Route::get('/b/{entity:slug}/o/{offer:slug}', function (App\Models\PulseEntity $entity, App\Models\PulseOffer $offer) {
+        abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity) && Illuminate\Support\Facades\Gate::allows('view', $offer), 404);
+
+        return view('pulse.business.offer', ['entity' => $entity, 'offer' => $offer]);
+    })->name('offers.show');
+
+    Route::get('/b/{entity:slug}/r/{role:slug}', function (App\Models\PulseEntity $entity, App\Models\PulseRole $role) {
+        // A closed or filled role still answers, so the people who applied can see how it ended.
+        $ended = in_array($role->status, ['closed', 'filled'], true) && $role->moderation === 'approved' && $entity->isLive();
+        abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity) && (Illuminate\Support\Facades\Gate::allows('view', $role) || $ended), 404);
+
+        return view('pulse.business.role', ['entity' => $entity, 'role' => $role]);
+    })->name('roles.show');
+
+    $manage = function (App\Models\PulseEntity $entity, string $tab = 'overview') {
+        $role = $entity->memberRole(auth()->user());
+        abort_if($role === null, 404);
+
+        $allowed = match ($tab) {
+            'page', 'verify' => in_array($role, ['owner', 'admin'], true),
+            'offers', 'roles' => in_array($role, ['owner', 'admin', 'editor'], true),
+            'team' => in_array($role, ['owner', 'admin'], true),
+            'lines' => App\Services\Pulse\Lines\Access::canRespondFor(auth()->user(), $entity),
+            default => true,
+        };
+        abort_unless($allowed, 403);
+
+        return view('pulse.business.manage', ['entity' => $entity, 'tab' => $tab, 'myRole' => $role]);
+    };
+
+    Route::get('/b/{entity:slug}/manage', $manage)->name('entities.manage');
+    foreach (['page', 'offers', 'roles', 'team', 'lines', 'verify'] as $tab) {
+        Route::get('/b/{entity:slug}/manage/'.$tab, $manage)->defaults('tab', $tab)->name('entities.manage.'.$tab);
+    }
+
+    Route::get('/need/new', fn () => view('pulse.need.create'))->name('needs.create');
+
+    Route::get('/need/{need}', function (App\Models\PulseNeed $need) {
+        return view('pulse.need.show', ['need' => App\Livewire\Pulse\Need\NeedPage::authorised($need)]);
+    })->whereNumber('need')->name('needs.show');
+
+    Route::get('/need/{need}/edit', function (App\Models\PulseNeed $need) {
+        abort_unless($need->user_id === auth()->id(), 404);
+
+        return view('pulse.need.edit', ['need' => $need]);
+    })->whereNumber('need')->name('needs.edit');
+});
+// --- end business ---

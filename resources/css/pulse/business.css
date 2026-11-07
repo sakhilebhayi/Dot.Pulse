@@ -1,0 +1,692 @@
+/*
+ * Business side: pages, offers, roles, needs, manage tabs. Prefix bz-. Built on the kit (pk-*) and the tokens; no colour
+ * or font is declared here. Flat, one yellow thing leading, no gradients or glass.
+ */
+
+.bz {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-lg);
+    min-width: 0;
+}
+
+.bz h2 {
+    font-size: 1.25rem;
+}
+
+.bz-pagetitle {
+    font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.5rem);
+    line-height: 1;
+}
+
+.bz-plain {
+    margin: 8px 0 0;
+    padding-left: 18px;
+}
+
+/* ---------- Notices and messages ---------- */
+.bz-notice {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+    color: var(--c-ink);
+}
+
+.bz-notice > svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.bz-notice p + p,
+.bz-notice strong + p {
+    margin-top: 4px;
+}
+
+.bz-notice--warn {
+    background: var(--c-warn-wash);
+    border-color: var(--c-warn);
+}
+
+.bz-notice--bad {
+    background: var(--c-bad-wash);
+    border-color: var(--c-bad);
+}
+
+.bz-say {
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.bz-say--good {
+    color: var(--c-good);
+}
+
+.bz-say--warn {
+    color: var(--c-warn);
+}
+
+.bz-panel {
+    margin-top: var(--s-md);
+    padding: 16px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+}
+
+.bz-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm);
+}
+
+.bz-state p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-sm);
+}
+
+/* ---------- Forms ---------- */
+.bz-form {
+    display: grid;
+    gap: var(--s-lg);
+    max-width: 760px;
+}
+
+.bz-block {
+    display: grid;
+    gap: var(--s-md);
+    padding: 20px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+}
+
+.bz-block > h2,
+.bz-block > h3 {
+    margin-bottom: -4px;
+}
+
+.bz-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-md);
+    align-items: start;
+}
+
+.bz-pair--end {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+    align-items: end;
+}
+
+.bz-combo {
+    position: relative;
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.bz-suggest {
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    box-shadow: 0 8px 24px var(--c-shadow-float);
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.bz-suggest button {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: var(--tap);
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bz-suggest button:hover,
+.bz-suggest button:focus-visible {
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+}
+
+.bz-suggest button span {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.bz-suggest button:hover span,
+.bz-suggest button:focus-visible span {
+    color: var(--c-on-signal);
+}
+
+.bz-chosen {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.bz-chosen button,
+.bz-tagx {
+    border: 0;
+    background: transparent;
+    color: var(--c-link);
+    font: inherit;
+    font-size: var(--t-small);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.bz-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-sm) var(--s-md);
+}
+
+.bz-select-sm {
+    width: auto;
+    min-width: 130px;
+}
+
+.bz-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bz-tags li {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.bz-tagx {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    text-decoration: none;
+    color: var(--c-ink);
+}
+
+.bz-radios {
+    display: grid;
+    gap: 10px;
+    border: 0;
+    padding: 0;
+}
+
+.bz-radios legend {
+    margin-bottom: 8px;
+    font-size: var(--t-small);
+    font-weight: 700;
+    font-stretch: 104%;
+}
+
+.bz-radio {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    cursor: pointer;
+}
+
+.bz-radio:has(input:checked) {
+    border-color: var(--c-ink);
+    box-shadow: inset 4px 0 0 var(--c-signal);
+}
+
+.bz-radio input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--c-field);
+}
+
+.bz-radio:has(input:focus-visible) {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+.bz-radio strong {
+    display: block;
+}
+
+/* ---------- Pictures ---------- */
+.bz-pics {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: var(--s-lg);
+    align-items: start;
+}
+
+.bz-pic {
+    display: grid;
+    gap: var(--s-sm);
+    min-width: 0;
+}
+
+.bz-frame {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px dashed var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.bz-frame--logo {
+    width: 120px;
+    aspect-ratio: 1;
+}
+
+.bz-frame--cover {
+    width: 100%;
+    aspect-ratio: 4 / 1;
+}
+
+.bz-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.bz-frame:has(img) {
+    border-style: solid;
+}
+
+.bz-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--s-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bz-gallery img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+}
+
+.bz-gallery--edit li {
+    display: grid;
+    gap: 6px;
+}
+
+/* ---------- The page ---------- */
+.bz-hero {
+    display: grid;
+    gap: var(--s-md);
+    padding: 20px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+    overflow: hidden;
+}
+
+.bz-cover {
+    margin: -20px -20px 0;
+    aspect-ratio: 4 / 1;
+    background: var(--c-raised);
+    border-bottom: 1px solid var(--c-line);
+}
+
+.bz-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.bz-id {
+    display: flex;
+    gap: var(--s-md);
+    align-items: flex-start;
+    min-width: 0;
+}
+
+.bz-id .pk-avatar {
+    flex: none;
+}
+
+.bz-id__text {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.bz-name {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.bz-tagline {
+    font-size: var(--t-lead);
+    color: var(--c-ink-2);
+}
+
+.bz-meta {
+    row-gap: 6px;
+}
+
+.bz-cta {
+    display: grid;
+    gap: var(--s-sm);
+    justify-items: start;
+}
+
+.bz-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+    gap: var(--s-lg);
+    align-items: start;
+}
+
+.bz-cols--even {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bz-main > section > h2,
+.bz-side h2 {
+    margin-bottom: 8px;
+}
+
+.bz-prose {
+    max-width: 68ch;
+    color: var(--c-ink-2);
+}
+
+.bz-list {
+    display: grid;
+    gap: 8px;
+}
+
+.bz-list .pk-row + .pk-row {
+    margin-top: 0;
+}
+
+.bz-facts {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.bz-facts > div {
+    display: grid;
+    grid-template-columns: minmax(110px, 160px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+}
+
+.bz-facts dt {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.bz-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.bz-side .bz-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+}
+
+.bz-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: var(--s-sm);
+    margin-top: 10px;
+}
+
+.bz-stats .pk-stat__value {
+    font-size: 1.25rem;
+}
+
+.bz-actionbar {
+    display: grid;
+    gap: var(--s-sm);
+}
+
+.bz-crumb {
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.bz-offerhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--s-md);
+}
+
+.bz-priceblock {
+    display: grid;
+    gap: 4px;
+    justify-items: end;
+    text-align: right;
+}
+
+.bz-pay {
+    font-size: 1.25rem;
+}
+
+.bz-ladder summary {
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: var(--t-small);
+    cursor: pointer;
+}
+
+.bz-ladder[open] summary {
+    margin-bottom: 8px;
+}
+
+.bz-from {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+}
+
+.bz-from > span {
+    display: grid;
+    min-width: 0;
+}
+
+.bz-quote {
+    display: grid;
+    gap: var(--s-sm);
+}
+
+.bz-quote:empty {
+    display: none;
+}
+
+/* ---------- Manage ---------- */
+.bz-tabs {
+    margin-bottom: 0;
+}
+
+.bz-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm);
+}
+
+.bz-todos {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bz-todos a {
+    display: block;
+    padding: 10px 12px 10px 16px;
+    border-left: 4px solid var(--c-signal);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    background: var(--c-raised);
+    color: var(--c-ink);
+    text-decoration: none;
+}
+
+.bz-todos a:hover {
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+}
+
+.bz-signal {
+    display: grid;
+    gap: var(--s-md);
+}
+
+/* The Knock sheet is a shared component styled by the Lines pass; on these pages it opens inline under its button. */
+.bz .pk-knock {
+    display: grid;
+    gap: var(--s-sm);
+    justify-items: start;
+    width: 100%;
+}
+
+.bz .pk-sheet {
+    display: grid;
+    gap: var(--s-md);
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    justify-items: start;
+}
+
+.bz .pk-sheet form {
+    display: grid;
+    gap: var(--s-md);
+    width: 100%;
+}
+
+.bz .pk-sheet .pk-title {
+    font-size: 1.25rem;
+    font-stretch: 112%;
+    font-weight: 700;
+}
+
+.bz .pk-sheet .pk-hint {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.bz .pk-sheet .pk-error {
+    color: var(--c-bad);
+    font-weight: 600;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 859.98px) {
+    .bz-cols,
+    .bz-cols--even,
+    .bz-pair,
+    .bz-pics {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bz-pair--end {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+    }
+
+    .bz-hero {
+        padding: 16px;
+    }
+
+    .bz-cover {
+        margin: -16px -16px 0;
+        aspect-ratio: 3 / 1;
+    }
+
+    .bz-frame--cover {
+        aspect-ratio: 3 / 1;
+    }
+
+    .bz-id {
+        flex-direction: column;
+    }
+
+    .bz-priceblock {
+        justify-items: start;
+        text-align: left;
+    }
+
+    .bz-facts > div {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+
+    .bz-block {
+        padding: 16px;
+    }
+
+    .bz-form {
+        max-width: none;
+    }
+
+    .bz .pk-row {
+        flex-wrap: wrap;
+    }
+
+    .bz .pk-row__end {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bz * {
+        scroll-behavior: auto;
+    }
+}
