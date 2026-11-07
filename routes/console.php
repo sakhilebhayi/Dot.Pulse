@@ -19,12 +19,13 @@ Schedule::command('pulse:publish-metrics')->dailyAt('00:10')->timezone('UTC')->w
 // --- lines ---
 // Expire stale quote slips, close requests nobody answered in 14 days (and tell the sender), lapse open doors, and
 // reveal reviews whose blind period is over.
-Schedule::command('pulse:lines:sweep')->hourly()->withoutOverlapping();
+Schedule::command('pulse:lines:sweep')->hourly()->withoutOverlapping(55);
 // --- end lines ---
 // --- R-41 discovery (D2) ---
 // The host has ONE shared crontab, so every entry here is guarded against overlapping itself.
-Schedule::command('pulse:index')->hourly()->withoutOverlapping();
-Schedule::command('pulse:match')->everyTenMinutes()->withoutOverlapping();
-Schedule::command('pulse:digest')->hourly()->withoutOverlapping();
-Schedule::command('pulse:expire')->hourly()->withoutOverlapping();
+// The lock expires (in minutes) so a run that died mid-way cannot hold the shared crontab's slot for a day.
+Schedule::command('pulse:index')->hourly()->withoutOverlapping(55);
+Schedule::command('pulse:match')->everyTenMinutes()->withoutOverlapping(15);
+Schedule::command('pulse:digest')->hourly()->withoutOverlapping(55);
+Schedule::command('pulse:expire')->hourly()->withoutOverlapping(55);
 // --- end R-41 discovery (D2) ---
