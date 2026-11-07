@@ -314,7 +314,9 @@ class SignalIndexer
             $place = self::regionOf($place);
         }
 
-        $scrub = fn (?string $text) => $this->scrub($text, $user->name, $user->email);
+        // An anonymous person must not be named through the words they typed either: the places they have worked go too.
+        $orgs = $anonymous ? collect((array) $profile->work_history)->map(fn ($j) => is_array($j) ? (string) ($j['org'] ?? $j['employer'] ?? '') : '')->filter(fn ($o) => mb_strlen(trim($o)) >= 3)->values()->all() : [];
+        $scrub = fn (?string $text) => $this->scrub($text, $user->name, $user->email, $orgs);
         $skills = array_values(array_filter((array) $profile->skills));
         $band = self::experienceBand($profile->experience_years);
 
@@ -546,12 +548,18 @@ class SignalIndexer
     }
 
     /** Removes a person's name parts, email and contact details from text that must not identify them. */
-    private function scrub(?string $text, string $name, string $email): ?string
+    private function scrub(?string $text, string $name, string $email, array $phrases = []): ?string
     {
         $text = Sanitizer::withoutContactDetails($text);
 
         if ($text === null) {
             return null;
+        }
+
+        // Whole phrases first (an employer's name), longest first, so a part of one is not left behind.
+        usort($phrases, fn ($a, $b) => mb_strlen($b) <=> mb_strlen($a));
+        foreach ($phrases as $phrase) {
+            $text = (string) preg_replace('/'.preg_quote(trim($phrase), '/').'/iu', '', $text);
         }
 
         $parts = array_filter(preg_split('/[\s.\-_]+/u', $name.' '.Str::before($email, '@')) ?: [], fn ($p) => mb_strlen($p) >= 3);

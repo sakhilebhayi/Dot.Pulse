@@ -61,7 +61,7 @@ final class Beat
             'url' => $this->url,
             'topics' => $this->topics,
             'subject_type' => $this->signal->subject_type,
-            'subject_id' => $this->signal->subject_id,
+            'subject_id' => $this->from['anonymous'] ? null : $this->signal->subject_id,
             'anonymous' => (bool) $this->signal->anonymous,
         ];
     }
