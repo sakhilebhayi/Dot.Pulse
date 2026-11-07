@@ -49,6 +49,9 @@ class SecurityHeaders
         }
 
         $response->headers->remove('X-Powered-By');
+        if (! headers_sent()) {
+            header_remove('X-Powered-By'); // PHP adds this one itself (expose_php)
+        }
 
         return $response;
     }
