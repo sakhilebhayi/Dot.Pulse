@@ -375,6 +375,22 @@ class AnonymousInviteTest extends TestCase
         $this->assertSame($this->employer->id, $review->reviewable_id);
     }
 
+    public function test_a_hidden_professional_review_is_forced_pseudonymous_until_they_reveal_themselves(): void
+    {
+        $c = $this->invite();
+        $this->lines()->accept($this->pro, $c);
+        $outcomes = app(OutcomeService::class);
+        $outcomes->propose($this->recruiter, $c->fresh(), 'hired');
+        $outcomes->confirm($this->pro, $c->fresh());
+
+        $review = app(ReviewService::class)->submit($this->pro, $c->fresh(), ['rating' => 5, 'body' => 'Fair and quick.', 'pseudonymous' => false]);
+
+        $this->assertTrue($review->pseudonymous, 'the form said named, the service says no');
+        $presented = app(ReviewService::class)->present($review->load('author'));
+        $this->assertStringNotContainsString(explode(' ', $this->pro->name)[0], $presented['author']);
+        $this->assertSame('A person who was hired', $presented['author']);
+    }
+
     public function test_reporting_an_anonymous_line_works_for_the_page_without_learning_who(): void
     {
         $c = $this->invite();

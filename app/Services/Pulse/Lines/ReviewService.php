@@ -99,8 +99,12 @@ class ReviewService
 
         $side = Access::side($by, $c);
 
+        // A professional who has not revealed themselves on an anonymous line is never named, whatever the form said:
+        // a public review under their name would undo the anonymity the line was built on.
+        $pseudonymous = (bool) ($r['pseudonymous'] ?? false) || ($c->identity_hidden && $side === 'recipient' && $c->entity_id === null);
+
         try {
-            $review = DB::transaction(function () use ($by, $c, $target, $rating, $body, $r, $verdict, $side) {
+            $review = DB::transaction(function () use ($by, $c, $target, $rating, $body, $pseudonymous, $verdict, $side) {
                 $review = PulseReview::create([
                     'user_id' => $by->id,
                     'reviewable_type' => $target[0],
@@ -111,7 +115,7 @@ class ReviewService
                     'conversation_id' => $c->id,
                     'reviewer_side' => $side,
                     'outcome' => $c->outcome,
-                    'pseudonymous' => (bool) ($r['pseudonymous'] ?? false),
+                    'pseudonymous' => $pseudonymous,
                     'moderation' => $verdict['verdict'] === 'hold' ? 'held' : 'approved',
                 ]);
 
