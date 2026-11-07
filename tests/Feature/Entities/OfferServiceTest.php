@@ -294,7 +294,7 @@ class OfferServiceTest extends EntitiesTestCase
         $offer = $this->service()->create($owner, $entity, $this->offerData() + ['publish' => true]);
         $this->assertSame('live', $this->signal($offer)->status);
 
-        $entity->forceFill(['moderation' => 'held'])->save();
+        $entity->update(['moderation' => 'held']);
         $this->assertSame('held', $this->signal($offer)->status);
 
         $entity->forceFill(['moderation' => 'approved', 'status' => 'suspended'])->save();

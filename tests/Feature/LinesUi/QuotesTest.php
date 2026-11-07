@@ -13,7 +13,6 @@ use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\QuoteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\LinesFixtures;
 use Tests\TestCase;
@@ -27,7 +26,7 @@ class QuotesTest extends TestCase
     private function provider(string $name = 'Moyo Plumbing', string $offer = 'Geyser repair'): array
     {
         $page = $this->page(null, ['name' => $name, 'contact_policy' => 'context']);
-        DB::table('pulse_entities')->where('id', $page->id)->update(['moderation' => 'approved']);
+        $page->update(['moderation' => 'approved']);
         $this->offer($page, ['title' => $offer]);
 
         return [$page, $this->responderOf($page)];

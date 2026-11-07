@@ -39,7 +39,7 @@ class OnboardedGateTest extends MeTestCase
     public function test_a_public_business_page_and_the_post_pages_send_a_signed_in_newcomer_to_the_flow_but_not_a_guest(): void
     {
         $entity = $this->dEntity($this->dUser(), ['name' => 'Karoo Books']);
-        $entity->forceFill(['moderation' => 'approved'])->save();
+        $entity->update(['moderation' => 'approved']);
 
         $this->get(route('entities.show', ['entity' => $entity->slug]))->assertOk();
         $this->actingAs($this->newcomer())->get(route('entities.show', ['entity' => $entity->slug]))->assertRedirect(route('onboarding'));

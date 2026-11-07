@@ -349,7 +349,7 @@ class EntityServiceTest extends EntitiesTestCase
     {
         $owner = $this->person();
         $entity = $this->service()->create($owner, ['name' => 'Karoo Books', 'is_seller' => true]);
-        $entity->forceFill(['moderation' => 'approved'])->save();
+        $entity->update(['moderation' => 'approved']);
         $offer = PulseOffer::factory()->create(['entity_id' => $entity->id, 'created_by' => $owner->id]);
 
         $this->assertSame('live', PulseSignal::where('subject_type', 'offer')->where('subject_id', $offer->id)->value('status'));
