@@ -1285,6 +1285,19 @@ select.pk-control {
     animation-name: pk-panel-bottom;
 }
 
+/* On a wide screen the bottom sheet is a centred card with all four corners round, not a strip stuck to the floor. */
+@media (min-width: 860px) {
+    .pk-dialog--bottom .pk-dialog__panel {
+        top: 50%;
+        bottom: auto;
+        width: min(560px, calc(100% - 48px));
+        max-height: calc(100% - 48px);
+        transform: translate(-50%, -50%);
+        border-radius: var(--r-lg);
+        animation-name: pk-panel-in;
+    }
+}
+
 .pk-dialog--center .pk-dialog__panel {
     top: 50%;
     left: 50%;
@@ -1517,4 +1530,35 @@ select.pk-control {
 /* An open sheet or drawer holds the page still behind it. */
 body:has(dialog.pk-dialog[open]) {
     overflow: hidden;
+}
+
+/* Small controls keep their look and get a 44px hit area on touch: the invisible padding is the target. */
+@media (pointer: coarse), (max-width: 859.98px) {
+    .bz-tagx,
+    .me-chip button,
+    .bz-chosen button,
+    .ln-linkbtn,
+    .fl-link,
+    .bz-ladder summary,
+    .ln-msg__tools .ln-linkbtn {
+        position: relative;
+        min-height: 32px;
+    }
+
+    .bz-tagx::after,
+    .me-chip button::after,
+    .bz-chosen button::after,
+    .ln-linkbtn::after,
+    .fl-link::after,
+    .bz-ladder summary::after {
+        content: "";
+        position: absolute;
+        inset: -8px -6px;
+    }
+
+    .pk-ladder a,
+    .pk-rung a {
+        display: inline-block;
+        padding-block: 14px;
+    }
 }

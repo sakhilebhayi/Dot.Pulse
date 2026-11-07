@@ -33,7 +33,7 @@
                         </div>
                         <div class="pk-row__end">
                             @if ($unread)
-                                <x-pulse.button variant="quiet" size="sm" wire:click="markRead('{{ $n->id }}')" type="button">Mark read</x-pulse.button>
+                                <x-pulse.button variant="ghost" size="sm" wire:click="markRead('{{ $n->id }}')" type="button">Mark read</x-pulse.button>
                             @else
                                 <x-pulse.button variant="quiet" size="sm" wire:click="markUnread('{{ $n->id }}')" type="button">Mark unread</x-pulse.button>
                             @endif

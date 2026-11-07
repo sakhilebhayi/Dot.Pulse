@@ -20,7 +20,7 @@
     <x-pulse.drawer
         :id="$dialogId"
         :title="$sent ? 'Sent.' : ($kind === 'application' ? 'Say why you fit.' : ($kind === 'invite' ? 'Say why you are writing.' : 'Say what you want.'))"
-        :description="$sent ? null : ($heading !== '' ? 'About: '.$heading : null)"
+        :description="$heading !== '' ? 'About: '.$heading : null"
         side="bottom"
         wire:ignore.self
         x-ref="sheet"
