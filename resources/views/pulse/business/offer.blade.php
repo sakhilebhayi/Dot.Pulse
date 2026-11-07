@@ -72,7 +72,7 @@
                         <span><strong>{{ $entity->name }}</strong><span class="pk-muted">{{ $summary['label'] }}</span></span>
                     </a>
                     @if ($isMember)
-                        <x-pulse.button variant="signal" :href="route('entities.manage.offers', ['entity' => $entity->slug])" :disabled="! $manager">Edit this offer</x-pulse.button>
+                        @if ($manager)<x-pulse.button variant="signal" :href="route('entities.manage.offers', ['entity' => $entity->slug])">Edit this offer</x-pulse.button>@else<p class="pk-muted">You are on this page's team. Only owners, admins and editors can change its offers.</p>@endif
                     @elseif ($offer->isLive())
                         @if ($offer->availability === 'sold_out')
                             <p class="pk-muted">This is sold out. You can still knock to ask when it is back.</p>

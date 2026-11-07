@@ -85,7 +85,7 @@
                         <span><strong>{{ $entity->name }}</strong><span class="pk-muted">{{ $summary['label'] }}</span></span>
                     </a>
                     @if ($isMember)
-                        <x-pulse.button variant="signal" :href="route('entities.manage.roles', ['entity' => $entity->slug])" :disabled="! $manager">Edit this role</x-pulse.button>
+                        @if ($manager)<x-pulse.button variant="signal" :href="route('entities.manage.roles', ['entity' => $entity->slug])">Edit this role</x-pulse.button>@else<p class="pk-muted">You are on this page's team. Only owners, admins and editors can change its roles.</p>@endif
                     @elseif ($open)
                         @if ($role->apply_mode === 'external_url' && $role->apply_url)
                             <x-pulse.button variant="signal" :href="$role->apply_url" target="_blank" rel="nofollow noopener ugc">Apply on their site</x-pulse.button>
