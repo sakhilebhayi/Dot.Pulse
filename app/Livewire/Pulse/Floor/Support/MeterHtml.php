@@ -20,10 +20,14 @@ final class MeterHtml
     /**
      * @param  list<array<string, mixed>>  $reasons
      */
-    public static function render(array $reasons, ?int $matchId, bool $removable = true, string $themLabel = 'Them'): HtmlString
+    public static function render(array $reasons, ?int $matchId, bool $removable = true, string $themLabel = 'Them', bool $mini = false): HtmlString
     {
         if ($reasons === []) {
             return new HtmlString('');
+        }
+
+        if ($mini) {
+            return new HtmlString(Blade::render('<x-pulse.sync-meter :reasons="$reasons" :mini="true" />', ['reasons' => $reasons]));
         }
 
         $remove = $removable && $matchId ? 'removeReason.bind(null, '.(int) $matchId.')' : null;

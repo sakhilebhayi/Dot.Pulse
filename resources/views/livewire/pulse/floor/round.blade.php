@@ -27,13 +27,21 @@
         @if ($fresh !== [])
             <h2 class="sr-only">The round</h2>
             <div class="pk-enter fl-list">
+                {{-- Two densities: the top three carry the whole strand, the rest a small strand and one line of reasons. --}}
                 @foreach ($fresh as $b)
-                    @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => ! $loop->first, 'lead' => $loop->first])
+                    @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => ! ($loop->first || ($loop->index < 3 && count($b['reasons'] ?? []) >= 2)), 'lead' => $loop->first || ($loop->index < 3 && count($b['reasons'] ?? []) >= 2), 'first' => $loop->first])
                 @endforeach
             </div>
         @endif
 
-        @if ($hasMore)
+        @if (! $hasMore && $fresh === [] && $earlier !== [])
+            {{-- A revisit with nothing new: one line, then what was seen. The beats (and their strands) stay the first thing on screen. --}}
+            <p class="fl-caught" data-floor-end>
+                <strong>That's the round. You are caught up.</strong>
+                @if ($readyAt)<span>Next round at <span class="pk-mono">{{ $readyAt->format('H:i') }}</span>.</span>@endif
+                <a href="{{ pulse_route('saved') }}">Your saved beats</a>
+            </p>
+        @elseif ($hasMore)
             <div class="fl-more">
                 <x-pulse.button variant="primary" wire:click="showNext" wire:loading.attr="disabled" wire:target="showNext">Show the next batch</x-pulse.button>
                 @if ($waiting > 0)

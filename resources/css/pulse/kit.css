@@ -355,6 +355,23 @@
     color: var(--c-muted);
 }
 
+/* Where it is is a fact about the listing, said quietly. It is never one of the reasons. */
+.pk-beat__near {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 500;
+}
+
+.pk-beat__near::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin: 0 8px 2px 0;
+    border-radius: 50%;
+    background: var(--c-muted);
+}
+
 .pk-beat__title {
     font-size: 1.3125rem;
     font-stretch: 110%;
@@ -577,6 +594,24 @@
     .pk-meter--cols .pk-meter__reason button {
         margin: 4px 0 0;
     }
+}
+
+/* The small strand of a compact row: two lines and their nodes, no words. The chips beside it are the reasons. */
+.pk-meter--mini {
+    --meter-h: 26px;
+    width: 96px;
+    flex: none;
+}
+
+.pk-meter--mini .pk-meter__node {
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-width: 2px;
+}
+
+.pk-meter--mini .pk-meter__node::after {
+    display: none;
 }
 
 /* Draw once on first view. Scripting adds .is-pending only when motion is allowed. */

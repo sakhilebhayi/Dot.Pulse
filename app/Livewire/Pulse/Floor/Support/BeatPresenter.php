@@ -24,13 +24,20 @@ final class BeatPresenter
     /** Kinds that start a conversation. Asks, news and events are opened and answered on their own page. */
     private const KNOCKABLE = ['offer', 'need', 'role', 'talent', 'door', 'business', 'collab'];
 
+    /**
+     * Facts about a listing, not reasons it fits you: when it was posted, where it is, how quickly the seller replies.
+     * They are a label ("Just now", the place, "Near you"), never a node on the strand or a chip. The matcher still
+     * scores them; this is presentation only. A beat whose only reasons are these says so ("Nearby, no other reason yet").
+     */
+    public const FACTS = ['fresh', 'responsive', 'place_city', 'place_region', 'place_country'];
+
     /** @var array<int, int|null> viewer id => employer page id, looked up once per presenter */
     private array $employers = [];
 
     /**
      * @return array<string, mixed>
      */
-    public function present(Beat $beat, User $viewer): array
+    public function present(Beat $beat, User $viewer, bool $listing = false): array
     {
         $row = $beat->toArray();
         $signal = $beat->signal;
@@ -39,6 +46,16 @@ final class BeatPresenter
         // the views read: the pre-check (can_knock), topics, the raw timestamp, the subject type and the beat's own url
         // are decided or shown elsewhere and are left out.
         unset($row['can_knock'], $row['topics'], $row['published_at'], $row['subject_type'], $row['url']);
+
+        $codes = array_column($row['reasons'] ?? [], 'code');
+        $row['near'] = array_intersect(['place_city', 'place_region'], $codes) !== [];
+
+        // In a list (the Floor, Saved) the facts are labels. A beat's own page keeps every reason, facts included.
+        if ($listing) {
+            $row['reasons'] = array_values(array_filter($row['reasons'] ?? [], fn ($r) => ! in_array($r['code'] ?? '', self::FACTS, true)));
+        }
+
+        $row['nearby_only'] = $listing && $row['reasons'] === [] && $row['near'];
 
         $row['when'] = self::ago($beat->published_at);
         $row['expires_at'] = $signal->expires_at?->toIso8601String();
@@ -74,7 +91,7 @@ final class BeatPresenter
     {
         $out = [];
         foreach ($beats as $beat) {
-            $out[] = $this->present($beat, $viewer);
+            $out[] = $this->present($beat, $viewer, listing: true);
         }
 
         return $out;
