@@ -39,6 +39,11 @@ class LocalRulesTest extends TestCase
             'price with zeros' => ['Stock clearance: 100 units at R1 000 000 total, collection only from our depot in Germiston.', 'allow', null],
             'warning without payload' => ['Please be careful when buying second hand phones, always meet at a police station.', 'allow', null],
             'job without fee' => ['We are hiring a learnership coordinator in Polokwane. Apply on the Pulse page, no fees of any kind.', 'allow', null],
+            'payroll administrator title' => ['Payroll administrator wanted in Sandton. Pastel Payroll experience and a Grade 12 certificate.', 'allow', null],
+            'payroll with pay range' => ['Payroll clerk, pay between R18 000 and R22 000 per month, training provided in the first month.', 'allow', null],
+            'fee schedule job' => ['Billing administrator needed to maintain our fee schedule and send statements. Apply on the Pulse page.', 'allow', null],
+            'payment terms offer' => ['Plumbing quotes valid for 30 days. Payment terms: 50 percent deposit on acceptance, balance on completion.', 'allow', null],
+            'pay admin clerk' => ['Pay R25 000 a month for an admin clerk who can start on the first of the month in Bloemfontein.', 'allow', null],
             'normal exclamation' => ['We are open on Saturday! Come and see the new range of tiles.', 'allow', null],
 
             // -- contact details in public text wait for a person
@@ -70,6 +75,7 @@ class LocalRulesTest extends TestCase
             'fake pop only' => ['Proof of payment attached, please check your banking app and dispatch the item to Durban.', 'hold', 'scam_fake_pop'],
             'learnership fee' => ['Learnership available at our company in Cape Town. Pay a registration fee of R350 to secure your place, limited spots.', 'block', 'scam_job_fee_block'],
             'job admin fee' => ['Cleaning vacancy open immediately, deposit R200 admin fee to our account to start your application.', 'block', 'scam_job_fee_block'],
+            'registration to secure learnership' => ['Pay R500 registration to secure your learnership, spaces are limited.', 'block', 'scam_job_fee_block'],
             'fee soft' => ['Please pay the training fee R500 before the course starts on Monday.', 'hold', 'scam_job_fee'],
             'inheritance' => ['I am a barrister handling the fund of my late client, you are the next of kin of 8.5 million USD.', 'block', 'scam_advance_fee'],
             'lottery' => ['Congratulations you have won the lottery draw, send your details to claim.', 'block', 'scam_advance_fee'],
