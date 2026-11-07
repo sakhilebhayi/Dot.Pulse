@@ -57,5 +57,6 @@ if (! Features::enabled(Features::registration())) {
 // Component gallery for development, QA and screenshots. Registered only locally and under test.
 if (app()->environment('local', 'testing')) {
     Route::view('/dev/kit', 'dev.kit')->name('dev.kit');
+    Route::view('/dev/floor', 'dev.floor')->name('dev.floor');
 }
 // --- /shell ---

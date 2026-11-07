@@ -23,7 +23,7 @@
     text-decoration: none;
     white-space: nowrap;
     transition: background var(--d-quick) var(--ease), color var(--d-quick) var(--ease),
-        transform var(--d-quick) var(--ease-click), border-color var(--d-quick) var(--ease);
+        transform var(--d-quick) var(--ease), border-color var(--d-quick) var(--ease);
 }
 
 .pk-btn:hover {
@@ -98,7 +98,10 @@
 
 .pk-btn:disabled,
 .pk-btn[aria-disabled="true"] {
-    opacity: 0.5;
+    background: var(--c-raised);
+    border-color: var(--c-line);
+    color: var(--c-muted);
+    cursor: not-allowed;
     transform: none;
 }
 
@@ -175,7 +178,6 @@
     font-weight: 700;
     letter-spacing: 0.01em;
     line-height: 1.3;
-    text-transform: uppercase;
 }
 
 .pk-pill {
@@ -1159,7 +1161,7 @@ select.pk-control {
     bottom: 24px;
     display: grid;
     gap: 8px;
-    width: min(420px, calc(100vw - 32px));
+    width: min(420px, calc(100% - 32px));
     transform: translateX(-50%);
     pointer-events: none;
 }

@@ -73,6 +73,7 @@
 
     /* Type. */
     --f-ui: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-icons: "Material Symbols Rounded";
     --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
     --t-display: clamp(2.5rem, 1.35rem + 4.9vw, 4.75rem);
@@ -97,7 +98,7 @@
     --context-w: 320px;
     --tap: 44px;
     --ease: cubic-bezier(0.2, 0.9, 0.25, 1);
-    --ease-click: cubic-bezier(0.2, 1.25, 0.4, 1);
+    --ease-click: cubic-bezier(0.2, 1.12, 0.4, 1);
     --d-quick: 140ms;
     --d-base: 240ms;
 }

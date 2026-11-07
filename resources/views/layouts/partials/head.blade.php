@@ -15,6 +15,7 @@
 <link rel="preload" href="{{ asset('fonts/jetbrains-mono-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <script>
     (function () {
+        document.documentElement.classList.add('js');
         try {
             var q = location.search.match(/[?&]theme=(light|dark)\b/);
             var t = q ? q[1] : localStorage.getItem('pulse-theme');

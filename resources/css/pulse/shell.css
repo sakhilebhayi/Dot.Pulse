@@ -207,7 +207,7 @@
     right: 0;
     top: calc(100% + 8px);
     z-index: 80;
-    width: min(320px, calc(100vw - 24px));
+    width: 320px;
     max-height: calc(100dvh - var(--mast-h) - 24px);
     overflow: auto;
     padding: var(--s-sm);
@@ -423,6 +423,7 @@
     max-height: calc(100dvh - var(--mast-h) - 48px);
     overflow-y: auto;
     display: grid;
+    align-content: start;
     gap: var(--s-md);
 }
 
@@ -444,24 +445,31 @@
     color: var(--c-muted);
 }
 
-/* Context drawer below 1200 */
+/* Context drawer below 1200. Without scripting the column simply sits under the floor; the drawer needs the .js class. */
 @media (max-width: 1199.98px) {
     .sh-stage--floor.has-context {
         grid-template-columns: minmax(0, var(--floor-w));
     }
 
-    .sh-context-open {
+    .sh-context {
+        position: static;
+        max-height: none;
+        margin-top: var(--s-lg);
+    }
+
+    .js .sh-context-open {
         display: inline-flex;
     }
 
-    .sh-context {
+    .js .sh-context {
         position: fixed;
         z-index: 90;
         top: 0;
         right: 0;
         bottom: 0;
-        width: min(360px, 92vw);
+        width: min(360px, 92%);
         max-height: none;
+        margin: 0;
         padding: var(--s-lg) var(--s-md);
         background: var(--c-ground);
         box-shadow: -18px 0 44px var(--c-shadow-float);
@@ -470,20 +478,24 @@
         transition: transform var(--d-base) var(--ease), visibility 0s linear var(--d-base);
     }
 
-    .sh-context.is-open {
+    .js .sh-context.is-open {
         transform: none;
         visibility: visible;
         transition: transform var(--d-base) var(--ease), visibility 0s;
     }
 
-    .sh-context__close {
+    .js .sh-context__close {
         justify-self: end;
     }
 }
 
-@media (min-width: 1200px) {
-    .sh-context__close {
-        display: none;
+.sh-context .sh-context__close {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    .js .sh-context__close {
+        display: inline-flex;
     }
 }
 
@@ -530,6 +542,14 @@
 }
 
 @media (max-width: 859.98px) {
+    .sh-menu {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: calc(var(--mast-h) + 8px);
+        width: auto;
+    }
+
     .sh-mast {
         padding: 0 var(--s-sm) 0 var(--s-md);
         gap: var(--s-sm);

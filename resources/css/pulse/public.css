@@ -198,10 +198,20 @@
 
 @media (max-width: 859.98px) {
     .lp-steps {
+        position: relative;
         grid-template-columns: minmax(0, 1fr);
         border-top: 0;
-        border-left: 3px solid var(--c-ink);
         margin-left: 15px;
+    }
+
+    .lp-steps::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 3px;
+        background: var(--c-ink);
     }
 
     .lp-steps li {

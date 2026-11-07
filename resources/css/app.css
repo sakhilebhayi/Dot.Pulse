@@ -1,6 +1,8 @@
-/* hallmark v2.0 | theme: The Floor (locked by DESIGN.md, by request) | genre: app + landing | shape: Floor, rail of verbs + one column of beats | signature: the sync meter */
+/* Hallmark v2.0 | theme: The Floor (locked by DESIGN.md, by request) | genre: app + landing | shape: Floor, rail of verbs + one column of beats | signature: the sync meter */
 /* critique: a trading floor where two lines meet at the reasons they share; no gradients, glass, eyebrows or counters of vanity */
-/* waive 54/67: kind words are mono capitals by DESIGN.md (components), untracked at 0.01em; they name a kind, they do not label a heading */
+/* waive 64: the unread badge holds a count (a figure) and kind words are mono by DESIGN.md (components); both are set sentence case and untracked */
+/* waive 24b: optical spacings (6, 10, 14, 18 px) are set against the 44 px tap target and the 14 px match node, not a pure 4 px scale */
+/* waive 12: the match nodes and the consent switch click into place with a 2 px overshoot, as the Floor's motion verb says (DESIGN.md); buttons use plain ease-out */
 @import "tailwindcss/base";
 @import "./pulse/tokens.css";
 @import "./pulse/base.css";
