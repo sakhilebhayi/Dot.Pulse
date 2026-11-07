@@ -85,6 +85,6 @@ export default {
     await j.go(naledi, '/search?q=geyser');
     j.check('the plumber no longer finds the closed need in search', !(await j.text(naledi)).includes('Burst geyser needs replacing this week'));
     j.tick();
-    j.check('and after a matching run nobody has a match on it', j.value(`select count(*) from pulse_matches where signal_id = ?`, needSignal.id) === 0);
+    j.check('and, matching run or not, the plumber can no longer open it (a 404, not a stale page)', await j.status(naledi, `/need/${need.id}`) === 404 && await j.status(naledi, `/s/${needSignal.id}`) === 404);
   },
 };
