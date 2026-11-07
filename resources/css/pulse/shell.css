@@ -384,6 +384,13 @@
     font-weight: 700;
 }
 
+.sh-verb__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .sh-rail__sub {
     padding: 0 12px 6px;
     color: var(--c-muted);

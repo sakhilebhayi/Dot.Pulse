@@ -70,3 +70,46 @@ if (! function_exists('pulse_route_first')) {
         return '#';
     }
 }
+
+if (! function_exists('pulse_my_businesses')) {
+    /**
+     * The business pages the signed-in person belongs to, for the rail and the account menu: name, slug, their role.
+     * One small query per request, and nothing at all for a visitor or for someone who runs no page.
+     *
+     * @return list<array{name: string, slug: string, role: string}>
+     */
+    function pulse_my_businesses(): array
+    {
+        $id = auth()->id();
+
+        if ($id === null) {
+            return [];
+        }
+
+        // Held on the request, so a long-lived process (a test run, Octane) never serves one person's pages to the next.
+        $request = request();
+        $key = 'pulse.businesses.'.$id;
+
+        if ($request->attributes->has($key)) {
+            return $request->attributes->get($key);
+        }
+
+        try {
+            $rows = \App\Models\PulseEntityMember::query()
+                ->join('pulse_entities as e', 'e.id', '=', 'pulse_entity_members.entity_id')
+                ->where('pulse_entity_members.user_id', $id)
+                ->whereNull('e.deleted_at')
+                ->orderBy('e.name')
+                ->limit(8)
+                ->get(['e.name', 'e.slug', 'pulse_entity_members.role'])
+                ->map(fn ($r) => ['name' => (string) $r->name, 'slug' => (string) $r->slug, 'role' => (string) $r->role])
+                ->all();
+        } catch (Throwable) {
+            $rows = [];
+        }
+
+        $request->attributes->set($key, $rows);
+
+        return $rows;
+    }
+}
