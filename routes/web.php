@@ -84,3 +84,27 @@ Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Cont
     ->middleware(['signed', 'throttle:20,1'])
     ->name('pulse.digest.unsubscribe');
 // --- end discovery digest (D2) ---
+// --- me ---
+// People: welcome flow, the Me hub (profile, discoverability, settings, notifications, privacy), data download.
+// `pulse.onboarded` sends a signed-in person who has not finished the welcome flow there once; other areas adopt it
+// with ->middleware('pulse.onboarded'). Notifications and privacy are deliberately outside it: reading what Pulse
+// holds about you, and erasing it, are never gated behind a sign-up flow.
+Route::aliasMiddleware('pulse.onboarded', \App\Http\Middleware\EnsureOnboarded::class);
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::view('/welcome-in', 'pulse.me.onboarding')->name('onboarding');
+
+    Route::middleware('pulse.onboarded')->group(function () {
+        Route::redirect('/me', '/me/profile')->name('me');
+        Route::view('/me/profile', 'pulse.me.profile')->name('me.profile');
+        Route::view('/me/discoverability', 'pulse.me.discover')->name('me.discover');
+        Route::view('/me/settings', 'pulse.me.settings')->name('me.settings');
+    });
+
+    Route::view('/me/notifications', 'pulse.me.notifications')->name('me.notifications');
+    Route::view('/me/privacy', 'pulse.me.privacy')->name('me.privacy');
+    Route::get('/me/privacy/export', \App\Http\Controllers\Pulse\PrivacyExportController::class)
+        ->middleware('throttle:3,10')
+        ->name('me.export');
+});
+// --- end me ---

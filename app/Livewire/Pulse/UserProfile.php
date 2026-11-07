@@ -3,7 +3,10 @@
 namespace App\Livewire\Pulse;
 
 use App\Models\PulsePost;
+use App\Models\PulseProfile;
 use App\Models\User;
+use App\Services\Pulse\Entities\ProfileService;
+use App\Services\Pulse\Lines\ContactGate;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -11,10 +14,14 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * The follow graph's missing UI (see User::followers()/following(), added
- * alongside this) — this is also the first public profile page in the
- * app; PulseProfile (headline/bio/skills/expertise_tags) existed with
- * nowhere to display it.
+ * A person's public page (/u/{id}), in the Floor system.
+ *
+ * What it shows depends on the discoverability the person chose (ProfileService decides the content):
+ *  - anonymous: the page does not exist for anyone but the person. It never resolves to a name, a photo or an email;
+ *    the response is the same 404 an unknown id gets.
+ *  - open: name, photo, headline, about, skills, languages, work and the rest of the card.
+ *  - off: name, their published posts, Follow, and a Knock when their contact policy allows one. Nothing else.
+ * The person themselves always sees their own full page.
  */
 class UserProfile extends Component
 {
@@ -23,6 +30,47 @@ class UserProfile extends Component
     public function mount(User $profileUser): void
     {
         $this->profileUser = $profileUser;
+
+        $mode = PulseProfile::query()->where('user_id', $profileUser->id)->value('discoverability');
+
+        if ($mode === 'anonymous' && auth()->id() !== $profileUser->id) {
+            abort(404);
+        }
+    }
+
+    #[Computed]
+    public function profile(): ?PulseProfile
+    {
+        return PulseProfile::query()->where('user_id', $this->profileUser->id)->first();
+    }
+
+    /**
+     * The card for this viewer, only when the page may show professional details: the person themselves, or an open
+     * profile whose owner is an adult who confirmed it.
+     *
+     * @return array<string, mixed>|null
+     */
+    #[Computed]
+    public function card(): ?array
+    {
+        $profile = $this->profile;
+
+        if ($profile === null || (! $this->isOwnProfile && ! ($profile->discoverability === 'open' && $profile->isAdultConfirmed()))) {
+            return null;
+        }
+
+        return app(ProfileService::class)->card($profile, auth()->user());
+    }
+
+    /** @return array{allowed: bool, mode: string, why: string, code: string, stranger: bool}|null */
+    #[Computed]
+    public function contact(): ?array
+    {
+        if ($this->isOwnProfile || auth()->user() === null) {
+            return null;
+        }
+
+        return app(ContactGate::class)->can(auth()->user(), $this->profileUser);
     }
 
     #[Computed]
@@ -56,10 +104,7 @@ class UserProfile extends Component
     }
 
     /**
-     * FollowButton (embedded in the view in place of the old inline
-     * button) owns follow/unfollow now and dispatches this browser event
-     * on every toggle -- the same sibling-component-talks-via-event shape
-     * TrendingHashtags uses for filter-by-hashtag.
+     * FollowButton owns follow/unfollow and dispatches this browser event on every toggle.
      */
     #[On('follow-toggled')]
     public function refreshCounts(): void

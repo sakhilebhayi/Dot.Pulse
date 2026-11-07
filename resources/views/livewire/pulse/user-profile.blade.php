@@ -1,94 +1,142 @@
-<div style="display:flex;flex-direction:column;gap:1rem;">
-    <div class="dot-card" style="padding:1.5rem;" x-data="{ followersOpen: false, followingOpen: false }">
-        <div class="profile-head">
-            <div class="dot-avatar" style="width:64px;height:64px;font-size:24px;flex-shrink:0;">
-                {{ strtoupper(substr($profileUser->name, 0, 1)) }}
+@php
+    $card = $this->card;
+    $profile = $this->profile;
+    $own = $this->isOwnProfile;
+    $open = $card !== null;
+    $contact = $this->contact;
+    $openLabels = \App\Livewire\Pulse\Me\Onboarding::OPEN_TO_LABELS;
+    $mode = $profile?->discoverability ?? 'off';
+    $name = $profileUser->name;
+    $typeWords = ['discussion' => 'Discussion', 'question' => 'Question', 'announcement' => 'Announcement', 'solution' => 'Solution'];
+@endphp
+<div class="up">
+    <a class="up-back" href="{{ pulse_route_first(['floor', 'dashboard']) }}">Back to the floor</a>
+
+    <header class="pk-card up-head">
+        <x-pulse.avatar :name="$name" :src="$open ? ($card['avatar_url'] ?? null) : null" size="xl" />
+        <div class="up-head__main">
+            <h1 class="up-name">{{ $name }}</h1>
+            <div class="pk-cluster">
+                @if ($open && $profile->kind === 'professional')<x-pulse.pill>Professional</x-pulse.pill>@endif
+                @if ($profile?->role && $profile->role !== 'customer')<x-pulse.pill>{{ ucfirst($profile->role) }}</x-pulse.pill>@endif
+                @if ($own)<x-pulse.pill tone="signal">This is you</x-pulse.pill>@endif
             </div>
-            <div class="profile-head-main">
-                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;">
-                    <h2 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#f4f4f5;margin:0;">{{ $profileUser->name }}</h2>
-                    @if($profileUser->pulseProfile?->is_verified)
-                        <span class="dot-badge dot-badge-accent">Verified</span>
-                    @endif
-                    @if($profileUser->pulseProfile?->role && $profileUser->pulseProfile->role !== 'customer')
-                        <span class="dot-badge dot-badge-neutral">{{ ucfirst($profileUser->pulseProfile->role) }}</span>
-                    @endif
+            @if ($open && ! empty($card['headline']))<p class="up-headline">{{ $card['headline'] }}</p>@endif
+            @if ($open && (! empty($card['place']) || ! empty($card['experience_band'])))
+                <div class="pk-cluster up-facts">
+                    @if (! empty($card['place']))<x-pulse.place-label :name="$card['place']" />@endif
+                    @if (! empty($card['experience_band']))<span class="pk-muted">{{ $card['experience_band']['label'] }} of experience</span>@endif
                 </div>
-                @if($profileUser->pulseProfile?->headline)
-                    <p style="font-size:13px;color:#a1a1aa;margin:4px 0 0;">{{ $profileUser->pulseProfile->headline }}</p>
-                @endif
-                @if($profileUser->pulseProfile?->bio)
-                    <p style="font-size:13px;color:#a1a1aa;line-height:1.6;margin:10px 0 0;">{{ $profileUser->pulseProfile->bio }}</p>
-                @endif
+            @endif
+        </div>
 
-                @if(!empty($profileUser->pulseProfile?->skills))
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
-                        @foreach($profileUser->pulseProfile->skills as $skill)
-                            <span class="dot-badge dot-badge-neutral">{{ $skill }}</span>
-                        @endforeach
-                    </div>
-                @endif
-
-                <div class="stat-row">
-                    <button @click="followersOpen = true" class="tap" style="gap:0.3em;background:none;border:none;padding:0;cursor:pointer;font:inherit;color:inherit;"><strong class="metric-val" style="color:#f4f4f5;font-weight:600;">{{ $this->followersCount }}</strong> followers</button>
-                    <button @click="followingOpen = true" class="tap" style="gap:0.3em;background:none;border:none;padding:0;cursor:pointer;font:inherit;color:inherit;"><strong class="metric-val" style="color:#f4f4f5;font-weight:600;">{{ $this->followingCount }}</strong> following</button>
-                    <span><strong class="metric-val" style="color:var(--accent);font-weight:600;">{{ $profileUser->pulseProfile?->community_points ?? 0 }}</strong> points</span>
-                    @if($profileUser->pulseProfile?->solutions_accepted)
-                        <span><strong class="metric-val" style="color:#f4f4f5;font-weight:600;">{{ $profileUser->pulseProfile->solutions_accepted }}</strong> solutions</span>
-                    @endif
-                </div>
-            </div>
-
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div class="up-actions">
+            @if ($own)
+                <x-pulse.button variant="primary" :href="pulse_route('me.profile')">Edit your profile</x-pulse.button>
+            @else
                 <livewire:pulse.follow-button :user="$profileUser" wire:key="follow-{{ $profileUser->id }}" />
+                @if ($contact && $contact['allowed'])
+                    <livewire:pulse.knock-sheet :target="['user' => $profileUser->id]" kind="intro" label="Knock" wire:key="knock-{{ $profileUser->id }}" />
+                @endif
                 @can('report', $profileUser)
                     <livewire:pulse.report-button target-type="user" :target-id="$profileUser->id" wire:key="report-user-{{ $profileUser->id }}" />
                 @endcan
-            </div>
+            @endif
         </div>
 
-        <div x-show="followersOpen" x-cloak @click.self="followersOpen = false" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:50;">
-            <div class="dot-card modal-card" @keydown.escape.window="followersOpen = false; followingOpen = false">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                    <h3 style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#f4f4f5;margin:0;">Followers</h3>
-                    <button @click="followersOpen = false" class="tap" aria-label="Close followers" style="background:none;border:none;color:#71717a;cursor:pointer;font-size:18px;line-height:1;">&times;</button>
-                </div>
-                <livewire:pulse.follow-list :user="$profileUser" mode="followers" wire:key="list-followers-{{ $profileUser->id }}" />
-            </div>
-        </div>
-
-        <div x-show="followingOpen" x-cloak @click.self="followingOpen = false" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:50;">
-            <div class="dot-card modal-card" @keydown.escape.window="followersOpen = false; followingOpen = false">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                    <h3 style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#f4f4f5;margin:0;">Following</h3>
-                    <button @click="followingOpen = false" class="tap" aria-label="Close following" style="background:none;border:none;color:#71717a;cursor:pointer;font-size:18px;line-height:1;">&times;</button>
-                </div>
-                <livewire:pulse.follow-list :user="$profileUser" mode="following" wire:key="list-following-{{ $profileUser->id }}" />
-            </div>
-        </div>
-    </div>
-
-    <div class="dot-card" style="padding:1.5rem;">
-        <h3 style="font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;color:#f4f4f5;margin:0 0 0.9rem;">Posts</h3>
-
-        @if($this->posts->isEmpty())
-            <p style="font-size:13px;color:#52525b;text-align:center;padding:1.5rem 0;margin:0;">No published posts yet.</p>
-        @else
-            <div style="display:flex;flex-direction:column;gap:2px;">
-                @foreach($this->posts as $post)
-                    <a href="{{ route('posts.show', $post) }}" class="dot-row" style="display:block;padding:12px 14px;text-decoration:none;">
-                        @if($post->title)
-                            <p style="font-size:13.5px;font-weight:600;color:#f4f4f5;margin:0;">{{ $post->title }}</p>
-                        @endif
-                        <p style="font-size:12.5px;color:#71717a;line-height:1.5;margin:3px 0 0;" class="line-clamp-2">{{ $post->body }}</p>
-                        <p style="font-size:11px;color:#3f3f46;margin:6px 0 0;">
-                            {{ str_replace('_', ' ', ucfirst($post->type)) }}
-                            @if($post->community) &middot; in {{ $post->community->name }} @endif
-                            &middot; {{ $post->created_at->diffForHumans() }}
-                        </p>
-                    </a>
-                @endforeach
-            </div>
+        @if (! $own && $contact && ! $contact['allowed'])
+            <p class="up-why"><x-pulse.icon name="lock" :size="16" /><span>{{ $contact['why'] }}</span></p>
+        @elseif (! $own && $contact && $contact['allowed'])
+            <p class="up-why"><x-pulse.icon name="info" :size="16" /><span>{{ $contact['mode'] === 'direct' ? 'You can message them directly.' : 'A knock goes to them as a request. They choose whether to answer.' }}</span></p>
         @endif
-    </div>
+    </header>
+
+    @if ($own)
+        <section class="up-own" aria-label="How your page looks to others">
+            <x-pulse.icon name="shield" :size="18" />
+            <p>
+                @if ($mode === 'open')
+                    Employers can find you by name, and people see everything below.
+                @elseif ($mode === 'anonymous')
+                    You are anonymous to employers, so nobody else can open this page. Only you see it.
+                @else
+                    Nobody can find you as a professional. Other people see your name and your posts only.
+                @endif
+                <a href="{{ pulse_route('me.discover') }}">Change who can find you</a>
+            </p>
+        </section>
+    @endif
+
+    @if ($open)
+        @if (! empty($card['bio']))
+            <section class="pk-card up-section" aria-labelledby="up-about"><h2 id="up-about">About</h2><p class="up-prose">{{ $card['bio'] }}</p></section>
+        @endif
+
+        @if (! empty($card['skills']) || ! empty($card['open_to']) || ! empty($card['languages']) || ! empty($card['interests']))
+            <section class="pk-card up-section" aria-labelledby="up-skills">
+                <h2 id="up-skills">What they do</h2>
+                @if (! empty($card['skills']))
+                    <ul class="me-tags__list" aria-label="Skills">@foreach ($card['skills'] as $s)<li><span class="me-chip me-chip--static">{{ $s }}</span></li>@endforeach</ul>
+                @endif
+                <ul class="me-facts">
+                    @if (! empty($card['open_to']))<li><span class="me-facts__k">Open to</span><span>{{ collect($card['open_to'])->map(fn ($v) => $openLabels[$v] ?? $v)->implode(', ') }}</span></li>@endif
+                    @if (! empty($card['languages']))<li><span class="me-facts__k">Languages</span><span>{{ implode(', ', $card['languages']) }}</span></li>@endif
+                    @if (! empty($card['interests']))<li><span class="me-facts__k">Interests</span><span>{{ implode(', ', $card['interests']) }}</span></li>@endif
+                </ul>
+            </section>
+        @endif
+
+        @if (! empty($card['achievements']))
+            <section class="pk-card up-section" aria-labelledby="up-ach"><h2 id="up-ach">Achievements</h2>
+                <ul class="me-bullets">@foreach ($card['achievements'] as $a)<li>{{ $a }}</li>@endforeach</ul>
+            </section>
+        @endif
+
+        @if (! empty($card['work_history']))
+            <section class="pk-card up-section" aria-labelledby="up-work"><h2 id="up-work">Work</h2>
+                <ol class="up-jobs">
+                    @foreach ($card['work_history'] as $job)
+                        <li><span class="up-jobs__title">{{ $job['title'] ?? '' }}</span>
+                            <span class="pk-muted">{{ $job['org'] ?? '' }}@if (! empty($job['from_year'])), <span class="pk-mono">{{ $job['from_year'] }} to {{ ! empty($job['current']) ? 'now' : ($job['to_year'] ?? 'now') }}</span>@endif</span></li>
+                    @endforeach
+                </ol>
+            </section>
+        @endif
+    @endif
+
+    <section class="pk-card up-section" aria-labelledby="up-posts">
+        <div class="me-section__head">
+            <h2 id="up-posts">Posts</h2>
+            <div class="pk-cluster">
+                <x-pulse.button variant="ghost" size="sm" data-pk-dialog="up-followers" type="button">Followers</x-pulse.button>
+                <x-pulse.button variant="ghost" size="sm" data-pk-dialog="up-following" type="button">Following</x-pulse.button>
+            </div>
+        </div>
+        @if ($this->posts->isEmpty())
+            <x-pulse.empty title="No posts yet." text="Nothing published to show." />
+        @else
+            <ul class="me-list">
+                @foreach ($this->posts as $post)
+                    <li wire:key="post-{{ $post->id }}">
+                        <div class="pk-row">
+                            <div class="pk-row__main">
+                                <div class="pk-row__title"><a href="{{ route('posts.show', $post) }}">{{ $post->title ?: \Illuminate\Support\Str::limit($post->body, 80) }}</a></div>
+                                @if ($post->title)<p class="up-excerpt">{{ \Illuminate\Support\Str::limit($post->body, 140) }}</p>@endif
+                                <div class="pk-row__meta">{{ $typeWords[$post->type] ?? ucfirst(str_replace('_', ' ', $post->type)) }}@if ($post->community), in {{ $post->community->name }}@endif, {{ $post->created_at->diffForHumans() }}</div>
+                            </div>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </section>
+
+    @foreach (['followers' => 'Followers', 'following' => 'Following'] as $listMode => $listTitle)
+        <dialog id="up-{{ $listMode }}" class="pk-dialog pk-dialog--center" aria-labelledby="up-{{ $listMode }}-title">
+            <div class="pk-dialog__panel">
+                <div class="pk-dialog__head"><h2 id="up-{{ $listMode }}-title">{{ $listTitle }}</h2><button type="button" class="pk-dialog__x" data-pk-close aria-label="Close {{ strtolower($listTitle) }}"><x-pulse.icon name="x" /></button></div>
+                <div class="pk-dialog__body"><livewire:pulse.follow-list :user="$profileUser" :mode="$listMode" wire:key="list-{{ $listMode }}-{{ $profileUser->id }}" /></div>
+            </div>
+        </dialog>
+    @endforeach
 </div>
