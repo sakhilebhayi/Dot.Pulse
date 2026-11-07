@@ -17,6 +17,7 @@ use App\Services\Pulse\Lines\MuteService;
 use App\Services\Pulse\Lines\NotificationPrefs;
 use App\Services\Pulse\Lines\PrivacyEraser;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -139,7 +140,7 @@ class Privacy extends Component
         return app(ConsentLedger::class)->entries($user);
     }
 
-    /** @return array{people: \Illuminate\Support\Collection, pages: \Illuminate\Support\Collection} */
+    /** @return array{people: Collection, pages: Collection} */
     public function blocks(): array
     {
         $me = auth()->id();

@@ -4,11 +4,12 @@ namespace Tests\Feature\Me;
 
 use App\Livewire\Pulse\Me\Onboarding;
 use App\Models\PulseNotificationPref;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 
 class OnboardingTest extends MeTestCase
 {
-    private function walkTo(\Livewire\Features\SupportTesting\Testable $c, int $step): \Livewire\Features\SupportTesting\Testable
+    private function walkTo(Testable $c, int $step): Testable
     {
         while ($c->get('step') < $step) {
             $c->call('next');

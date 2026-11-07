@@ -28,7 +28,7 @@
         </fieldset>
         <x-pulse.field name="headline" label="Headline" hint="One line that says what you do. No phone numbers, emails or links." wire:model="headline" maxlength="120" placeholder="Bookkeeper and payroll specialist" />
         <x-pulse.textarea name="bio" label="About" hint="Up to 1,500 characters. Plain text." wire:model="bio" maxlength="1500" rows="5" optional />
-        <x-pulse.field name="experienceYears" type="number" label="Years of experience" hint="Employers see a band (for example 5 to 10 years), never the exact number." wire:model="experienceYears" min="0" max="60" inputmode="numeric" optional style="max-width: 200px" />
+        <x-pulse.field name="experienceYears" type="number" label="Years of experience" hint="Employers see a band (for example 5 to 9 years), never the exact number." wire:model="experienceYears" min="0" max="60" inputmode="numeric" optional style="max-width: 200px" />
     </section>
 
     <section class="pk-card me-section" aria-labelledby="me-skills">

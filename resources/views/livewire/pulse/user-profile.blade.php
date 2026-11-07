@@ -25,7 +25,7 @@
             @if ($open && (! empty($card['place']) || ! empty($card['experience_band'])))
                 <div class="pk-cluster up-facts">
                     @if (! empty($card['place']))<x-pulse.place-label :name="$card['place']" />@endif
-                    @if (! empty($card['experience_band']))<span class="pk-muted">{{ $card['experience_band']['label'] }} of experience</span>@endif
+                    @if (! empty($card['experience_band']))<span class="pk-muted">{{ $card['experience_band']['label'] }}</span>@endif
                 </div>
             @endif
         </div>

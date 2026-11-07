@@ -3,7 +3,6 @@
 namespace Tests\Feature\Pulse;
 
 use App\Livewire\Pulse\FollowButton;
-use App\Livewire\Pulse\NotificationBell;
 use App\Models\Community;
 use App\Models\CommunityMembership;
 use App\Models\PulsePost;
@@ -73,11 +72,14 @@ class PulseTest extends TestCase
             ->assertSeeLivewire(FollowButton::class);
     }
 
-    public function test_the_dashboard_layout_embeds_the_notification_bell(): void
+    public function test_the_dashboard_layout_shows_the_notifications_badge_link(): void
     {
+        // R-41: once Me, Notifications exists the shell shows a badge link the poller keeps current; the Livewire
+        // dropdown (NotificationBell) remains for any view that still mounts it.
         $this->actingAs($this->user)
             ->get('/dashboard')
-            ->assertSeeLivewire(NotificationBell::class);
+            ->assertSee('href="'.route('me.notifications').'"', false)
+            ->assertSee('data-pulse-badge="notifications"', false);
     }
 
     public function test_dashboard_creates_profile_if_missing(): void
