@@ -78,22 +78,66 @@ class RoundTest extends FloorTestCase
         $this->assertNull(PulseMatch::where('signal_id', $elsewhere->id)->value('seen_at'), 'a beat that is not on screen is never marked seen');
     }
 
-    public function test_a_seen_beat_leaves_the_next_round_and_the_person_is_caught_up_not_empty(): void
+    public function test_a_seen_beat_leaves_the_new_round_but_stays_in_seen_earlier_after_a_reload(): void
     {
         $s = $this->matched(['title' => 'Seen already']);
-        $this->round()->call('markSeen', [$s->id]);
+        $first = $this->round();
+        $first->assertSee('Seen already')->assertDontSee('Seen earlier');
+        $first->call('markSeen', [$s->id]);
+
+        $again = $this->round();
+        $again->assertSee('Seen earlier')
+            ->assertSee('Seen already')
+            ->assertSee('Nothing new since you last looked.')
+            ->assertSee("That's the round. You are caught up.", false)
+            ->assertDontSee('Nothing fits yet.');
+        $this->assertTrue($again->get('beats')[0]['earlier']);
+    }
+
+    public function test_a_seen_beat_leaves_after_24_hours_and_when_acted_on(): void
+    {
+        $old = $this->matched(['title' => 'Seen yesterday']);
+        $saved = $this->matched(['title' => 'Saved one']);
+        $dismissed = $this->matched(['title' => 'Dismissed one']);
+        $knocked = $this->matched(['title' => 'Knocked one', 'kind' => 'need', 'subject_type' => 'need', 'subject_id' => 777]);
+        $kept = $this->matched(['title' => 'Kept one']);
+
+        foreach ([$old, $saved, $dismissed, $knocked, $kept] as $sig) {
+            PulseMatch::where('signal_id', $sig->id)->update(['seen_at' => now()->subHours(2)]);
+        }
+        PulseMatch::where('signal_id', $old->id)->update(['seen_at' => now()->subHours(25)]);
+        PulseSave::create(['user_id' => $this->me->id, 'saveable_type' => 'signal', 'saveable_id' => $saved->id]);
+        PulseMatch::where('signal_id', $dismissed->id)->update(['dismissed_at' => now()]);
+        DB::table('pulse_conversations')->insert([
+            'type' => 'direct', 'kind' => 'enquiry', 'status' => 'open', 'initiator_id' => $this->me->id,
+            'recipient_id' => $this->person()->id, 'context_type' => 'need', 'context_id' => 777, 'card' => '{}',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
 
         $this->round()
-            ->assertDontSee('Seen already')
-            ->assertSee("That's the round. You are caught up.", false)
-            ->assertDontSee('Nothing matches yet.');
+            ->assertSee('Kept one')
+            ->assertDontSee('Seen yesterday')
+            ->assertDontSee('Saved one')
+            ->assertDontSee('Dismissed one')
+            ->assertDontSee('Knocked one');
+    }
+
+    public function test_a_person_who_saw_things_long_ago_is_caught_up_and_a_person_who_saw_nothing_in_a_mode_is_not(): void
+    {
+        $trade = $this->matched(['title' => 'Old trade thing', 'kind' => 'offer', 'subject_type' => 'offer']);
+        PulseMatch::where('signal_id', $trade->id)->update(['seen_at' => now()->subDays(3)]);
+
+        $this->round('all')->assertSee("That's the round. You are caught up.", false)->assertSee('Everything that fits you has been shown.')->assertDontSee('Old trade thing');
+        // Work mode: nothing was ever shown there, so it must not claim anything was caught up.
+        $this->round('work')->assertSee('No work matches yet.')->assertDontSee('caught up');
     }
 
     public function test_with_no_matches_at_all_the_empty_state_is_honest_and_actionable(): void
     {
         $this->round()
-            ->assertSee('Nothing matches yet.')
+            ->assertSee('Nothing fits yet.')
             ->assertSee('Say what you need')
+            ->assertSee('Find businesses to follow')
             ->assertSee('Say what you are open to')
             ->assertDontSee("That's the round", false);
 

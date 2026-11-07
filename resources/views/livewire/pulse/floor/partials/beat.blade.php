@@ -2,7 +2,9 @@
     One beat, drawn from the array BeatPresenter makes. Shared by the Floor, search and saved so a beat looks and
     behaves the same wherever it turns up.
 
-    Needs: $b (the beat array), $mode ('floor' | 'search' | 'saved'), optional $why (list of sentences from search).
+    Needs: $b (the beat array), $mode ('floor' | 'search' | 'saved'), optional $why (list of sentences from search),
+    optional $compact (up to three reason chips, the full thread on expand; the first card of a list is drawn in full)
+    and optional $quiet (a beat seen earlier: lighter, same actions).
     The host component supplies save, unsave, dismiss and removeReason (see Concerns\ActsOnBeats).
 --}}
 @php
@@ -15,6 +17,9 @@
     $meter = \App\Livewire\Pulse\Floor\Support\MeterHtml::render($reasons, $b['match_id'] ?? null, $mode === 'floor' && ! empty($b['match_id']));
     $sid = (int) $b['signal_id'];
     $aside = $b['aside'] ?? null;
+    $compact = ($compact ?? false) && $meter->toHtml() !== '';
+    $quiet = $quiet ?? false;
+    $chips = collect($reasons)->pluck('text')->filter()->values();
 @endphp
 <x-pulse.beat
     :kind="$b['kind']"
@@ -25,7 +30,8 @@
     wire:key="beat-{{ $sid }}"
     data-beat="{{ $sid }}"
     tabindex="-1"
-    class="fl-beat"
+    class="fl-beat{{ $quiet ? ' fl-beat--quiet' : '' }}{{ $compact ? ' fl-beat--compact' : '' }}"
+    x-data="{ thread: false }"
 >
     @if ($anon)
         <span class="fl-card-line">{{ collect($b['card']['skills'] ?? [])->take(6)->implode(', ') }}</span>
@@ -60,6 +66,18 @@
                 {{ $meter }}
             @endif
             <p class="fl-why">{{ implode(' ', $why) }}</p>
+        </x-slot>
+    @elseif ($compact)
+        <x-slot name="meter">
+            <ul class="fl-chips" aria-label="Why this fits">
+                @foreach ($chips->take(3) as $text)
+                    <li class="fl-chip">{{ $text }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="fl-link fl-thread-toggle" x-on:click="thread = ! thread" x-bind:aria-expanded="thread" aria-controls="thread-{{ $sid }}">
+                <span x-show="! thread">Show how it fits</span><span x-show="thread" x-cloak>Hide how it fits</span>
+            </button>
+            <div id="thread-{{ $sid }}" class="fl-thread" x-show="thread" x-cloak>{{ $meter }}</div>
         </x-slot>
     @elseif ($meter->toHtml() !== '')
         <x-slot name="meter">{{ $meter }}</x-slot>

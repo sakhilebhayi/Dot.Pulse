@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\DB;
  *  - Paging: the cursor is a position in the ordered pool. A round is finished when `next` is null; then
  *    `caught_up` is true and `next_round_at` says when matches are next recomputed. Beats stay "new" until
  *    markSeen() is called with the ones the person actually saw.
+ *  - Seen is not done. A beat that was seen and not acted on (dismissed, saved, knocked) stays on the round for
+ *    EARLIER_HOURS after it was seen, below the new ones, in earlier(). A reload therefore never empties the floor.
  */
 class Floor
 {
@@ -34,6 +36,12 @@ class Floor
     public const RUN_LIMIT = 3;
 
     public const POOL = 200;
+
+    /** How long a beat that was seen but not acted on stays on the round, in hours. */
+    public const EARLIER_HOURS = 24;
+
+    /** The most "seen earlier" beats one round carries. */
+    public const EARLIER_LIMIT = 40;
 
     public const MODES = ['all', 'trade', 'work', 'local', 'learn'];
 
@@ -70,6 +78,50 @@ class Floor
             'next_round_at' => $caught ? $this->nextRoundAt() : null,
             'counts' => ['new' => $total],
         ];
+    }
+
+    /**
+     * Beats the person has seen in the last EARLIER_HOURS and not acted on: not dismissed, not saved, not knocked.
+     * Same eligibility and mode rules as the round, ordered the same way (score, then newest) so the order is stable
+     * from one load to the next. `ever_shown` is true when the person has been shown, dismissed or saved anything
+     * in this mode, ever: it is what makes "caught up" truthful, and false means a first visit.
+     *
+     * @return array{beats: list<Beat>, ever_shown: bool}
+     */
+    public function earlier(User $u, string $mode = 'all'): array
+    {
+        $mode = in_array($mode, self::MODES, true) ? $mode : 'all';
+        $pool = $this->pool($u, $mode, earlier: true);
+        $beats = $this->beats->build($u->id, $pool['items']->map(fn ($i) => $i['signal']), $pool['pack'], $pool['matches'], [])->all();
+
+        return ['beats' => $beats, 'ever_shown' => $beats !== [] || $this->everShown($u, $mode)];
+    }
+
+    /** Has this person been shown, dismissed or saved anything in this mode before? */
+    private function everShown(User $u, string $mode): bool
+    {
+        $kinds = Taxonomy::kindsOfMode($mode);
+
+        $rows = PulseSignal::query()
+            ->join('pulse_matches as m', 'm.signal_id', '=', 'pulse_signals.id')
+            ->where('m.user_id', $u->id)
+            ->where(fn ($w) => $w->whereNotNull('m.seen_at')->orWhereNotNull('m.dismissed_at'))
+            ->when($kinds !== null, fn ($q) => $q->whereIn('pulse_signals.kind', $kinds))
+            ->limit(self::POOL)
+            ->get(['pulse_signals.*', 'm.reasons as match_reasons']);
+
+        foreach ($rows as $signal) {
+            $reasons = $signal->match_reasons;
+            $reasons = is_string($reasons) ? (json_decode($reasons, true) ?: []) : (array) $reasons;
+
+            if ($this->inMode($mode, $signal, $reasons)) {
+                return true;
+            }
+        }
+
+        return PulseSave::query()->where('user_id', $u->id)->where('saveable_type', 'signal')
+            ->when($kinds !== null, fn ($q) => $q->whereIn('saveable_id', PulseSignal::query()->whereIn('kind', $kinds)->select('id')))
+            ->exists();
     }
 
     /** Record that the person saw these signals so they leave the next round. */
@@ -230,15 +282,21 @@ class Floor
      *
      * @return array{items: Collection<int, array{signal: PulseSignal, id: int}>, pack: SignalPack, matches: array<int, array<string, mixed>>}
      */
-    private function pool(User $u, string $mode): array
+    private function pool(User $u, string $mode, bool $earlier = false): array
     {
         $kinds = Taxonomy::kindsOfMode($mode);
+        $horizon = now()->subHours(self::EARLIER_HOURS);
 
         $rows = PulseSignal::query()
             ->join('pulse_matches as m', 'm.signal_id', '=', 'pulse_signals.id')
             ->where('m.user_id', $u->id)
             ->whereNull('m.dismissed_at')
-            ->whereNull('m.seen_at')
+            ->when($earlier, fn ($q) => $q->where('m.seen_at', '>', $horizon), fn ($q) => $q->whereNull('m.seen_at'))
+            ->when($earlier, fn ($q) => $q->whereNotExists(fn ($c) => $c->select(DB::raw(1))->from('pulse_conversations as c')
+                ->where('c.initiator_id', $u->id)
+                ->where(fn ($w) => $w
+                    ->where(fn ($x) => $x->where('c.context_type', 'signal')->whereColumn('c.context_id', 'pulse_signals.id'))
+                    ->orWhere(fn ($x) => $x->whereColumn('c.context_type', 'pulse_signals.subject_type')->whereColumn('c.context_id', 'pulse_signals.subject_id')))))
             ->where('pulse_signals.status', 'live')
             ->where(fn ($w) => $w->whereNull('pulse_signals.expires_at')->orWhere('pulse_signals.expires_at', '>', now()))
             ->whereNotIn('pulse_signals.id', fn ($q) => $q->select('saveable_id')->from('pulse_saves')->where('user_id', $u->id)->where('saveable_type', 'signal'))
@@ -270,7 +328,10 @@ class Floor
             $items->push(['signal' => $signal, 'id' => $signal->id]);
         }
 
-        return ['items' => collect($this->diversify($items->all())), 'pack' => $pack, 'matches' => $matches];
+        // The earlier strip is a quiet list in the same stable order, not a diversified round of its own.
+        $ordered = $earlier ? array_slice($items->all(), 0, self::EARLIER_LIMIT) : $this->diversify($items->all());
+
+        return ['items' => collect($ordered), 'pack' => $pack, 'matches' => $matches];
     }
 
     /** @param array<int, mixed> $reasons */
