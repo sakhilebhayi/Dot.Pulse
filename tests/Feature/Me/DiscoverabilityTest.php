@@ -3,8 +3,11 @@
 namespace Tests\Feature\Me;
 
 use App\Livewire\Pulse\Me\Discoverability;
+use App\Livewire\Pulse\Me\Onboarding;
+use App\Models\PulseProfile;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Entities\ProfileService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
@@ -92,7 +95,7 @@ class DiscoverabilityTest extends MeTestCase
         Livewire::actingAs($u)->test(Discoverability::class)->set('openTo', ['work', 'collab']);
         $this->assertSame(['work', 'collab'], $this->profileOf($u)->open_to);
 
-        $c = Livewire::actingAs($u)->test(Discoverability::class)->set('openTo', ['work', 'suppliers']);
+        $c = Livewire::actingAs($u)->test(Discoverability::class)->set('openTo', ['work', 'time travel']);
         $this->assertNotNull($c->get('problem'));
         $this->assertSame(['work', 'collab'], $this->profileOf($u)->fresh()->open_to);
     }
@@ -139,5 +142,16 @@ class DiscoverabilityTest extends MeTestCase
 
         $live = PulseSignal::query()->where('owner_id', $u->id)->where('kind', 'talent')->where('status', 'live')->exists();
         $this->assertFalse($live, 'withdrawn means not live');
+    }
+
+    public function test_suppliers_and_learning_are_choices_with_labels_everywhere_open_to_is_shown(): void
+    {
+        $this->assertContains('suppliers', PulseProfile::OPEN_TO);
+        $this->assertContains('learning', PulseProfile::OPEN_TO);
+        $this->assertEqualsCanonicalizing(PulseProfile::OPEN_TO, array_keys(Onboarding::OPEN_TO_LABELS), 'every choice has a label');
+
+        $u = $this->member();
+        app(ProfileService::class)->setOpenTo($u, ['suppliers', 'learning']);
+        $this->assertSame(['suppliers', 'learning'], $this->profileOf($u)->open_to);
     }
 }

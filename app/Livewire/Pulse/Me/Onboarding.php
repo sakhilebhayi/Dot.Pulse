@@ -31,6 +31,8 @@ class Onboarding extends Component
         'collab' => 'Collaborators',
         'mentoring' => 'Mentoring, giving or getting',
         'investing' => 'Investors or investing',
+        'suppliers' => 'Suppliers and trade partners',
+        'learning' => 'Learning, courses and events',
     ];
 
     #[Locked]

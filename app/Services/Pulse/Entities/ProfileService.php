@@ -83,13 +83,13 @@ class ProfileService
         return $profile->refresh();
     }
 
-    /** @param list<string> $values work, freelance, collab, mentoring, investing */
+    /** @param list<string> $values work, freelance, collab, mentoring, investing, suppliers, learning */
     public function setOpenTo(User $by, array $values): PulseProfile
     {
         $values = array_values(array_unique(array_filter($values, 'is_string')));
 
         if (array_diff($values, PulseProfile::OPEN_TO)) {
-            throw ValidationException::withMessages(['open_to' => 'Choose from work, freelance, collab, mentoring and investing.']);
+            throw ValidationException::withMessages(['open_to' => 'Choose from work, freelance, collaborators, mentoring, investing, suppliers and learning.']);
         }
 
         $profile = $this->profileFor($by);

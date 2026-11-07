@@ -18,7 +18,7 @@ class PulseProfile extends Model
 
     public const CONTACT_POLICIES = ['anyone', 'context', 'requests', 'nobody'];
 
-    public const OPEN_TO = ['work', 'freelance', 'collab', 'mentoring', 'investing'];
+    public const OPEN_TO = ['work', 'freelance', 'collab', 'mentoring', 'investing', 'suppliers', 'learning'];
 
     protected $fillable = [
         'user_id', 'headline', 'bio', 'avatar_url', 'cover_url', 'location',
