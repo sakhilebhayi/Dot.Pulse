@@ -5,12 +5,12 @@
  */
 
 .me-page {
-    max-width: 880px;
-    margin-inline: auto;
+    max-width: var(--floor-w);
 }
 
 .me-page--flow {
     max-width: 640px;
+    margin-inline: auto; /* the welcome flow is a single task, centred */
 }
 
 .me-page--wide {
@@ -925,4 +925,49 @@
     align-items: center;
     min-height: 44px;
     font-weight: 700;
+}
+
+/* Jetstream sections (account, teams) in the Floor's card: one column, same rhythm as the Me pages. */
+.jt-section {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.jt-head h2,
+.jt-title {
+    font-size: 1.125rem;
+    font-stretch: 108%;
+}
+
+.jt-form {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.jt-fields {
+    display: grid;
+    gap: var(--s-md);
+    max-width: 480px;
+}
+
+.jt-fields > * {
+    min-width: 0;
+}
+
+.jt-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s-sm) var(--s-md);
+}
+
+.jt-content {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.jt-content > .text-sm,
+.jt-content .max-w-xl {
+    color: var(--c-ink-2);
+    font-size: var(--t-ui);
 }

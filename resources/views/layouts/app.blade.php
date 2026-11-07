@@ -114,7 +114,8 @@
                             <strong>{{ $user->name }}</strong>
                             <span>{{ $user->currentTeam->name ?? 'Personal' }}</span>
                         </div>
-                        <a href="{{ route('profile.show') }}">Profile and settings</a>
+                        <a href="{{ pulse_route('me.profile') }}">Profile and settings</a>
+                        <a href="{{ pulse_route('me.account') }}">Account and security</a>
                         @if (count($biz))
                             <div class="sh-menu__label">{{ count($biz) === 1 ? 'Your business' : 'Your businesses' }}</div>
                             @foreach ($biz as $b)

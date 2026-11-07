@@ -62,4 +62,11 @@ class ShellNavTest extends FloorTestCase
         $this->assertSame(['Kettle and Plum'], $this->railActive($this->actingAs($owner)->get(route('entities.manage.offers', $entity))->getContent()));
         $this->assertNotNull($other);
     }
+
+    public function test_the_stock_jetstream_profile_sends_people_to_their_floor_profile(): void
+    {
+        $this->actingAs($this->me)->get('/user/profile')->assertRedirect(route('me.profile'));
+        $this->actingAs($this->me)->get('/me/account')->assertOk()->assertSee('Account and security')->assertSee('Go to Privacy');
+        $this->assertSame(1, substr_count($this->actingAs($this->me)->get('/me/profile')->getContent(), 'Headline'), 'one profile editor, not two');
+    }
 }

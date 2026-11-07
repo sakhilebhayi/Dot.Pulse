@@ -167,6 +167,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::view('/me/profile', 'pulse.me.profile')->name('me.profile');
         Route::view('/me/discoverability', 'pulse.me.discover')->name('me.discover');
         Route::view('/me/settings', 'pulse.me.settings')->name('me.settings');
+        Route::view('/me/account', 'pulse.me.account')->name('me.account');
     });
 
     Route::view('/me/notifications', 'pulse.me.notifications')->name('me.notifications');

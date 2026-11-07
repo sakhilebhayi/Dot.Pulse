@@ -418,7 +418,7 @@
 .sh-stage--floor {
     display: grid;
     grid-template-columns: minmax(0, var(--floor-w));
-    justify-content: center;
+    justify-content: start; /* every screen's column starts at the same left edge, beside the rail */
     column-gap: var(--s-lg);
     align-items: start;
 }

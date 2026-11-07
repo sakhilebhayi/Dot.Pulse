@@ -101,7 +101,7 @@
                 </ul>
             </div>
         </div>
-        <p class="pk-field__hint">This clears Pulse. Your Dot account and sign-in belong to InfoDot, and you manage them under <a href="{{ pulse_route('profile.show') }}">Account and security</a>. You will be signed out.</p>
+        <p class="pk-field__hint">This clears Pulse. Your Dot account and sign-in belong to InfoDot, and you manage them under <a href="{{ pulse_route('me.account') }}">Account and security</a>. You will be signed out.</p>
 
         @if (! $eraseOpen)
             <div><x-pulse.button variant="danger" wire:click="startErase" type="button">Erase my Pulse data</x-pulse.button></div>

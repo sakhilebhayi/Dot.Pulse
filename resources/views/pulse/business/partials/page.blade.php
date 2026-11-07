@@ -42,6 +42,7 @@
                     @if ($entity->is_employer)<x-pulse.pill>Hires</x-pulse.pill>@endif
                     @if ($d['place'])<x-pulse.place-label :name="$d['place']" />@endif
                     @if ($entity->industry)<span class="pk-muted">{{ $entity->industry }}</span>@endif
+                    <span class="pk-muted">On Pulse since {{ \App\Support\Moment::date($entity->created_at) }}</span>
                 </div>
             </div>
         </div>
@@ -66,13 +67,6 @@
             @unless ($hasContent)
                 <x-pulse.empty :title="$isMember ? 'Nothing here yet' : 'Nothing published yet'" :text="$isMember ? 'Write an about and publish an offer or a role from Manage. They show up here the moment they are live.' : 'This business has not published an about, an offer or a role yet.'" />
             @endunless
-
-            @if ($entity->about)
-                <section aria-labelledby="bz-about">
-                    <h2 id="bz-about">About</h2>
-                    <p class="bz-prose">{!! nl2br(e($entity->about)) !!}</p>
-                </section>
-            @endif
 
             @if ($d['offers']->isNotEmpty())
                 <section aria-labelledby="bz-offers">
@@ -104,6 +98,13 @@
                 </section>
             @endif
 
+            @if ($entity->about)
+                <section aria-labelledby="bz-about">
+                    <h2 id="bz-about">About</h2>
+                    <p class="bz-prose">{!! nl2br(e($entity->about)) !!}</p>
+                </section>
+            @endif
+
             @if ($d['reviews']->isNotEmpty())
                 <section aria-labelledby="bz-reviews">
                     <h2 id="bz-reviews">Reviews</h2>
@@ -111,7 +112,7 @@
                     <ul class="pk-stack" role="list" style="margin-top: 12px; list-style: none; padding: 0">
                         @foreach ($d['reviews'] as $review)
                             <li class="pk-card" style="padding: 14px 16px">
-                                <p><strong>{{ $review['rating'] }} out of 5</strong> <span class="pk-muted">from {{ $review['author'] }}, {{ $review['created_at']?->format('j M Y') }}</span></p>
+                                <p><strong>{{ $review['rating'] }} out of 5</strong> <span class="pk-muted">from {{ $review['author'] }}, {{ \App\Support\Moment::date($review['created_at']) }}</span></p>
                                 @if ($review['body'])<p class="bz-prose">{{ $review['body'] }}</p>@endif
                             </li>
                         @endforeach
@@ -144,15 +145,19 @@
         <aside class="bz-side pk-stack" aria-label="Trust and facts">
             <section class="pk-card" aria-labelledby="bz-trust">
                 <h2 id="bz-trust">What Pulse can show</h2>
-                <p class="pk-muted" style="margin: 6px 0 14px">Checked means Pulse saw it in a real record. Claimed means the business said it and Pulse has not checked.</p>
-                <x-pulse.ladder :rungs="$ladder" :summary="true" />
+                @php $nChecked = collect($ladder)->where('state', 'checked')->count(); $nClaimed = collect($ladder)->where('state', 'claimed')->count(); @endphp
+                <p class="pk-muted" style="margin: 6px 0 10px">Checked means Pulse saw it in a real record. Claimed means the business said it and Pulse has not checked.</p>
+                <details class="bz-ladder">
+                    <summary>{{ $nChecked }} of {{ count($ladder) }} checked, {{ $nClaimed }} claimed. See the checks</summary>
+                    <x-pulse.ladder :rungs="$ladder" />
+                </details>
             </section>
 
             @if ($response)
                 <section class="pk-card" aria-labelledby="bz-resp">
                     <h2 id="bz-resp">How they answer</h2>
                     <div class="bz-stats">
-                        <x-pulse.stat label="Answered" :value="round($response['response_rate'] * 100).'%'" :note="'of '.$response['received'].' in the last '.$response['window_days'].' days'" />
+                        <x-pulse.stat label="First messages answered" :value="$response['answered'].' of '.$response['received']" :note="'in the last '.\App\Support\Moment::plural((int) $response['window_days'], 'day')" />
                         @if ($response['median_first_response_seconds'] !== null)
                             <x-pulse.stat label="Usually within" :value="EntityView::duration($response['median_first_response_seconds'])" />
                         @endif

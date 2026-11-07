@@ -107,7 +107,7 @@ class ViewSweepTest extends TestCase
         $lines = PulseConversation::query()->get();
 
         $fixed = ['/floor', '/trade', '/work', '/local', '/learn', '/search?q=plumbing', '/search?q=bookkeeping', '/saved', '/door', '/lines', '/lines?tab=open',
-            '/me/profile', '/me/discoverability', '/me/settings', '/me/notifications', '/me/privacy', '/community', '/business/new', '/need/new', '/user/profile'];
+            '/me/profile', '/me/discoverability', '/me/settings', '/me/notifications', '/me/privacy', '/community', '/business/new', '/need/new', '/user/profile', '/me/account'];
 
         foreach ($people as $user) {
             foreach ($fixed as $path) {

@@ -95,7 +95,7 @@
 .bz-form {
     display: grid;
     gap: var(--s-lg);
-    max-width: 760px;
+    max-width: var(--floor-w);
 }
 
 .bz-block {

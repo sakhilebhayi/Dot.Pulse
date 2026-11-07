@@ -40,6 +40,6 @@
     <section class="pk-card me-section" aria-labelledby="set-account">
         <h2 id="set-account">Your Dot account</h2>
         <p class="me-section__text">Password, two factor sign-in and your signed-in browsers live with your Dot account. Your name and email come from InfoDot.</p>
-        <div><x-pulse.button variant="quiet" :href="pulse_route('profile.show')">Account and security</x-pulse.button></div>
+        <div><x-pulse.button variant="quiet" :href="pulse_route('me.account')">Account and security</x-pulse.button></div>
     </section>
 </div>

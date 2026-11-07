@@ -1,4 +1,4 @@
-{{-- The Me hub: one title, one line of tabs. Variables: $active (profile|discover|settings|notifications|privacy), $lede --}}
+{{-- The Me hub: one title, one line of tabs. Variables: $active (profile|discover|settings|notifications|privacy|account), $lede --}}
 @php
     $tabs = [
         'profile' => ['label' => 'Profile', 'href' => pulse_route('me.profile')],
@@ -6,6 +6,7 @@
         'settings' => ['label' => 'Settings', 'href' => pulse_route('me.settings')],
         'notifications' => ['label' => 'Notifications', 'href' => pulse_route('me.notifications')],
         'privacy' => ['label' => 'Privacy', 'href' => pulse_route('me.privacy')],
+        'account' => ['label' => 'Account', 'href' => pulse_route('me.account')],
     ];
 @endphp
 <div class="me-head">
