@@ -84,7 +84,7 @@ class PlaceRepository
         return match ($place->level) {
             'country' => $place->name,
             'region' => $place->name.', '.$this->countryName($place->country_code),
-            default => $place->region && $place->region !== $place->name && ! str_contains($place->name, (string) $place->region)
+            default => $place->region && $place->region !== $place->name && ! str_contains($place->name, ',')
                 ? $place->name.', '.$place->region
                 : $place->name,
         };

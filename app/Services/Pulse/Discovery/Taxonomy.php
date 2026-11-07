@@ -314,10 +314,14 @@ class Taxonomy
 
         $map = [];
 
+        // Precedence: topic labels, topic aliases, skill labels, skill aliases. So a skill called "Cleaning" resolves to
+        // the topic "Cleaning services" it is an alias of, while a skill label is never swallowed by another skill's alias.
         foreach ([self::loadTopics(), self::loadSkills()] as $entries) {
             foreach ($entries as $slug => $entry) {
                 $map[$slug] ??= $slug;
+            }
 
+            foreach ($entries as $slug => $entry) {
                 foreach ($entry['aliases'] as $alias) {
                     $map[Str::slug($alias)] ??= $slug;
                 }
