@@ -29,3 +29,7 @@ Schedule::command('pulse:match')->everyTenMinutes()->withoutOverlapping(15);
 Schedule::command('pulse:digest')->hourly()->withoutOverlapping(55);
 Schedule::command('pulse:expire')->hourly()->withoutOverlapping(55);
 // --- end R-41 discovery (D2) ---
+// --- R-41 hardening ---
+// Daily purge of what has outlived its purpose (numbers in config/pulse.php, `retention`). The lock expires in minutes.
+Schedule::command('pulse:retention')->dailyAt('03:40')->timezone('UTC')->withoutOverlapping(120);
+// --- end R-41 hardening ---

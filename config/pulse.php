@@ -215,4 +215,17 @@ return [
     ],
     // --- end invitations ---
 
+    // --- retention ---
+    // `pulse:retention` (daily). What is held, why and for how long: docs/programme/R41_PRIVACY.md.
+    'retention' => [
+        'closed_line_messages_months' => (int) env('PULSE_RETAIN_MESSAGES_MONTHS', 24),
+        'declined_request_days' => (int) env('PULSE_RETAIN_REQUESTS_DAYS', 90),
+        'ended_signal_days' => (int) env('PULSE_RETAIN_SIGNALS_DAYS', 90), // expired or removed signals, dismissed matches, ended needs' text
+        'read_notification_months' => (int) env('PULSE_RETAIN_NOTIFICATIONS_MONTHS', 12),
+        'audit_actor_months' => (int) env('PULSE_RETAIN_AUDIT_ACTOR_MONTHS', 24), // the actor and ip hash are nulled; rows are never deleted
+        'invitation_days' => (int) env('PULSE_RETAIN_INVITATIONS_DAYS', 30),
+        'chunk' => 500,
+    ],
+    // --- end retention ---
+
 ];
