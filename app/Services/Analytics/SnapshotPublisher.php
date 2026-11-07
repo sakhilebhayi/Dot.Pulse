@@ -31,8 +31,37 @@ class SnapshotPublisher
             'company_uuid' => (string) config('analytics.company_uuid'),
             'taken_at' => $asOf->copy()->startOfDay()->format('Y-m-d\TH:i:s\Z'),
             'period' => 'day',
-            'metrics' => $this->collector->collect($asOf),
+            'metrics' => $this->metrics($asOf),
         ];
+    }
+
+    /**
+     * The three catalogue metrics, always, in their fixed order, then (unless switched off) the operator's real
+     * aggregate counts. Dot.Analytics drops keys its catalogue does not list yet, so the extra keys cannot break
+     * the snapshot; a failure while computing them leaves the three untouched. `null` (no data yet) is left out
+     * rather than sent, so "not reported" never turns into a zero.
+     *
+     * @return array<string, int>
+     */
+    private function metrics(CarbonInterface $asOf): array
+    {
+        $metrics = $this->collector->collect($asOf);
+
+        if (! config('analytics.extended', false)) {
+            return $metrics;
+        }
+
+        try {
+            foreach ($this->collector->extended($asOf) as $key => $value) {
+                if ($value !== null && ! array_key_exists($key, $metrics)) {
+                    $metrics[$key] = (int) $value;
+                }
+            }
+        } catch (Throwable $e) {
+            Log::warning('Could not compute the extra operator metrics; sending the core snapshot only.', ['error' => $e->getMessage()]);
+        }
+
+        return $metrics;
     }
 
     /**

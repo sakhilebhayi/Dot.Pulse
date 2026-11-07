@@ -4,6 +4,7 @@ namespace App\Services\Analytics;
 
 use App\Models\PulseComment;
 use App\Models\PulsePost;
+use App\Services\Pulse\Operator\Metrics;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,18 @@ class MetricsCollector
             'active_users_7d' => $this->activeUsers($from, $to),
             'held_posts' => PulsePost::query()->where('status', 'flagged')->count(),
         ];
+    }
+
+    /**
+     * The operator's real aggregate counts (people by kind, live listings, knocks, answers, confirmed results, reports,
+     * the queue and so on) for the 7 days up to $asOf. Whole numbers, `null` where there is no data yet. Defined in
+     * App\Services\Pulse\Operator\Metrics, which the operator dashboard reads too, so the two can never disagree.
+     *
+     * @return array<string, int|null>
+     */
+    public function extended(CarbonInterface $asOf): array
+    {
+        return app(Metrics::class)->publishable(Carbon::instance($asOf)->utc(), 7);
     }
 
     private function posts(Carbon $from, Carbon $to): int
