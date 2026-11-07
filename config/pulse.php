@@ -204,6 +204,14 @@ return [
         // K-anonymity for anonymous talent cards (D23): an employer is shown an anonymous card only when this many
         // professionals share its primary skills and region. Never set it below 5 in production; tests lower it.
         'talent_cohort_min' => (int) env('PULSE_TALENT_COHORT_MIN', 5),
+
+        // Step-up before the two sensitive privacy actions. Everyone signs in through InfoDot, so there is no password to
+        // re-ask: the person types a phrase and, when mail is configured, a 6 digit code Pulse emails them (10 minutes).
+        // 'auto' asks for the code only when the mailer is a real one (not log or array); 'on' and 'off' force it.
+        'step_up_code' => env('PULSE_STEP_UP_CODE', 'auto'),
+        'step_up_minutes' => 10,
+        // Whether /me/privacy/export insists on that confirmation first. Tests that only want the file turn it off.
+        'export_needs_confirmation' => (bool) env('PULSE_EXPORT_NEEDS_CONFIRMATION', true),
     ],
     // --- end privacy ---
 

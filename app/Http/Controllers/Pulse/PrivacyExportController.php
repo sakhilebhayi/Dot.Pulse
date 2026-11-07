@@ -5,14 +5,26 @@ namespace App\Http\Controllers\Pulse;
 use App\Http\Controllers\Controller;
 use App\Services\Pulse\Lines\AuditLog;
 use App\Services\Pulse\Lines\PrivacyExport;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** "Download my data": everything Pulse holds about the signed-in person, as one JSON file. Rate limited by the route. */
 class PrivacyExportController extends Controller
 {
-    public function __invoke(Request $request): StreamedResponse
+    /** Session key set by the privacy page once the person has typed the phrase (and the emailed code, where mail is set up). */
+    public const GRANT = 'pulse.export_grant';
+
+    public function __invoke(Request $request): StreamedResponse|RedirectResponse
     {
+        if (config('pulse.privacy.export_needs_confirmation', true)) {
+            $until = (int) $request->session()->pull(self::GRANT, 0);
+
+            if ($until < now()->getTimestamp()) {
+                return redirect()->route('me.privacy')->with('pulse_notice', 'Confirm on this page first, then the download starts.');
+            }
+        }
+
         $user = $request->user();
         $data = PrivacyExport::forUser($user);
         AuditLog::record($user, 'privacy.export', null);

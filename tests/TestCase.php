@@ -15,7 +15,8 @@ abstract class TestCase extends BaseTestCase
 
         // The production rule shows an anonymous talent card only inside a cohort of five (D23). Most tests seed one
         // professional to check something else, so the floor is lowered here; the tests for the rule itself put it back.
-        config(['pulse.privacy.talent_cohort_min' => 1]);
+        // Likewise the download of your data insists on a typed confirmation in production; most tests only want the file.
+        config(['pulse.privacy.talent_cohort_min' => 1, 'pulse.privacy.export_needs_confirmation' => false]);
     }
 
     /** Mark a person as having finished the welcome flow, so signed-in pages open for them. */
