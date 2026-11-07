@@ -44,6 +44,24 @@ class OperatorDashboardTest extends TestCase
             ->assertSee('Real counts from real rows');
     }
 
+    public function test_the_page_loads_twice_on_a_store_that_does_not_rebuild_objects(): void
+    {
+        // Production caches to a real store with cache.serializable_classes = false: a Carbon in the cached
+        // snapshot came back as an incomplete object and the second load was a 500. The array store hides it.
+        $dir = sys_get_temp_dir().'/pulse-cache-'.uniqid();
+        config(['cache.default' => 'file', 'cache.stores.file.path' => $dir, 'cache.serializable_classes' => false]);
+        $this->app->forgetInstance('cache');
+        $this->app->forgetInstance('cache.store');
+        \Illuminate\Support\Facades\Cache::clearResolvedInstances();
+
+        $mod = $this->platformModerator();
+        $this->actingAs($mod)->get('/operator')->assertOk();
+        $this->actingAs($mod)->get('/operator')->assertOk()->assertSee('Range');
+        $this->actingAs($mod)->get('/operator')->assertOk();
+
+        (new \Illuminate\Filesystem\Filesystem)->deleteDirectory($dir);
+    }
+
     public function test_the_component_refuses_anyone_else(): void
     {
         Livewire::actingAs($this->pulseUser())->test(Dashboard::class)->assertForbidden();

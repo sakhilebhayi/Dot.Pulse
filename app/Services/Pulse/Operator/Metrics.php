@@ -345,10 +345,33 @@ class Metrics
         $days = max(1, min(self::MAX_DAYS, $days));
 
         try {
-            return Cache::remember(self::cacheKey($days), self::CACHE_SECONDS, fn () => $this->snapshot($days));
+            // Plain arrays and strings only: the cache store does not rebuild objects (cache.serializable_classes
+            // is false), so a Carbon in the cached value comes back as an incomplete object on the second load.
+            $stored = Cache::remember(self::cacheKey($days), self::CACHE_SECONDS, fn () => $this->forCache($this->snapshot($days)));
+
+            return $this->fromCache($stored);
         } catch (\Throwable) {
             return $this->snapshot($days); // a cache outage must not take the dashboard down
         }
+    }
+
+    /** @param array<string, mixed> $snapshot @return array<string, mixed> */
+    private function forCache(array $snapshot): array
+    {
+        $snapshot['range']['from'] = $snapshot['range']['from']->toIso8601String();
+        $snapshot['range']['to'] = $snapshot['range']['to']->toIso8601String();
+
+        return $snapshot;
+    }
+
+    /** @param array<string, mixed> $stored @return array<string, mixed> */
+    private function fromCache(array $stored): array
+    {
+        $tz = (string) config('app.timezone', 'UTC');
+        $stored['range']['from'] = Carbon::parse($stored['range']['from'])->setTimezone($tz);
+        $stored['range']['to'] = Carbon::parse($stored['range']['to'])->setTimezone($tz);
+
+        return $stored;
     }
 
     /** Forget the cached dashboard figures (after a moderation decision, say, when the queue should read true at once). */
