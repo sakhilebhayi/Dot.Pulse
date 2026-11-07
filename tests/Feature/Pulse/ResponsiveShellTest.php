@@ -115,9 +115,11 @@ class ResponsiveShellTest extends TestCase
 
         $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('class="pulse-page"', $html);
-        $this->assertStringContainsString('class="kpi-grid"', $html);
-        $this->assertStringContainsString('class="feed-grid"', $html);
+        // R-41 U5: the legacy pulse-page / kpi-grid / feed-grid markup became the Floor column (680 px, context column
+        // folding into a drawer below 1200 px), so the hooks to assert are the floor stage, the feed and the context.
+        $this->assertStringContainsString('sh-stage--floor', $html);
+        $this->assertStringContainsString('class="lg-feed"', $html);
+        $this->assertStringContainsString('id="sh-context"', $html);
     }
 
     public function test_the_shell_script_polls_the_pulse_check_endpoint_and_the_body_names_it(): void

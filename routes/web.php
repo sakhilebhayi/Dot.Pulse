@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\Pulse\DigestUnsubscribeController;
 use App\Http\Controllers\Pulse\MediaController;
 use App\Models\Community;
 use App\Models\PulsePost;
@@ -79,7 +80,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:1
 // --- discovery digest (D2) ---
 // Signed link in the digest email: switches the digest off for the user in the URL. GET (click) and POST (a mail
 // client's one-click List-Unsubscribe-Post). No sign-in needed; the signature is the proof.
-Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Controllers\Pulse\DigestUnsubscribeController::class)
+Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscribeController::class)
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
     ->middleware(['signed', 'throttle:20,1'])
     ->name('pulse.digest.unsubscribe');

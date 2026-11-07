@@ -17,7 +17,7 @@ if (! function_exists('pulse_route')) {
 
         try {
             return route($name, $parameters, $absolute);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return '#';
         }
     }

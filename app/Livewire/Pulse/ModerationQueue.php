@@ -20,6 +20,7 @@ use App\Services\Pulse\Operator\ReportedSubject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -309,7 +310,7 @@ class ModerationQueue extends Component
 
         try {
             $this->desk()->decideListing($this->moderator(), $subject, $decision, $reason);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->addError('listingReason', $e->errors()['reason'][0] ?? 'Say why.');
 
             return false;

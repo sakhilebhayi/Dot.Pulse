@@ -71,7 +71,7 @@ final class ReportedSubject
         return [
             'kind' => 'Request',
             'title' => $c->context_title ? 'About '.$c->context_title : 'A '.$c->kind.' line',
-            'body' => self::join([$card['what'] ?? null, $card['when_or_qty'] ?? null, $card['where'] ?? null, $card['budget_band'] ?? null], ' · '),
+            'body' => self::join([$card['what'] ?? null, $card['when_or_qty'] ?? null, $card['where'] ?? null, $card['budget_band'] ?? null], ', '),
             'by' => $c->initiator?->name,
             'where' => 'Line status: '.$c->status,
         ];

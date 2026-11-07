@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\InfoDot\IdentityClient;
 use App\Services\InfoDot\InfoDotUnavailable;
+use App\Services\Pulse\Entities\VerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -104,7 +105,7 @@ class EcosystemAuthController extends Controller
 
                 // A page linked to an InfoDot company re-reads what InfoDot said about it. Never blocks sign-in.
                 try {
-                    app(\App\Services\Pulse\Entities\VerificationService::class)->refreshForUser($user, $identity);
+                    app(VerificationService::class)->refreshForUser($user, $identity);
                 } catch (\Throwable $e) {
                     report($e);
                 }

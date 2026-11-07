@@ -51,7 +51,6 @@
     font-family: var(--f-mono);
     font-size: var(--t-mono);
     font-weight: 700;
-    text-transform: uppercase;
 }
 
 .op-section {
@@ -209,7 +208,6 @@
     min-width: 0;
     border-radius: 0 var(--r-sm) var(--r-sm) 0;
     background: var(--c-you);
-    transition: width var(--d-base) var(--ease);
 }
 
 .op-bars__n {
@@ -294,12 +292,6 @@
 
     .op-range .pk-btn {
         flex: 1;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .op-bars__fill {
-        transition: none;
     }
 }
 
@@ -424,8 +416,6 @@
 .mq-form {
     display: grid;
     gap: 12px;
-    padding: 14px;
-    border: 1px solid var(--c-line);
-    border-radius: var(--r-md);
-    background: var(--c-raised);
+    padding-top: 12px;
+    border-top: 1px solid var(--c-line);
 }

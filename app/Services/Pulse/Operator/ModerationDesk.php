@@ -153,7 +153,9 @@ class ModerationDesk
             default => 'The rules held it when it was submitted. The text shows no flags now.',
         };
 
-        return ['flags' => array_values($flags), 'source' => $source, 'note' => $note];
+        $flags = array_values(array_map(fn ($f) => is_array($f) ? $f : ['code' => (string) $f, 'severity' => 'hold', 'text' => ucfirst(str_replace('_', ' ', (string) $f))], $flags));
+
+        return ['flags' => $flags, 'source' => $source, 'note' => $note];
     }
 
     /** How the last submit of this subject was decided (rules, no rules, InfoDot member), from the audit log. */

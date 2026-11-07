@@ -38,7 +38,7 @@
                     <div class="mq-item__who">
                         <x-pulse.kind-word :kind="ucfirst(str_replace('_', ' ', $post->type))" />
                         <span class="mq-item__by">by {{ $post->author->name }}</span>
-                        <span class="pk-muted">&middot; {{ $post->community?->name ?? 'No community' }}@if ($post->community?->isPrivate()) (private)@endif</span>
+                        <span class="pk-muted">{{ $post->community?->name ?? 'No community' }}@if ($post->community?->isPrivate()) (private)@endif</span>
                     </div>
                     <x-pulse.pill :tone="$badge[1]">{{ $badge[0] }}</x-pulse.pill>
                 </header>
@@ -54,7 +54,7 @@
                             <p>{{ $status === 'pending' ? 'Why it is here' : 'AI rationale' }}: {{ $post->enrichment->moderation_rationale }}</p>
                         @endif
                         @if ($status !== 'pending')
-                            <p>Spam score: {{ number_format($post->enrichment->spam_score, 2) }} &middot; Safety score: {{ number_format($post->enrichment->safety_score, 2) }}</p>
+                            <p>Spam score: {{ number_format($post->enrichment->spam_score, 2) }} Safety score: {{ number_format($post->enrichment->safety_score, 2) }}</p>
                         @endif
                     </div>
                 @endif
@@ -98,7 +98,7 @@
                     <div class="mq-item__who">
                         <x-pulse.kind-word :kind="ucfirst($item['noun'])" />
                         <span class="mq-item__by">@if ($item['author']) by {{ $item['author']->name }} @endif</span>
-                        @if ($item['entity'])<span class="pk-muted">&middot; {{ $item['entity']->name }}</span>@endif
+                        @if ($item['entity'])<span class="pk-muted">{{ $item['entity']->name }}</span>@endif
                     </div>
                     <x-pulse.pill tone="warn">{{ $item['moderation'] === 'held' ? 'Held by the rules' : 'Waiting, no rules ran' }}</x-pulse.pill>
                 </header>

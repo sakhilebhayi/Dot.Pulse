@@ -17,10 +17,10 @@
             <x-pulse.kind-word :kind="$d['kind']" />
             <span class="mq-item__by">
                 @if ($d['by']) by {{ $d['by'] }} @elseif ($d['where']) {{ $d['where'] }} @endif
-                @if ($d['by'] && $d['where']) <span class="pk-muted">&middot; {{ $d['where'] }}</span> @endif
+                @if ($d['by'] && $d['where']) <span class="pk-muted">{{ $d['where'] }}</span> @endif
             </span>
             @if ($group['community'])
-                <span class="pk-muted">&middot; {{ $group['community'] }}@if ($group['private']) (private)@endif</span>
+                <span class="pk-muted">{{ $group['community'] }}@if ($group['private']) (private)@endif</span>
             @endif
         </div>
         <x-pulse.pill tone="bad">{{ $group['count'] }} {{ \Illuminate\Support\Str::plural('report', $group['count']) }}</x-pulse.pill>

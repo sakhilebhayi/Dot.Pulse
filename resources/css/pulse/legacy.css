@@ -485,3 +485,579 @@ textarea.dot-input {
     border: 1px solid var(--c-line);
     box-shadow: none;
 }
+
+/*
+ * The community surfaces on the Floor kit (R-41, U5): the feed, posts and comments, communities, people lists, trending,
+ * your posts' status, report and follow controls. These replaced the .dot-* markup above for those views; the block
+ * above stays only for the views that have not been rebuilt yet (profile, notification bell, profile forms).
+ */
+.lg-pagetitle {
+    font-size: var(--t-title);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.lg-h {
+    margin-bottom: 12px;
+    font-size: 1.0625rem;
+    font-stretch: 108%;
+}
+
+.lg-small {
+    font-size: var(--t-small);
+}
+
+.lg-none {
+    padding: 24px 0;
+    text-align: center;
+}
+
+.lg-feed {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm) var(--s-md);
+    margin-bottom: var(--s-sm);
+}
+
+.lg-feed > .lg-toolbar,
+.lg-communities .lg-toolbar {
+    margin-bottom: 0;
+}
+
+.lg-communities {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-toolbar .lg-h {
+    margin: 0;
+}
+
+.lg-toolbar__type {
+    min-width: min(100%, 12rem);
+}
+
+.lg-seg {
+    display: flex;
+    gap: var(--s-xs);
+}
+
+.lg-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--s-sm);
+}
+
+.lg-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-md);
+}
+
+/* A post: the same card as a beat, quieter, with no meter and no counters of vanity. */
+.lg-post {
+    display: grid;
+    gap: 12px;
+    transition: box-shadow var(--d-quick) var(--ease);
+}
+
+.lg-post:hover {
+    box-shadow: 0 4px 0 var(--c-shadow);
+}
+
+.lg-post__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.lg-avatar {
+    display: inline-flex;
+    flex: none;
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.lg-post__meta {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 12px;
+    min-width: 0;
+}
+
+.lg-post__name {
+    color: var(--c-ink);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.lg-post__name:hover {
+    text-decoration: underline;
+}
+
+.lg-post__where {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.lg-post__time {
+    margin-left: auto;
+    color: var(--c-muted);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+    white-space: nowrap;
+}
+
+.lg-post__title {
+    font-size: 1.0625rem;
+    font-stretch: 106%;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.lg-post__title a {
+    color: var(--c-ink);
+    text-decoration: none;
+}
+
+.lg-post__title a:hover {
+    color: var(--c-link);
+    text-decoration: underline;
+}
+
+.lg-post__title--lg {
+    font-size: var(--t-title);
+    font-stretch: 112%;
+}
+
+.lg-post__text {
+    color: var(--c-ink-2);
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.lg-clamp,
+.lg-clamp--2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.lg-clamp--2 {
+    -webkit-line-clamp: 2;
+}
+
+.lg-trunc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lg-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lg-tags li {
+    padding: 2px 8px;
+    border-radius: var(--r-sm);
+    background: var(--c-raised);
+    color: var(--c-ink-2);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+}
+
+.lg-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.lg-acts__end {
+    margin-left: auto;
+}
+
+.lg-act,
+.lg-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-muted);
+    font: inherit;
+    font-size: var(--t-small);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--d-quick) var(--ease), background-color var(--d-quick) var(--ease);
+}
+
+.lg-act:hover,
+.lg-link:hover {
+    background: var(--c-raised);
+    color: var(--c-ink);
+}
+
+.lg-act--static {
+    cursor: default;
+}
+
+.lg-act--static:hover {
+    background: transparent;
+    color: var(--c-muted);
+}
+
+.lg-act__n {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink-2);
+}
+
+.lg-link--bad {
+    color: var(--c-bad);
+}
+
+.lg-link--done {
+    cursor: default;
+}
+
+.lg-link--done:hover {
+    background: transparent;
+    color: var(--c-muted);
+}
+
+.lg-link--reply {
+    margin-top: 6px;
+    margin-left: 40px;
+}
+
+.lg-act:focus-visible,
+.lg-link:focus-visible,
+.lg-compose__open:focus-visible,
+.lg-trend__btn:focus-visible,
+.lg-post__title a:focus-visible,
+.lg-post__name:focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+.lg-callout {
+    padding: 12px 16px;
+    border-left: 4px solid var(--c-warn);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    background: var(--c-warn-wash);
+}
+
+.lg-callout__title {
+    color: var(--c-warn);
+    font-weight: 700;
+}
+
+.lg-inline {
+    display: grid;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--c-line);
+}
+
+/* Compose */
+.lg-compose {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-compose__open {
+    width: 100%;
+    min-height: var(--tap);
+    padding: 10px 14px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    color: var(--c-muted);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.lg-compose__open:hover {
+    border-color: var(--c-ink);
+    color: var(--c-ink);
+}
+
+.lg-compose__note {
+    flex: 1 1 14rem;
+    font-size: var(--t-small);
+}
+
+/* Lists of people, rows, communities */
+.lg-list {
+    display: grid;
+    gap: 8px;
+}
+
+.lg-list > .pk-row + .pk-row {
+    margin-top: 0;
+}
+
+.lg-person {
+    padding: 10px 12px;
+}
+
+.lg-rowlink {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lg-rowlink:hover {
+    border-color: var(--c-line-strong);
+}
+
+.lg-cpost .pk-row__main {
+    display: grid;
+    gap: 4px;
+}
+
+.lg-status .lg-h {
+    margin-bottom: 8px;
+}
+
+.lg-trend {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lg-trend__btn {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm);
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-ink-2);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+    text-align: left;
+    cursor: pointer;
+}
+
+.lg-trend__btn:hover {
+    background: var(--c-raised);
+    color: var(--c-ink);
+}
+
+.lg-cgrid {
+    display: grid;
+    gap: 12px;
+}
+
+.lg-community {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+}
+
+.lg-community__main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.lg-community__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-weight: 700;
+}
+
+.lg-community__name a {
+    color: var(--c-ink);
+    text-decoration: none;
+}
+
+.lg-community__name a:hover {
+    color: var(--c-link);
+    text-decoration: underline;
+}
+
+.lg-community__industry {
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.lg-community__act {
+    flex: none;
+}
+
+.lg-chead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.lg-chead__main {
+    display: grid;
+    flex: 1 1 16rem;
+    gap: 8px;
+    min-width: 0;
+}
+
+.lg-chead__title {
+    font-size: var(--t-title);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* Comments */
+.lg-comments {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-comments .lg-h {
+    margin-bottom: 0;
+}
+
+.lg-thread {
+    display: grid;
+    gap: 20px;
+}
+
+.lg-comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.lg-comment__main {
+    display: grid;
+    flex: 1;
+    gap: 6px;
+    min-width: 0;
+}
+
+.lg-replies {
+    display: grid;
+    gap: 12px;
+    margin: 12px 0 0 14px;
+    padding-left: 16px;
+    border-left: 2px solid var(--c-line);
+}
+
+.lg-facts {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    font-size: var(--t-small);
+}
+
+.lg-facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-md);
+}
+
+.lg-facts dd {
+    margin: 0;
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* Report popover */
+.lg-report {
+    position: relative;
+    display: inline-flex;
+}
+
+.lg-pop {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 30;
+    width: 20rem;
+    max-width: calc(100vw - 2rem);
+    margin-top: 6px;
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+@media (max-width: 859.98px) {
+    .lg-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lg-act,
+    .lg-link {
+        min-height: var(--tap);
+    }
+
+    .lg-pop {
+        position: fixed;
+        top: auto;
+        right: 1rem;
+        bottom: 5rem;
+        left: 1rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        z-index: 95;
+    }
+
+    .lg-replies {
+        margin-left: 6px;
+        padding-left: 12px;
+    }
+
+    .lg-link--reply {
+        margin-left: 12px;
+    }
+
+    .lg-community {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lg-post,
+    .lg-act,
+    .lg-link {
+        transition: none;
+    }
+}

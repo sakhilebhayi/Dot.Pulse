@@ -1,13 +1,6 @@
-<x-app-layout>
-
-<div class="pulse-page">
-
-    <a href="{{ route('dashboard') }}" style="font-size:0.78rem;color:#52525b;text-decoration:none;">&larr; Back to feed</a>
-
-    <div style="margin-top:1rem;">
+<x-app-layout :title="$community->name" width="floor" :dial="false">
+    <div class="pk-stack">
+        <div><x-pulse.button variant="quiet" size="sm" :href="pulse_route_first(['floor', 'dashboard'])">Back to the feed</x-pulse.button></div>
         <livewire:pulse.community-show :community="$community" />
     </div>
-
-</div>
-
 </x-app-layout>
