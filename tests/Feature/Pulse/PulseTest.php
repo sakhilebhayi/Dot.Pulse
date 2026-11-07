@@ -45,13 +45,13 @@ class PulseTest extends TestCase
 
     public function test_dashboard_requires_authentication(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
+        $this->get('/community')->assertRedirect('/login');
     }
 
     public function test_authenticated_user_can_view_dashboard(): void
     {
         $this->actingAs($this->user)
-            ->get('/dashboard')
+            ->get('/community')
             ->assertOk()
             ->assertViewIs('dashboard');
     }
@@ -69,14 +69,14 @@ class PulseTest extends TestCase
         ]);
 
         $this->actingAs($this->user)
-            ->get('/dashboard')
+            ->get('/community')
             ->assertSeeLivewire(FollowButton::class);
     }
 
     public function test_the_dashboard_layout_embeds_the_notification_bell(): void
     {
         $this->actingAs($this->user)
-            ->get('/dashboard')
+            ->get('/community')
             ->assertSeeLivewire(NotificationBell::class);
     }
 
@@ -84,7 +84,7 @@ class PulseTest extends TestCase
     {
         $this->assertDatabaseMissing('pulse_profiles', ['user_id' => $this->user->id]);
 
-        $this->actingAs($this->user)->get('/dashboard')->assertOk();
+        $this->actingAs($this->user)->get('/community')->assertOk();
 
         $this->assertDatabaseHas('pulse_profiles', ['user_id' => $this->user->id]);
     }

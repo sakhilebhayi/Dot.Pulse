@@ -1,0 +1,643 @@
+/* Hallmark v2.0 | theme: The Floor (locked by DESIGN.md, by request) | genre: app screens | shape: one column of beats | signature: the sync meter, opened in full on a beat's own page */
+/* critique: the Floor surfaces add only what the screens need (drawn load line, key focus, menus, forms); all colour and type come from tokens.css */
+/*
+ * The Floor surfaces: the round, a beat in full, search, saved, doors and the knock sheet. Prefix fl-.
+ * Built from the kit (kit.css). Nothing here changes a token; it adds layout and the few parts the kit lacks.
+ */
+
+.fl-h1 {
+    font-size: var(--t-title);
+    font-stretch: 118%;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.fl-small {
+    font-size: var(--t-small);
+    color: var(--c-muted);
+}
+
+.fl-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--c-link);
+    font: inherit;
+    font-size: var(--t-small);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* ---------- Round ---------- */
+.fl-round {
+    position: relative;
+}
+
+/* Loading is a line drawing in, not a spinner. */
+.fl-draw {
+    position: sticky;
+    top: var(--mast-h);
+    z-index: 5;
+    height: 3px;
+    margin: -3px 0 8px;
+    border-radius: 2px;
+    background: var(--c-field);
+    transform-origin: left center;
+    animation: fl-draw 900ms var(--ease) both;
+}
+
+@keyframes fl-draw {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.fl-beat:focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 3px;
+}
+
+.fl-card-line {
+    display: block;
+    font-weight: 600;
+    color: var(--c-ink);
+}
+
+.fl-card-line--muted {
+    margin-top: 2px;
+    font-weight: 500;
+    color: var(--c-muted);
+}
+
+.fl-knocknote {
+    flex: 1 1 100%;
+    margin-top: 2px;
+}
+
+.fl-why {
+    margin: 0;
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+}
+
+.pk-beat__meter .pk-meter + .fl-why {
+    margin-top: 12px;
+}
+
+.fl-more {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.fl-more p {
+    margin: 0;
+}
+
+.fl-end__links {
+    margin-top: 16px;
+}
+
+/* "Not for me" menu */
+.fl-menu {
+    position: relative;
+}
+
+.fl-menu__panel {
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    bottom: calc(100% + 6px);
+    display: grid;
+    gap: 2px;
+    min-width: 224px;
+    padding: 8px;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    box-shadow: 0 14px 34px var(--c-shadow-float);
+}
+
+.fl-menu__panel p {
+    margin: 0;
+    padding: 4px 8px 6px;
+}
+
+.fl-menu__panel button {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fl-menu__panel button:hover,
+.fl-menu__panel button:focus-visible {
+    background: var(--c-raised);
+}
+
+.fl-menu__panel button:focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: -2px;
+}
+
+@media (max-width: 859.98px) {
+    .fl-menu__panel button {
+        min-height: var(--tap);
+    }
+}
+
+/* ---------- Context column ---------- */
+.fl-context {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-md);
+}
+
+.fl-ctx {
+    display: grid;
+    gap: 10px;
+}
+
+.fl-ctx p {
+    margin: 0;
+}
+
+.fl-ctx__title {
+    font-size: 1.0625rem;
+    font-stretch: 108%;
+}
+
+.fl-ctx .pk-btn {
+    justify-self: start;
+}
+
+.fl-facts {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+}
+
+.fl-facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.fl-facts dt {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.fl-facts dt a {
+    color: inherit;
+}
+
+.fl-facts dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+}
+
+.fl-facts--block {
+    margin-top: 16px;
+}
+
+.fl-facts--block > div {
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.fl-facts--block dt {
+    flex: 0 0 96px;
+}
+
+.fl-facts--block dd {
+    font-weight: 500;
+    text-align: left;
+}
+
+.fl-keys p {
+    margin-top: 6px;
+}
+
+kbd {
+    padding: 1px 6px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-sm);
+    background: var(--c-sheet);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+}
+
+/* ---------- Knock sheet ---------- */
+.fl-knock {
+    display: contents;
+}
+
+.fl-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.fl-sheet__pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 539.98px) {
+    .fl-sheet__pair {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.fl-sheet__lead {
+    font-size: 1.25rem;
+    font-stretch: 112%;
+    outline: none;
+}
+
+.fl-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+    font-weight: 600;
+}
+
+.fl-notice svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.fl-notice--soft {
+    border-color: var(--c-line);
+    font-weight: 500;
+}
+
+.fl-notice--bad {
+    border-color: var(--c-bad);
+    background: var(--c-bad-wash);
+    color: var(--c-ink);
+}
+
+/* ---------- Search ---------- */
+.fl-search {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.fl-search .fl-draw {
+    margin-bottom: 0;
+}
+
+.fl-search__bar {
+    display: flex;
+    gap: 8px;
+}
+
+.fl-search__field {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fl-search__field > svg {
+    position: absolute;
+    left: 14px;
+    top: 13px;
+    color: var(--c-muted);
+    pointer-events: none;
+}
+
+.fl-search__field .pk-control {
+    padding-left: 42px;
+}
+
+.fl-suggest {
+    display: grid;
+    margin-top: -6px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    overflow: hidden;
+}
+
+.fl-suggest button {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-bottom: 1px solid var(--c-line);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fl-suggest button:last-child {
+    border-bottom: 0;
+}
+
+.fl-suggest button:hover,
+.fl-suggest button:focus-visible {
+    background: var(--c-raised);
+}
+
+.fl-suggest button:focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: -2px;
+}
+
+.fl-suggest .fl-small {
+    flex: 0 0 64px;
+}
+
+.fl-suggest--tight {
+    margin-top: 6px;
+}
+
+.fl-filters summary {
+    cursor: pointer;
+    font-weight: 700;
+    font-stretch: 106%;
+    min-height: 28px;
+}
+
+.fl-filters summary:focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 4px;
+    border-radius: var(--r-sm);
+}
+
+.fl-filters__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+    margin-top: 16px;
+}
+
+.fl-filters__foot {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.fl-place {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+@media (max-width: 539.98px) {
+    .fl-filters__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.fl-count {
+    margin: 0;
+    color: var(--c-muted);
+}
+
+.fl-count strong {
+    color: var(--c-ink);
+}
+
+/* ---------- Doors ---------- */
+.fl-door {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-md);
+}
+
+.fl-door__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.fl-door__purpose {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-stretch: 108%;
+    font-weight: 700;
+}
+
+.fl-door [aria-labelledby="door-open"] h2 {
+    margin-bottom: 14px;
+}
+
+.fl-radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.fl-radios legend {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 0;
+    font-size: var(--t-small);
+    font-weight: 700;
+    font-stretch: 104%;
+}
+
+.fl-radios--stack {
+    display: grid;
+    gap: 6px;
+}
+
+.fl-radio {
+    position: relative;
+}
+
+.fl-radio input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.fl-radio span {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 16px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    font-weight: 600;
+}
+
+.fl-radio input:hover + span {
+    border-color: var(--c-ink);
+}
+
+.fl-radio input:checked + span {
+    border-color: var(--c-ink);
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+}
+
+.fl-radio input:focus-visible + span {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+/* ---------- Beat in full ---------- */
+.fl-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    color: var(--c-link);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.fl-back:hover {
+    text-decoration: underline;
+}
+
+.fl-back__icon {
+    transform: rotate(90deg);
+}
+
+.fl-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-md);
+}
+
+.fl-detail__main.pk-beat:hover {
+    box-shadow: none;
+}
+
+.fl-detail__title {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.125rem);
+    font-stretch: 116%;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    overflow-wrap: break-word;
+}
+
+.fl-detail__body {
+    margin-top: 16px;
+    max-width: 62ch;
+    color: var(--c-ink-2);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.fl-detail__price {
+    margin: 16px 0 0;
+}
+
+.fl-detail .pk-beat__actions {
+    margin-top: 20px;
+}
+
+.fl-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+.fl-section h2 {
+    font-size: 1.125rem;
+    font-stretch: 110%;
+}
+
+.fl-section p {
+    margin: 0;
+    max-width: 62ch;
+}
+
+.fl-section__meter {
+    padding: 16px;
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+}
+
+.fl-section__lead {
+    display: grid;
+    gap: 2px;
+}
+
+.fl-guide {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 1.2em;
+    list-style: disc;
+}
+
+.fl-safety {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+
+/* Legacy report button, inside the new column */
+.fl-section .report-button,
+.fl-section [wire\:id] > span {
+    font-size: var(--t-small);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fl-draw {
+        animation: none;
+    }
+}
+
+.fl-facts--block + p {
+    margin-top: 12px;
+}
+
+.fl-search__bar > .pk-btn {
+    flex: none;
+}
+
+/* A long verification sentence wraps inside the beat instead of running off a phone. */
+.fl-beat .pk-beat__from-text .pk-pill,
+.fl-detail .pk-beat__from-text .pk-pill {
+    max-width: 100%;
+    white-space: normal;
+    align-items: flex-start;
+}
