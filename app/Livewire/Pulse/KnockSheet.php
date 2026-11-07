@@ -6,6 +6,7 @@ use App\Models\PulseDoor;
 use App\Models\PulseEntity;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
+use App\Models\PulseProfile;
 use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
@@ -191,7 +192,12 @@ class KnockSheet extends Component
             ? ['left' => app(KnockBudget::class)->remaining(auth()->user())]
             : null;
 
-        return view('livewire.pulse.knock-sheet', ['verdict' => $verdict, 'budget' => $budget]);
+        // An application names the applicant to the employer. Someone who chose to be anonymous to employers who browse
+        // is told so before they send it, so applying is never a surprise.
+        $namesYou = $this->open && $this->kind === 'application' && auth()->check()
+            && PulseProfile::query()->where('user_id', auth()->id())->value('discoverability') === 'anonymous';
+
+        return view('livewire.pulse.knock-sheet', ['verdict' => $verdict, 'budget' => $budget, 'namesYou' => $namesYou]);
     }
 
     /** @return array<string, mixed>|null */

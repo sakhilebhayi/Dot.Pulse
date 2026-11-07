@@ -10,7 +10,7 @@ export async function knock(j, page, triggerLocator, card) {
   const dialog = page.getByRole('dialog').first();
   await dialog.waitFor();
   const fill = async (label, value) => { if (value) await dialog.getByLabel(label).fill(value); };
-  await fill('What do you want?', card.what);
+  if (card.what) await dialog.locator('#what').fill(card.what);
   await fill('When, or how many', card.when);
   await fill('Where', card.where);
   await fill('Budget', card.budget);

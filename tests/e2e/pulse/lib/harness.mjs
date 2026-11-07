@@ -104,8 +104,16 @@ export class Journey {
 
   // ---- database (read only, fresh connection per call) -------------------------------------------------
   db(sql, ...params) {
-    const d = new DatabaseSync(this.dbFile, { readOnly: true });
-    try { return d.prepare(sql).all(...params); } finally { d.close(); }
+    for (let attempt = 0; ; attempt++) {
+      const d = new DatabaseSync(this.dbFile, { readOnly: true });
+      try {
+        d.exec('PRAGMA busy_timeout = 4000');
+        return d.prepare(sql).all(...params);
+      } catch (e) {
+        if (attempt < 5 && /locked|busy/i.test(e.message)) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300); continue; }
+        throw e;
+      } finally { d.close(); }
+    }
   }
   one(sql, ...params) { return this.db(sql, ...params)[0]; }
   value(sql, ...params) { const r = this.one(sql, ...params); return r ? Object.values(r)[0] : undefined; }
