@@ -1,6 +1,6 @@
 # R-41 Dot.Pulse: security and privacy pass
 
-Branch `feat/r41-sec`. Scope: authorisation, identity leaks, injection and output, abuse, moderation bypass, POPIA, platform hygiene. Every finding below has a regression test in `tests/Feature/Security/` (or an updated existing test, named). Method: read the code, then attack it through HTTP and Livewire in tests; the full suite is green (1,517 tests, 7 skipped, the same 7 as trunk).
+Branch `feat/r41-sec`. Scope: authorisation, identity leaks, injection and output, abuse, moderation bypass, POPIA, platform hygiene. Every finding below has a regression test in `tests/Feature/Security/` (or an updated existing test, named). Method: read the code, then attack it through HTTP and Livewire in tests; the full suite is green (1,517 tests, 7 skipped, the same 7 as trunk; the hardening pass brings it to 1,627).
 
 Severity: High = a person or their data is exposed or a core promise is broken with no special skill; Medium = needs a hostile signed-in person or a specific state; Low = hardening or a narrow window.
 
@@ -51,18 +51,28 @@ New environment variables: `SECURITY_CSP_REPORT_ONLY`, `PULSE_LIMIT_SEARCH`, `PU
 - POPIA: age gate cannot be skipped by forged onboarding or discoverability calls, an unconfirmed account is not indexed, knockable or able to knock; withdrawing consent changes discoverability, contact policy and digest; digest unsubscribe works signed-out and only for the person in the link; erasure holds after signing in again.
 - Hygiene: debug off hides stack traces, session cookie http-only and same-site, `pulse-check` answers a session user on a host not in the Sanctum stateful list (it lives in the web group, so the Press "Unauthenticated after SSO" bug does not exist here; `api/user` is the only route in the `api` group and nothing in the UI calls it), no secrets tracked in git.
 
-## Not fixed, and why
+## Not fixed, and why (updated by the hardening pass, branch `feat/r41-hard`)
 
-1. **No k-anonymity on talent cards, and the talent cohort rule (D23) is not built yet** (it is on the integration punch list). An employer can combine filters until exactly one card remains; someone who already knows a person's skills, band and region can recognise them. When counts ship they need the `>= 5` floor, and the card list itself needs a decision (hide a card when fewer than 5 people share its region, band and skill set). A test sketch: seed 4 matching professionals, assert no count and no filtered list narrower than 5.
-2. **Adding a team member by email** (`TeamManager::add`) says whether an address has an account and shows the person's name. Rate limited to 20 an hour; the real fix is an invitation the person accepts.
-3. **Anonymous professionals who also post under their name in communities, or open a Door** (a door carries their name and their profile place) can be linked to their card by skills and place. Legacy surfaces (integration list: anonymous names on legacy surfaces). Suggest: block doors and community posting while discoverability is anonymous, or warn.
-4. **Retention**: nothing purges old closed lines, messages, audit rows or expired needs' text. The plan promises expiry (done, tested by the existing sweep tests) but not deletion.
-5. **Export and erase have no step-up authentication.** SSO provisioned people have no password to confirm; a recent-sign-in check needs an InfoDot round trip.
-6. **Age is self declared**, as designed (D25).
-7. **Sybil outcomes and reviews**: two accounts can confirm each other's outcome and review each other. The refill cap (5) limits the allowance gain; a ring check is in the research notes, not in code.
-8. **`/u/{id}` for people who are not anonymous** lists named people by sequential id for anyone signed in (legacy community profile).
-9. **Role `apply_url`** is an external link a signed-in person can be sent to; it is `http(s)` only and `rel="nofollow noopener"`, but nothing checks where it goes.
-10. **CSP keeps `'unsafe-eval'`** (Livewire/Alpine, the fleet constraint) **and inline `style=""`** (91 attributes in the kit). Native `on*` handlers and inline scripts without a nonce are blocked. Two moderate npm advisories remain in the build-time `@tailwindcss/typography` chain (major upgrade, build only).
+Closed by the hardening pass (each has tests; details in `R41_SERVICES_NOTES.md`, "Hardening"):
+
+1. **K-anonymity on talent cards** (was: an employer could narrow filters to one card). `Discovery\AnonymousCohort`, enforced inside `Matcher::talentVisible`, so Floor, stored matches, saved, digest, search, `signals.show` and invitations all obey it: an anonymous card is shown only when 5 or more professionals share its first three skills and its region. The cohort belongs to the card, not the query, so two searches cannot differ by one person; anonymous cards are found on skills and region only. Tests: `AnonymousCohortTest` (includes a differencing attack that fails on the old behaviour).
+2. **Team member by email oracle.** Replaced by invitations: the reply is always the same, the address is a keyed hash, the person accepts on their hub, 14 days, rate limited, audited. `InvitationService`, `TeamInvitationTest`.
+3. **Anonymous professionals acting under their name.** While anonymous a person cannot open a door or publish a need (switching to anonymous closes theirs); posts stay, bylined by handle, with no link, place or skills to join on. `AnonymousGuard`, `AnonymousLinkabilityTest`.
+4. **Retention.** `pulse:retention` (daily): old closed-line messages erased to stubs after 24 months, declined and ignored requests deleted after 90 days, ended signals, dismissed matches and ended needs' text after 90 days, read notifications after 12 months, audit actors and ip hashes nulled after 24 months (rows kept), finished invitations after 30 days. Numbers in `config/pulse.php` (`retention`). `RetentionTest`, `R41_PRIVACY.md`.
+5. **Sybil outcomes and reviews.** Ring check on pair frequency (more than 3 confirmed results between the same two parties in 90 days) and account age (under 7 days: the second result is flagged). Flagged results are accepted, stay out of public counts and the ladder, their reviews are held; a moderator approves or discards them in the queue (Messages and reviews tab). `RingCheckTest`.
+6. **Export and erase step-up.** The person types a phrase and, where mail is configured, a 6 digit code emailed to them (10 minutes, five tries, three sends an hour). Without mail the typed phrase alone is the step. Download is released by a five minute, single use session grant. `StepUpTest`.
+
+Still open:
+
+- **Age is self declared**, as designed (D25).
+- **`/u/{id}` for people who are not anonymous** lists named people by sequential id for anyone signed in (legacy community profile).
+- **Role `apply_url`** is an external link a signed-in person can be sent to; `http(s)` only and `rel="nofollow noopener"`, nothing checks where it goes.
+- **CSP keeps `'unsafe-eval'`** (Livewire/Alpine, the fleet constraint) **and inline `style=""`** (91 attributes in the kit). Two moderate npm advisories remain in the build-time `@tailwindcss/typography` chain.
+- **Anonymous card detail.** The cohort rule counts the first three skills and the region. The card also shows up to eight skills, an experience band and the free-text headline, none of which the cohort covers. A later pass could cap the card to the cohort attributes or generalise the headline.
+- **Page level linkability.** A person who runs a business page under their own name and is also anonymous can be joined to their card through the page's public identity. The rule cannot reach that; the page is theirs to name.
+- **Cohort cost.** The cohort is computed per employer from one pass over live talent signals. Fine at thousands of cards; at tens of thousands it should be materialised and refreshed with `pulse:index`.
+- **Ring check blind spots.** It has no device or ip signal, so a ring spread over many accounts, each below the pair limit, passes. Pair limits are in `pulse.ring`.
+- **Step-up without mail** is a typed phrase only. A real second factor needs an InfoDot round trip.
 
 ## Seen in the integration agent's areas (not touched)
 
