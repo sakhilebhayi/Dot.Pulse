@@ -337,6 +337,43 @@ document.addEventListener('livewire:init', () => {
     });
 });
 
+/*
+ * Forms that fail: focus goes to the first invalid field (so a keyboard or screen reader person lands on the problem, and
+ * typed text is not typed into the button), and a closed sheet hands focus back to whatever opened it.
+ */
+let lastSubmitted = null;
+let lastOpener = null;
+
+document.addEventListener('submit', (event) => {
+    lastSubmitted = event.target instanceof HTMLFormElement ? event.target : null;
+}, true);
+
+document.addEventListener('click', (event) => {
+    const el = event.target instanceof Element ? event.target.closest('button, a') : null;
+    if (el && !el.closest('dialog')) lastOpener = el;
+}, true);
+
+document.addEventListener('close', (event) => {
+    if (!(event.target instanceof HTMLDialogElement)) return;
+    const opener = lastOpener;
+    if (opener && opener.isConnected) setTimeout(() => opener.focus({ preventScroll: true }), 0);
+}, true);
+
+document.addEventListener('livewire:init', () => {
+    window.Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => {
+            const form = lastSubmitted;
+            if (!form) return;
+            setTimeout(() => {
+                lastSubmitted = null;
+                const live = form.isConnected ? form : document.querySelector('dialog[open] form, form[wire\\:submit]');
+                const bad = live && live.querySelector('[aria-invalid="true"]');
+                if (bad) bad.focus();
+            }, 80);
+        });
+    });
+});
+
 function init() {
     syncThemeButtons();
     prepareMeters();

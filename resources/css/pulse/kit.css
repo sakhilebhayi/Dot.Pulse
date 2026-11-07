@@ -1500,3 +1500,8 @@ select.pk-control {
     color: var(--c-bad);
     box-shadow: 0 -12px 0 -11px var(--c-line);
 }
+
+/* An open sheet or drawer holds the page still behind it. */
+body:has(dialog.pk-dialog[open]) {
+    overflow: hidden;
+}
