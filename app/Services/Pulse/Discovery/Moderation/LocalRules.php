@@ -42,13 +42,13 @@ class LocalRules
         $job = '(?:job|learnership|internship|vacanc|position|apprentice|hiring|recruit|employment|placement)';
 
         return [
-            'scam_fake_pop_fee' => ['/(?:proof of payment|\bpop\b)[^.\n]{0,120}(?:courier|delivery|insurance|release|clearance) fee|(?:courier|delivery|insurance|release|clearance) fee[^.\n]{0,120}(?:proof of payment|\bpop\b)/iu', self::BLOCK,
+            'scam_fake_pop_fee' => ['/(?:proof of payment|\bpop\b)[^\n]{0,160}(?:courier|delivery|insurance|release|clearance) fee|(?:courier|delivery|insurance|release|clearance) fee[^\n]{0,160}(?:proof of payment|\bpop\b)/iu', self::BLOCK,
                 'It looks like the fake proof of payment scam, where a buyer "pays" and then asks for a fee to be sent back. It was not published.'],
             'scam_fake_pop' => ['/(?:proof of payment|\bpop\b)[^.\n]{0,60}(?:attached|sent|is in|below)|(?:check|see) (?:your )?(?:account|banking app)[^.\n]{0,40}(?:reflect|pending|paid)|payment (?:is )?pending[^.\n]{0,40}(?:send|release|dispatch)/iu', self::HOLD,
                 'Talk of proof of payment is a common scam, so a person will check this first.'],
             'scam_job_fee' => ['/(?:pay|paying|payment of|deposit|send|transfer)[^.\n]{0,50}(?:registration|application|admin(?:istration)?|processing|training|uniform|placement|recruitment|medical|police clearance|visa|interview|screening)(?: fees?)?|(?:registration|application|admin(?:istration)?|placement|recruitment|training|uniform|screening) fees? (?:of|is|are|:|\-)? ?r? ?\d/iu', self::HOLD,
                 'Asking for a fee for a job or learnership is a common scam, so a person will check this first.'],
-            'scam_job_fee_block' => ['/(?:'.$job.')[^\n]{0,160}(?:pay|deposit|send|transfer)[^.\n]{0,40}r ?\d{2,}[^\n]{0,40}(?:fee|registration|admin|uniform|training|placement|application)|(?:registration|application|admin|uniform|training|placement) fees? (?:of )?r ?\d[^\n]{0,160}'.$job.'/iu', self::BLOCK,
+            'scam_job_fee_block' => ['/(?:'.$job.')[^\n]{0,160}(?:pay|deposit|send|transfer)[^.\n]{0,40}r ?\d{2,}[^\n]{0,40}(?:fee|registration|admin|uniform|training|placement|application)|(?:'.$job.')[^\n]{0,160}(?:pay|deposit|send|transfer)[^.\n]{0,40}(?:registration|application|admin|uniform|training|placement) fees?[^.\n]{0,20}r ?\d{2,}|(?:registration|application|admin|uniform|training|placement) fees? (?:of )?r ?\d[^\n]{0,160}'.$job.'/iu', self::BLOCK,
                 'Charging a fee to apply for a job or learnership is a scam pattern and is not allowed here. It was not published.'],
             'scam_advance_fee' => ['/next of kin|unclaimed (?:funds?|estate|inheritance)|beneficiary of (?:a |the )?(?:fund|estate|will|inheritance)|you have (?:won|been selected)|lottery (?:winner|draw)|diplomat(?:ic)? (?:consignment|box)|(?:million|billion) (?:usd|dollars|us dollars)|transfer of \$ ?\d|barrister[^.\n]{0,40}(?:fund|estate)/iu', self::BLOCK,
                 'It matches an advance-fee story (an inheritance, lottery or fund that needs a payment first). It was not published.'],
