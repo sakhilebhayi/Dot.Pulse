@@ -114,7 +114,7 @@ Legend: PHPUnit = test classes under `tests/Feature`; E2E = a Playwright spec in
 
 Not covered by a real-browser test, and why: reporting a review (needs two confirmed outcomes and the blind period; PHPUnit covers it), the InfoDot redeem round trip (needs the secret), mail delivery (the log mailer is read), uploads of real photographs through the media pipeline beyond the failure path (`Entities\MediaServiceTest`).
 
-New PHPUnit tests this run: 30 (`tests/Feature/AcceptanceB/`, plus extensions of `Discovery\DigestTest`, `Me\NotificationsTest`, `Lines\PrivacyTest`). Suite: SUITE_RESULT.
+New PHPUnit tests this run: 23 in `tests/Feature/AcceptanceB/` (7 classes), plus edits to `Discovery\DigestTest`, `Me\NotificationsTest` and `Lines\PrivacyTest`. Suite: 1417 tests, 1410 passed, 7 skipped (trunk baseline 1394, 7 skipped). Browser: `s09` 28, `s10` 33, `s13` 16, `s14` 41, `s15` 55, `s16` 56, `s17` 19, `s19` 48, `s20` 28 checks, all passing in the final run (`s16` with its five reviewed harness reports).
 
 
 ## Criterion 9: notification control (what was driven)

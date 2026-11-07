@@ -80,4 +80,16 @@ class IntegrationsAreRealTest extends TestCase
 
         $this->assertSame([], $found, 'nothing visible may claim an integration with a platform Pulse does not call');
     }
+
+    public function test_the_acceptance_sign_in_route_exists_only_locally(): void
+    {
+        $web = File::get(base_path('routes/web.php'));
+        $block = substr($web, (int) strpos($web, '// --- dev-b ---'));
+
+        $this->assertStringContainsString("if (app()->environment('local', 'testing')) {", substr($block, 0, 400), 'the dev-b block must be guarded by the environment check');
+        $this->assertStringContainsString('/dev/login-b/{id}', $block);
+
+        // This suite runs as "testing": the route is there. In production the guard above keeps it from being registered.
+        $this->assertTrue(collect(app('router')->getRoutes()->getRoutes())->contains(fn ($r) => $r->uri() === 'dev/login-b/{id}'));
+    }
 }
