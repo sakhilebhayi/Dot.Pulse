@@ -20,6 +20,7 @@
     $lead = ($lead ?? false) && $meter->toHtml() !== '';
     $compact = ($compact ?? false) && $meter->toHtml() !== '';
     $quiet = $quiet ?? false;
+    $row = ($row ?? false) || $mode === 'search';
     $chips = collect($reasons)->pluck('text')->filter()->values();
 @endphp
 <x-pulse.beat
@@ -31,7 +32,7 @@
     wire:key="beat-{{ $sid }}"
     data-beat="{{ $sid }}"
     tabindex="-1"
-    class="fl-beat{{ $quiet ? ' fl-beat--quiet' : '' }}{{ $compact ? ' fl-beat--compact' : '' }}{{ $lead ? ' fl-beat--lead' : '' }}"
+    class="fl-beat{{ $quiet ? ' fl-beat--quiet' : '' }}{{ $row ? ' fl-beat--row' : '' }}{{ $compact ? ' fl-beat--compact' : '' }}{{ $lead ? ' fl-beat--lead' : '' }}"
     x-data="{ thread: false }"
 >
     @if ($anon)
@@ -44,7 +45,12 @@
     @endif
 
     <x-slot name="from">
-        @if ($anon)
+        @if ($row)
+            <span class="pk-beat__from-text fl-rowfrom">
+                <span class="pk-beat__from-name">{{ $anon ? 'Anonymous professional' : ($b['from']['name'] ?? 'Someone on Pulse') }}</span>
+                @if (! $anon && ! empty($b['verification']))<span class="fl-small">{{ $b['verification']['label'] }}</span>@endif
+            </span>
+        @elseif ($anon)
             <x-pulse.avatar name="" />
             <span class="pk-beat__from-text">
                 <span class="pk-beat__from-name">Anonymous professional</span>
@@ -63,7 +69,7 @@
 
     @if (! empty($why))
         <x-slot name="meter">
-            @if ($meter->toHtml() !== '')
+            @if ($meter->toHtml() !== '' && ! $row)
                 {{ $meter }}
             @endif
             <p class="fl-why">{{ implode(' ', $why) }}</p>

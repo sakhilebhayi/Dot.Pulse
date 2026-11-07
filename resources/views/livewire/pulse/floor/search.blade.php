@@ -82,7 +82,7 @@
             @foreach ($beats as $b)
                 @if (($b['result'] ?? 'signal') === 'entity')
                     @php $e = $b['entity']; @endphp
-                    <article class="pk-beat fl-beat fl-entity" wire:key="ent-{{ $e['id'] }}">
+                    <article class="pk-beat fl-beat fl-beat--row fl-entity" wire:key="ent-{{ $e['id'] }}">
                         <div class="pk-beat__top"><x-pulse.kind-word kind="business" />@if ($e['place'])<x-pulse.place-label :name="$e['place']" />@endif</div>
                         <h3 class="pk-beat__title"><a href="{{ pulse_route('entities.show', ['entity' => $e['slug']]) }}">{{ $e['name'] }}</a></h3>
                         @if ($e['tagline'])<div class="pk-beat__body">{{ $e['tagline'] }}</div>@endif

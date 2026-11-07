@@ -70,7 +70,7 @@
         @endif
 
         <div class="sh-mast__tools">
-            @if (Route::has('search'))
+            @if (Route::has('search') && ! request()->routeIs('search'))
                 <form class="sh-search" role="search" action="{{ route('search') }}" method="get">
                     <label for="mast-q" class="sr-only">Search the floor</label>
                     <x-pulse.icon name="search" :size="16" />
