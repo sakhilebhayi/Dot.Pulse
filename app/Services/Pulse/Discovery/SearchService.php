@@ -101,13 +101,19 @@ class SearchService
         }
 
         if ($this->wantsEntities($filters)) {
-            // A page found by name is listed once, as the page: its own business signal steps aside.
-            $entities = $this->entityResults($ctx, $terms, $q, $viewerPlace);
-            $named = array_flip(array_map(fn ($r) => (int) ($r['entity']['id'] ?? 0), $entities));
-            $results = array_values(array_filter($results, fn ($r) => ! (($r['signal']->kind ?? null) === 'business' && isset($named[(int) $r['signal']->entity_id]))));
+            // A business already found as its own "business" signal is one result, not two (the signal carries the
+            // match reasons and the trust label; the plain page row would repeat it with a different label).
+            $listed = [];
+            foreach ($results as $r) {
+                if ($r['type'] === 'signal' && $r['signal']->kind === 'business' && $r['signal']->entity_id) {
+                    $listed[(int) $r['signal']->entity_id] = true;
+                }
+            }
 
-            foreach ($entities as $r) {
-                $results[] = $r;
+            foreach ($this->entityResults($ctx, $terms, $q, $viewerPlace) as $r) {
+                if (! isset($listed[$r['entity']['id']])) {
+                    $results[] = $r;
+                }
             }
         }
 

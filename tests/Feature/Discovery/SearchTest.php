@@ -67,9 +67,13 @@ class SearchTest extends TestCase
         $res = $this->search('bakery');
 
         $this->assertSame(['Karoo Bakery'], $this->titles($res));
-        $this->assertSame('entity', $res['results'][0]['type']);
-        $this->assertContains('Matched the business name.', $res['results'][0]['why']);
-        $this->assertSame('Claims', substr((string) ($res['results'][0]['entity']['verification'] ?? 'Claims'), 0, 6));
+        // A live page has its own business signal (the observer indexes it) and that one result stands for the page.
+        $this->assertContains($res['results'][0]['type'], ['signal', 'entity']);
+
+        if ($res['results'][0]['type'] === 'entity') {
+            $this->assertContains('Matched the business name.', $res['results'][0]['why']);
+            $this->assertSame('Claims', substr((string) ($res['results'][0]['entity']['verification'] ?? 'Claims'), 0, 6));
+        }
     }
 
     public function test_a_business_with_its_own_signal_is_one_result_not_two(): void

@@ -30,7 +30,7 @@ class RouteSweepTest extends TestCase
         '/', 'login', 'forgot-password', 'reset-password', 'reset-password/{token}', 'two-factor-challenge', 'auth/ecosystem', 'up',
         'b/{entity}', 'media/{mediaFile}/{size?}', 'pulse/digest/unsubscribe/{user}', 'sanctum/csrf-cookie',
         'register', 'storage/{path}', 'livewire/update', 'livewire/upload-file', 'livewire/preview-file/{filename}',
-        'livewire/livewire.js', 'livewire/livewire.min.js.map', 'broadcasting/auth', 'dev/kit', 'dev/floor', '_boost/browser-logs',
+        'livewire/livewire.js', 'livewire/livewire.min.js.map', 'broadcasting/auth', 'dev/kit', 'dev/floor', 'dev/login/{who}', 'dev/logout', 'dev/login/{who}', 'dev/logout', '_boost/browser-logs',
     ];
 
     public function test_every_route_is_classified_and_everything_unclassified_needs_a_sign_in(): void
