@@ -1,12 +1,16 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\Pulse\DigestUnsubscribeController;
 use App\Http\Controllers\Pulse\MediaController;
 use App\Models\Community;
+use App\Models\PulseConversation;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Features;
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
@@ -79,8 +83,26 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:1
 // --- discovery digest (D2) ---
 // Signed link in the digest email: switches the digest off for the user in the URL. GET (click) and POST (a mail
 // client's one-click List-Unsubscribe-Post). No sign-in needed; the signature is the proof.
-Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Controllers\Pulse\DigestUnsubscribeController::class)
+Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscribeController::class)
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
     ->middleware(['signed', 'throttle:20,1'])
     ->name('pulse.digest.unsubscribe');
 // --- end discovery digest (D2) ---
+// --- lines-ui ---
+// Lines: the inbox, one line's thread, and the side by side comparison of a quote request.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
+
+    Route::get('/lines/quotes/{group}', function (string $group) {
+        abort_unless(Str::isUuid($group), 404);
+
+        return view('livewire.pulse.lines.pages.quotes', ['group' => $group]);
+    })->name('lines.quotes');
+
+    Route::get('/lines/{conversation}', function (PulseConversation $conversation) {
+        abort_unless(Gate::allows('view', $conversation), 404);
+
+        return view('livewire.pulse.lines.pages.show', ['conversation' => $conversation]);
+    })->whereNumber('conversation')->name('lines.show');
+});
+// --- end lines-ui ---
