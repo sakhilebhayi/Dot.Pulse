@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -47,6 +48,8 @@ class Thread extends Component
         'image.max' => 'That photo is over 5 MB. Pick a smaller one.',
     ];
 
+    #[Locked]
+
     public int $conversationId = 0;
 
     public string $body = '';
@@ -56,6 +59,8 @@ class Thread extends Component
 
     /** close | reveal while the person is being asked to be sure */
     public ?string $confirming = null;
+
+    #[Locked]
 
     public ?int $reportingMessage = null;
 

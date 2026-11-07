@@ -15,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -29,6 +30,8 @@ use Livewire\WithFileUploads;
 class EntityForm extends Component
 {
     use WithFileUploads;
+
+    #[Locked]
 
     public ?int $entityId = null;
 

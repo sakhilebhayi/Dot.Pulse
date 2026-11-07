@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -23,6 +24,8 @@ use Livewire\Component;
 class TeamManager extends Component
 {
     use HandlesServiceErrors;
+
+    #[Locked]
 
     public int $entityId;
 

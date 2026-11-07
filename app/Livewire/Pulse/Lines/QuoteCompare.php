@@ -12,6 +12,7 @@ use App\Services\Pulse\Lines\ResponseStats;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -22,6 +23,7 @@ use Livewire\Component;
  */
 class QuoteCompare extends Component
 {
+    #[Locked]
     public string $group = '';
 
     public ?string $failure = null;

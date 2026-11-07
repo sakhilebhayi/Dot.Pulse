@@ -13,6 +13,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -33,6 +34,8 @@ class Inbox extends Component
 
     #[Url(as: 'tab')]
     public string $tab = 'requests';
+
+    #[Locked]
 
     public ?int $entityId = null;
 

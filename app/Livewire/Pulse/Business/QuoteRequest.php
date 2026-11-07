@@ -8,6 +8,7 @@ use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\QuoteService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -16,11 +17,14 @@ use Livewire\Component;
  */
 class QuoteRequest extends Component
 {
+    #[Locked]
     public int $offerId;
 
     public bool $open = false;
 
     public bool $sent = false;
+
+    #[Locked]
 
     public ?int $lineId = null;
 

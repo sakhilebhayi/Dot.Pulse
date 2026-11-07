@@ -16,6 +16,7 @@ use App\Services\Pulse\Lines\LineService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -41,11 +42,18 @@ use Livewire\Component;
 class KnockSheet extends Component
 {
     /** @var array<string, int> */
+    #[Locked]
     public array $target = [];
+
+    #[Locked]
 
     public string $kind = 'enquiry';
 
+    #[Locked]
+
     public ?string $contextType = null;
+
+    #[Locked]
 
     public ?int $contextId = null;
 
@@ -54,6 +62,8 @@ class KnockSheet extends Component
     public bool $open = false;
 
     public bool $sent = false;
+
+    #[Locked]
 
     public ?int $lineId = null;
 

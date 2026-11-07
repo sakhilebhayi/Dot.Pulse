@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -27,10 +28,14 @@ class OfferManager extends Component
     use HandlesServiceErrors;
     use WithFileUploads;
 
+    #[Locked]
+
     public int $entityId;
 
     /** list | edit */
     public string $mode = 'list';
+
+    #[Locked]
 
     public ?int $offerId = null;
 

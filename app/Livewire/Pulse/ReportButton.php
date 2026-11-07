@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -25,7 +26,10 @@ use Livewire\Component;
  */
 class ReportButton extends Component
 {
+    #[Locked]
     public string $targetType;
+
+    #[Locked]
 
     public int $targetId;
 
