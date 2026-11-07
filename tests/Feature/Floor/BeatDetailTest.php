@@ -182,6 +182,18 @@ class BeatDetailTest extends FloorTestCase
         $this->detail($s)->assertSee('My own ask')->assertSee('This is yours.')->assertDontSee('data-pk-dialog', false)->assertDontSee('>Save<', false)->assertDontSee('How ');
     }
 
+    public function test_the_answer_heading_reads_as_a_sentence_for_one_person_or_one_business(): void
+    {
+        $owner = $this->person();
+        $s = $this->dSignal(['owner_id' => $owner->id, 'kind' => 'ask', 'subject_type' => 'post', 'title' => 'A door']);
+        $this->dMatch($this->me, $s);
+
+        $this->detail($s)->assertSee('How '.$owner->name.' answers')->assertDontSee($owner->name.' answer<', false);
+
+        [$signal] = $this->offerFor();
+        $this->detail($signal)->assertSeeHtml('answers</h2>');
+    }
+
     public function test_knock_and_save_are_on_the_page_and_save_works(): void
     {
         [$signal, $entity] = $this->offerFor();

@@ -122,7 +122,7 @@
 
         @if ($answer)
             <section class="pk-card fl-section" aria-labelledby="ans-title">
-                <h2 id="ans-title">How {{ $stats['who'] ?? 'they' }} answer</h2>
+                <h2 id="ans-title">{{ isset($stats['who']) ? 'How '.$stats['who'].' answers' : 'How they answer' }}</h2>
                 <p>{{ $answer }}</p>
                 <p class="pk-muted fl-small">Counted from real first messages. Requests that were ignored or lapsed count as not answered.</p>
             </section>
