@@ -12,7 +12,8 @@
     $iAmInvited = $line['can']['reveal'];
     $anonymousToThem = $model->identity_hidden && $side === 'recipient';
 @endphp
-<div class="ln-thread" wire:poll.visible.10s="refresh">
+<div class="ln-thread" wire:poll.visible.10s="refresh"
+     x-data x-init="$nextTick(() => { const last = $el.querySelector('[data-latest]'); if (last && !location.hash) last.scrollIntoView({ block: 'end' }); })">
     <div class="ln-back"><a href="{{ route('lines') }}">All lines</a></div>
 
     <header class="ln-head">
@@ -88,7 +89,7 @@
         </div>
     @endif
 
-    @include('livewire.pulse.lines.partials.context-card', ['line' => $line, 'subject' => $subject, 'open' => count($messages) <= 3])
+    @include('livewire.pulse.lines.partials.context-card', ['line' => $line, 'subject' => $subject, 'open' => false])
 
     @if ($anonymousToThem)
         <p class="ln-note ln-note--block"><x-pulse.icon name="lock" :size="16" />This employer sees you as an anonymous card: your headline, skills, experience band and region. Nothing else. Show who you are only when you are ready.</p>
@@ -141,7 +142,7 @@
                 @php $day = $thisDay; @endphp
                 <h2 class="ln-day">{{ $m['created_at']?->isToday() ? 'Today' : ($m['created_at']?->isYesterday() ? 'Yesterday' : Words::date($m['created_at'])) }}</h2>
             @endif
-            <div wire:key="m-{{ $m['id'] }}">
+            <div wire:key="m-{{ $m['id'] }}" @if ($loop->last) data-latest @endif>
                 @include('livewire.pulse.lines.partials.message', ['m' => $m, 'viewerSide' => $side, 'quotes' => $quotes, 'canDecide' => $canDecide, 'canReport' => $canReport, 'closedReason' => $line['closed_reason'] ?? null])
             </div>
         @empty

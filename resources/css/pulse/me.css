@@ -905,3 +905,24 @@
         transition: none;
     }
 }
+
+.me-biz {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    margin: 8px 0 0;
+    font-size: var(--t-ui);
+}
+
+.me-biz span {
+    color: var(--c-muted);
+    font-weight: 600;
+}
+
+.me-biz a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+}

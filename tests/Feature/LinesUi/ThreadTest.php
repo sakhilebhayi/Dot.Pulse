@@ -117,6 +117,20 @@ class ThreadTest extends TestCase
         $this->assertStringContainsString('wire:poll.visible.10s="refresh"', $component->html());
     }
 
+    public function test_the_thread_opens_folded_scrolled_to_the_newest_message_with_a_compact_composer(): void
+    {
+        [$sender, $owner, , $line] = $this->enquiry();
+        $this->lines()->send($owner, $line->fresh(), 'Morning. When suits you?');
+
+        $html = $this->thread($sender, $line->fresh())->html();
+
+        $this->assertStringNotContainsString('<details class="ln-details" wire:ignore.self open', $html, 'the context card is folded by default');
+        $this->assertSame(1, preg_match_all('/wire:key="m-\d+"\s+data-latest/', $html), 'exactly the newest message is the scroll target');
+        $this->assertStringContainsString('scrollIntoView', $html);
+        $this->assertStringContainsString('ln-composer__keys', $html, 'the keyboard hint is its own span so touch can hide it');
+        $this->assertStringContainsString('rows="1"', $html);
+    }
+
     public function test_opening_a_line_marks_it_read(): void
     {
         [$sender, $owner, , $line] = $this->enquiry();
@@ -136,7 +150,7 @@ class ThreadTest extends TestCase
         [$sender, , , $line] = $this->enquiry();
 
         $this->thread($sender, $line)
-            ->assertSee('What this line is about')
+            ->assertSee('What was asked')
             ->assertSee('Same week geyser repairs')
             ->assertSee('Plumbing')
             ->assertSee('The request')
@@ -212,7 +226,7 @@ class ThreadTest extends TestCase
 
         $this->thread($sender, $line->fresh())
             ->assertSee('Links and contact details are fine now.')
-            ->assertSee('Photo')
+            ->assertSee('Add a photo')
             ->set('body', 'Thanks, see https://example.com/leak')
             ->call('send')
             ->assertHasNoErrors();
