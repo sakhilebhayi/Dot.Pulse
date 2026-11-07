@@ -52,3 +52,13 @@ Route::middleware([
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// --- media ---
+// Images are read through this route only. Authorisation is decided per request in MediaService::canView
+// (public images of live pages to anyone, message media to the people in the conversation).
+Route::get('/media/{mediaFile}/{size?}', \App\Http\Controllers\Pulse\MediaController::class)
+    ->whereNumber('mediaFile')
+    ->where('size', 'thumb|medium|large')
+    ->middleware('throttle:300,1')
+    ->name('pulse.media');
+// --- end media ---
