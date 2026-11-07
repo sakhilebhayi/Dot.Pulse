@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Lines;
 use App\Models\User;
 use App\Notifications\PulseNotice;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 use Throwable;
 
@@ -32,7 +33,7 @@ class Notifier
         $payload['type'] ??= $category;
         $payload['title'] ??= '';
 
-        if (isset($payload['route']['name']) && \Illuminate\Support\Facades\Route::has($payload['route']['name'])) {
+        if (isset($payload['route']['name']) && Route::has($payload['route']['name'])) {
             $payload['url'] = route($payload['route']['name'], $payload['route']['params'] ?? []);
         }
 

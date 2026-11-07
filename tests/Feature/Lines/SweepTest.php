@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Lines;
 
-use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Services\Pulse\Lines\Doors;
 use App\Services\Pulse\Lines\LineService;

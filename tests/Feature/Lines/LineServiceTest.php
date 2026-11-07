@@ -4,10 +4,12 @@ namespace Tests\Feature\Lines;
 
 use App\Models\PulseConversation;
 use App\Models\PulseMessage;
+use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\LinesFixtures;
@@ -331,7 +333,7 @@ class LineServiceTest extends TestCase
             $this->lines()->send($sender, $c, "message {$i}");
         }
 
-        $this->expectException(\Illuminate\Http\Exceptions\ThrottleRequestsException::class);
+        $this->expectException(ThrottleRequestsException::class);
         $this->lines()->send($sender, $c, 'one too many');
     }
 
@@ -342,11 +344,11 @@ class LineServiceTest extends TestCase
         $offer = $this->offer($page);
 
         $first = $this->lines()->knock($sender, ['entity' => $page->id], 'enquiry', $this->card(), $offer);
-        $remaining = app(\App\Services\Pulse\Lines\KnockBudget::class)->remaining($sender);
+        $remaining = app(KnockBudget::class)->remaining($sender);
         $second = $this->lines()->knock($sender, ['entity' => $page->id], 'enquiry', $this->card(), $offer);
 
         $this->assertSame($first->id, $second->id);
-        $this->assertSame($remaining, app(\App\Services\Pulse\Lines\KnockBudget::class)->remaining($sender));
+        $this->assertSame($remaining, app(KnockBudget::class)->remaining($sender));
     }
 
     public function test_after_a_decline_the_same_ask_waits_for_the_cooldown(): void

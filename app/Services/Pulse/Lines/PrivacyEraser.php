@@ -13,6 +13,7 @@ use App\Models\PulseNotificationPref;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Notifications\PulseNotice;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -76,7 +77,7 @@ class PrivacyEraser
             DB::table('pulse_matches')->where('user_id', $user->id)->delete();
             DB::table('pulse_entity_followers')->where('user_id', $user->id)->delete();
             $result['notifications'] = DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)
-                ->where('type', \App\Notifications\PulseNotice::class)->delete();
+                ->where('type', PulseNotice::class)->delete();
             DB::table('pulse_knock_budgets')->where('user_id', $user->id)->delete();
 
             // Reviews they wrote: unlinked from a name, kept as the other side's record.
@@ -90,6 +91,7 @@ class PrivacyEraser
 
                 if ($onlyOwner) {
                     $stuck[] = (string) ($m->entity?->slug ?? $m->entity_id);
+
                     continue;
                 }
 

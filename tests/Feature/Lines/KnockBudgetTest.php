@@ -7,7 +7,9 @@ use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use ReflectionClass;
 use ReflectionMethod;
 use Tests\Support\LinesFixtures;
@@ -63,7 +65,7 @@ class KnockBudgetTest extends TestCase
         $this->assertTrue($resets->isSameDay(now()->addDays(7)));
 
         $this->travel(7)->days();
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
 
         $this->assertSame(7, $this->budget()->remaining($u));
         $this->assertTrue($this->budget()->resetsAt($u)->isFuture());
@@ -119,11 +121,11 @@ class KnockBudgetTest extends TestCase
         $this->assertSame(0, $this->budget()->remaining($u), 'never below zero and never more than the base');
 
         $this->travel(7)->days();
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
         $this->assertSame(1, $this->budget()->remaining($u), 'one step healed');
 
         $this->travel(7)->days();
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
         $this->assertSame(2, $this->budget()->remaining($u));
     }
 
@@ -170,7 +172,7 @@ class KnockBudgetTest extends TestCase
 
         try {
             app(LineService::class)->knock($sender, ['entity' => $page->id], 'enquiry', $this->card(['what' => 'see https://spam.example']));
-        } catch (\Illuminate\Validation\ValidationException) {
+        } catch (ValidationException) {
         }
 
         $this->assertSame(7, $this->budget()->remaining($sender));

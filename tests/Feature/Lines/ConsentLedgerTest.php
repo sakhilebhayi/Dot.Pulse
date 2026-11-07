@@ -4,11 +4,12 @@ namespace Tests\Feature\Lines;
 
 use App\Models\PulseEntityMember;
 use App\Models\PulseSignal;
+use App\Models\User;
 use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\LineException;
-use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\NotificationPrefs;
 use App\Services\Pulse\Lines\QuoteService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\LinesFixtures;
@@ -24,7 +25,7 @@ class ConsentLedgerTest extends TestCase
         return app(ConsentLedger::class);
     }
 
-    private function sentences(\App\Models\User $u): array
+    private function sentences(User $u): array
     {
         return array_column($this->ledger()->entries($u), 'sentence', 'key');
     }
@@ -128,7 +129,7 @@ class ConsentLedgerTest extends TestCase
         $page = $this->page(null, ['contact_policy' => 'requests']);
         $line = $this->openLine($customer, $page);
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         $this->ledger()->withdraw($this->person(), 'line.close:'.$line->id);
     }
 

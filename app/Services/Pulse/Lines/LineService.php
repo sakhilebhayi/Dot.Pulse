@@ -8,11 +8,13 @@ use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
 use App\Models\PulseMessage;
 use App\Models\PulseProfile;
+use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -65,7 +67,7 @@ class LineService
         $card = $this->cleanCard($from, $card);
         $context ??= $t['context'];
 
-        if ($kind === 'application' && ! ($context instanceof \App\Models\PulseRole)) {
+        if ($kind === 'application' && ! ($context instanceof PulseRole)) {
             throw LineException::because('invalid', 'Applications start from a role. Open the role and apply from there.');
         }
 
@@ -83,7 +85,7 @@ class LineService
         $described = $context ? Context::describe($context) : null;
         $status = ($decision['mode'] === 'direct' && $kind !== 'invite') ? PulseConversation::OPEN : PulseConversation::REQUESTED;
 
-        $conversation = DB::transaction(function () use ($from, $t, $kind, $card, $context, $decision, $described, $status) {
+        $conversation = DB::transaction(function () use ($from, $t, $kind, $card, $decision, $described, $status) {
             if ($t['door'] !== null) {
                 $this->takeDoorSlot($from, $t['door']);
             }
@@ -333,7 +335,7 @@ class LineService
         // Past the last message, so a message that lands in the same second as the read still counts as new.
         $readAt = now()->startOfSecond();
         $last = PulseConversation::query()->whereKey($c->id)->value('last_message_at');
-        if ($last !== null && $readAt->lte($last = \Illuminate\Support\Carbon::parse($last))) {
+        if ($last !== null && $readAt->lte($last = Carbon::parse($last))) {
             $readAt = $last->copy()->addSecond();
         }
 
@@ -570,6 +572,9 @@ class LineService
             if (! $signal || $signal->status !== 'live' || ($signal->owner_id === null && $signal->entity_id === null)) {
                 throw LineException::because('unavailable', 'They cannot be contacted right now.');
             }
+            if ($signal->kind === 'talent' && $kind !== 'invite') {
+                throw LineException::because('not_allowed', 'Professionals are invited by employer pages. Send an invitation from your page.');
+            }
             $out['signal'] = $signal;
             $out['context'] = $signal;
             $out['user'] = $signal->owner_id ? User::query()->find($signal->owner_id) : null;
@@ -685,6 +690,7 @@ class LineService
             ->when($t['entity'], fn ($q) => $q->where('entity_id', $t['entity']->id), fn ($q) => $q->where('recipient_id', $t['user']->id))
             ->when($context, fn ($q) => $q->where('context_type', Context::describe($context)['type'])->where('context_id', $context->getKey()))
             ->when($t['door'], fn ($q) => $q->where('door_id', $t['door']->id))
+            ->when($t['as_entity'], fn ($q) => $q->where('initiator_entity_id', $t['as_entity']->id))
             ->first();
     }
 

@@ -8,6 +8,7 @@ use App\Models\PulseNeed;
 use App\Models\PulseOffer;
 use App\Models\PulseQuote;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -78,7 +79,7 @@ class QuoteService
         $described = Context::describe($context);
         $group = (string) Str::uuid();
 
-        $conversations = DB::transaction(function () use ($from, $ids, $entities, $card, $described, $group, $stranger, $offer) {
+        $conversations = DB::transaction(function () use ($from, $ids, $card, $described, $group, $stranger) {
             if ($stranger) {
                 $this->budget->spend($from); // one knock for the whole request, not one per business
             }
@@ -297,7 +298,7 @@ class QuoteService
         return $stale->count();
     }
 
-    /** @return array{0: \Illuminate\Database\Eloquent\Model, 1: ?PulseOffer} */
+    /** @return array{0: Model, 1: ?PulseOffer} */
     private function resolveSubject(User $from, array $needOrOffer): array
     {
         if (isset($needOrOffer['need'])) {
@@ -325,7 +326,7 @@ class QuoteService
      * The context a provider's contact policy is checked against. A need is a context for any seller that quotes.
      * An offer is a context for its own page; another page is asked on the strength of its own quoting offer.
      */
-    private function gateContext(\Illuminate\Database\Eloquent\Model $context, PulseEntity $entity): ?\Illuminate\Database\Eloquent\Model
+    private function gateContext(Model $context, PulseEntity $entity): ?Model
     {
         if ($context instanceof PulseOffer && $context->entity_id !== $entity->id) {
             return PulseOffer::query()->where('entity_id', $entity->id)->where('status', 'live')

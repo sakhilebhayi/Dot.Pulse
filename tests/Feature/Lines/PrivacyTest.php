@@ -4,13 +4,12 @@ namespace Tests\Feature\Lines;
 
 use App\Models\PulseAuditEntry;
 use App\Models\PulseBlock;
-use App\Models\PulseConversation;
 use App\Models\PulseMessage;
 use App\Models\PulseMute;
 use App\Models\PulseNotificationPref;
+use App\Models\PulseReview;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
-use App\Services\Pulse\Lines\AuditLog;
 use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\MuteService;
@@ -177,6 +176,6 @@ class PrivacyTest extends TestCase
         PrivacyEraser::erase($customer);
 
         $this->assertTrue(OutcomeService::confirmed($c->fresh()), 'the page\'s result stays');
-        $this->assertTrue(\App\Models\PulseReview::first()->pseudonymous);
+        $this->assertTrue(PulseReview::first()->pseudonymous);
     }
 }

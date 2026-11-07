@@ -10,7 +10,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -194,7 +193,7 @@ class ReviewService
                 'partnered' => 'A partner',
                 default => 'A customer',
             }
-            : $this->shortName($r->author?->name);
+        : $this->shortName($r->author?->name);
 
         return [
             'id' => $r->id,

@@ -4,7 +4,9 @@ namespace Tests\Feature\Lines;
 
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
+use App\Models\PulseMessage;
 use App\Models\PulseReport;
+use App\Models\PulseSignal;
 use App\Models\User;
 use App\Notifications\PulseNotice;
 use App\Services\Pulse\Lines\ConsentLedger;
@@ -14,6 +16,7 @@ use App\Services\Pulse\Lines\OutcomeService;
 use App\Services\Pulse\Lines\PrivacyExport;
 use App\Services\Pulse\Lines\ReportService;
 use App\Services\Pulse\Lines\ReviewService;
+use App\Services\Pulse\Lines\SweepLines;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +40,7 @@ class AnonymousInviteTest extends TestCase
 
     private User $pro;
 
-    private \App\Models\PulseSignal $signal;
+    private PulseSignal $signal;
 
     protected function setUp(): void
     {
@@ -186,7 +189,7 @@ class AnonymousInviteTest extends TestCase
         [$otherPro, $otherSignal] = $this->talent('anonymous', ['name' => 'Sipho Nkosi-Private']);
         $other = $this->lines()->knock($this->recruiter, ['signal' => $otherSignal->id, 'as_entity' => $this->employer->id], 'invite', $this->card());
         $this->travel(15)->days();
-        app(\App\Services\Pulse\Lines\SweepLines::class)->expireRequests();
+        app(SweepLines::class)->expireRequests();
 
         foreach ($this->recruiter->notifications()->get() as $row) {
             $this->assertNoIdentity($row->data, 'notification '.$row->data['type']);
@@ -237,7 +240,7 @@ class AnonymousInviteTest extends TestCase
         $this->lines()->accept($this->pro, $c);
         $this->lines()->reveal($this->pro, $c->fresh());
         $this->lines()->reveal($this->pro, $c->fresh()); // idempotent: nothing to do, no error
-        $this->assertSame(1, \App\Models\PulseMessage::where('pulse_conversation_id', $c->id)->where('meta', 'like', '%revealed%')->count());
+        $this->assertSame(1, PulseMessage::where('pulse_conversation_id', $c->id)->where('meta', 'like', '%revealed%')->count());
     }
 
     public function test_the_professional_sees_the_page_not_the_staff_member_who_sent_it(): void
@@ -399,5 +402,13 @@ class AnonymousInviteTest extends TestCase
         $thread = $this->lines()->thread($moderator, $c->fresh());
         $this->assertNoIdentity($thread, 'moderator thread');
         $this->assertNoIdentity($this->lines()->present($moderator, $c->fresh()), 'moderator view');
+    }
+
+    public function test_a_talent_signal_can_only_be_approached_with_an_invitation_from_a_page(): void
+    {
+        $someone = $this->person();
+
+        $this->expectException(LineException::class);
+        $this->lines()->knock($someone, ['signal' => $this->signal->id], 'intro', $this->card());
     }
 }

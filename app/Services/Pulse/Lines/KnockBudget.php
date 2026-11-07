@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Lines;
 use App\Models\PulseKnockBudget;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -30,7 +31,7 @@ class KnockBudget
 
         $affected = PulseKnockBudget::query()
             ->whereKey($row->id)
-            ->whereRaw('spent < (CASE WHEN penalty > ? THEN 0 ELSE ? - penalty END) + bonus', [$base, $base])
+            ->whereRaw('spent < (CASE WHEN penalty > CAST(? AS INTEGER) THEN 0 ELSE CAST(? AS INTEGER) - penalty END) + bonus', [$base, $base])
             ->update(['spent' => DB::raw('spent + 1'), 'updated_at' => now()]);
 
         $this->forget($u);
@@ -92,8 +93,9 @@ class KnockBudget
 
         if ($row === null) {
             try {
-                $row = PulseKnockBudget::create(['user_id' => $u->id, 'window_started_at' => now(), 'spent' => 0, 'bonus' => 0, 'penalty' => 0]);
-            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // A savepoint, so a lost race on first use does not poison an enclosing PostgreSQL transaction.
+                $row = DB::transaction(fn () => PulseKnockBudget::create(['user_id' => $u->id, 'window_started_at' => now(), 'spent' => 0, 'bonus' => 0, 'penalty' => 0]));
+            } catch (UniqueConstraintViolationException) {
                 $row = PulseKnockBudget::query()->where('user_id', $u->id)->firstOrFail();
             }
 

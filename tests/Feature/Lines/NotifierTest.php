@@ -6,11 +6,14 @@ use App\Livewire\Pulse\NotificationBell;
 use App\Models\User;
 use App\Notifications\NewFollower;
 use App\Notifications\PulseNotice;
-use App\Services\Pulse\Lines\Notifier;
 use App\Services\Pulse\Lines\NotificationPrefs;
 use App\Services\Pulse\Lines\NotificationPresenter;
+use App\Services\Pulse\Lines\Notifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Events\NotificationSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\Support\LinesFixtures;
@@ -55,7 +58,7 @@ class NotifierTest extends TestCase
     public function test_the_database_row_has_a_category_and_a_resolved_url(): void
     {
         $u = $this->person();
-        \Illuminate\Support\Facades\Route::get('/lines/{conversation}', fn () => 'x')->name('lines.show');
+        Route::get('/lines/{conversation}', fn () => 'x')->name('lines.show');
         app('router')->getRoutes()->refreshNameLookups();
 
         $this->notifier()->notify($u, 'lines', $this->payload(['route' => ['name' => 'lines.show', 'params' => ['conversation' => 5]]]));
@@ -185,7 +188,7 @@ class NotifierTest extends TestCase
     public function test_a_mail_failure_never_undoes_the_in_app_notification(): void
     {
         $u = $this->person();
-        \Illuminate\Support\Facades\Event::listen(\Illuminate\Notifications\Events\NotificationSending::class, function ($event) {
+        Event::listen(NotificationSending::class, function ($event) {
             if ($event->channel === 'mail') {
                 throw new \RuntimeException('smtp down');
             }

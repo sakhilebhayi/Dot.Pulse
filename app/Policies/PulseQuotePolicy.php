@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\PulseConversation;
 use App\Models\PulseQuote;
 use App\Models\User;
 use App\Services\Pulse\Lines\Access;
@@ -14,7 +15,7 @@ class PulseQuotePolicy
     }
 
     /** The provider page's responders send the slip. */
-    public function respond(User $user, PulseQuote|\App\Models\PulseConversation $subject): bool
+    public function respond(User $user, PulseQuote|PulseConversation $subject): bool
     {
         $conversation = $subject instanceof PulseQuote ? $subject->conversation : $subject;
 

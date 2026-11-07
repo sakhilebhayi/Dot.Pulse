@@ -3,6 +3,7 @@
 namespace Tests\Feature\Lines;
 
 use App\Models\PulseConversation;
+use App\Models\PulseEntity;
 use App\Models\PulseQuote;
 use App\Models\User;
 use App\Services\Pulse\Lines\KnockBudget;
@@ -24,7 +25,7 @@ class QuoteServiceTest extends TestCase
         return app(QuoteService::class);
     }
 
-    /** @return array{0: \App\Models\PulseEntity, 1: User} */
+    /** @return array{0: PulseEntity, 1: User} */
     private function provider(string $name = 'Moyo Plumbing'): array
     {
         $page = $this->page(null, ['name' => $name, 'contact_policy' => 'context']);

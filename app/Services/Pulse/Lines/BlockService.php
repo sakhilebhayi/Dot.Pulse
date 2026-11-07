@@ -7,6 +7,7 @@ use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityBlock;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -54,7 +55,7 @@ class BlockService
     public function blockAsEntity(User $by, PulseEntity $entity, User $person): void
     {
         if (! Access::canRespondFor($by, $entity)) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('You do not answer for this page.');
+            throw new AuthorizationException('You do not answer for this page.');
         }
 
         try {

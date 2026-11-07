@@ -3,6 +3,7 @@
 namespace Tests\Feature\Lines;
 
 use App\Models\PulseDoor;
+use App\Models\User;
 use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\ContactGate;
 use App\Services\Pulse\Lines\Doors;
@@ -235,7 +236,7 @@ class ContactGateTest extends TestCase
     public function test_a_user_with_no_profile_is_treated_as_context_only_and_is_not_contactable_until_age_confirmed(): void
     {
         $from = $this->person();
-        $bare = \App\Models\User::factory()->create();
+        $bare = User::factory()->create();
 
         $r = $this->gate()->can($from, $bare);
         $this->assertFalse($r['allowed']);

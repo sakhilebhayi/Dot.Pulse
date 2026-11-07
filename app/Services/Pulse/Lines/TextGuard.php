@@ -114,7 +114,7 @@ class TextGuard
     {
         $class = 'App\\Services\\Pulse\\Discovery\\Moderation\\LocalRules';
 
-        if (! class_exists($class)) {
+        if (! class_exists($class) && ! app()->bound($class)) {
             return ['verdict' => 'allow', 'flags' => []];
         }
 

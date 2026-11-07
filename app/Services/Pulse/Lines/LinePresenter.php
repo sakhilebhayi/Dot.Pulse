@@ -6,7 +6,6 @@ use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseMessage;
 use App\Models\User;
-use Illuminate\Support\Collection;
 
 /**
  * What a viewer is allowed to see of a line. Every client facing read of a conversation goes through here: the

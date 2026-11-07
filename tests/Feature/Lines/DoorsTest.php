@@ -4,6 +4,8 @@ namespace Tests\Feature\Lines;
 
 use App\Models\PulseConversation;
 use App\Models\PulseDoor;
+use App\Services\Pulse\Lines\BlockService;
+use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\Doors;
 use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\LineException;
@@ -184,7 +186,7 @@ class DoorsTest extends TestCase
         $owner = $this->person();
         $blocked = $this->person();
         $signal = $this->doors()->open($owner, 'Looking for a baker for Saturday', 'day');
-        app(\App\Services\Pulse\Lines\BlockService::class)->block($owner, $blocked);
+        app(BlockService::class)->block($owner, $blocked);
 
         try {
             $this->doors()->knockOnDoor($blocked, $signal, $this->card());
@@ -206,10 +208,10 @@ class DoorsTest extends TestCase
         $owner = $this->person();
         $this->doors()->open($owner, 'Looking for a baker for Saturday', 'day');
 
-        $row = collect(app(\App\Services\Pulse\Lines\ConsentLedger::class)->entries($owner))->firstWhere('kind', 'door');
+        $row = collect(app(ConsentLedger::class)->entries($owner))->firstWhere('kind', 'door');
         $this->assertStringContainsString('Looking for a baker for Saturday', $row['sentence']);
 
-        app(\App\Services\Pulse\Lines\ConsentLedger::class)->withdraw($owner, $row['key']);
+        app(ConsentLedger::class)->withdraw($owner, $row['key']);
         $this->assertSame('closed', PulseDoor::first()->status);
         $this->assertNull(DB::table('pulse_signals')->where('kind', 'door')->where('status', 'live')->first());
     }

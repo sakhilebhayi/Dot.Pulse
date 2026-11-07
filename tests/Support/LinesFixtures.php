@@ -12,6 +12,7 @@ use App\Models\PulseProfile;
 use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Lines\LineService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -163,7 +164,7 @@ trait LinesFixtures
     /** An open line with a reply, ready for outcomes. */
     protected function openLine(User $from, PulseEntity|User $to, string $kind = 'enquiry', ?object $context = null): PulseConversation
     {
-        $lines = app(\App\Services\Pulse\Lines\LineService::class);
+        $lines = app(LineService::class);
         $target = $to instanceof PulseEntity ? ['entity' => $to->id] : ['user' => $to->id];
         $c = $lines->knock($from, $target, $kind, $this->card(), $context);
 

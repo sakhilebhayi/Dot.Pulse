@@ -77,6 +77,12 @@ return new class extends Migration
             $table->timestamp('erased_at')->nullable();
         });
 
+        // 2026_11_08_100000 made pulse_messages.kind varchar(12); the value 'quote_request' is 13 characters.
+        // SQLite does not enforce the length, PostgreSQL does. Widened here, left widened on rollback.
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE pulse_messages ALTER COLUMN kind TYPE VARCHAR(24)');
+        }
+
         Schema::table('pulse_quotes', function (Blueprint $table) {
             $table->unsignedBigInteger('amount_max_cents')->nullable(); // a range: amount_cents is the low end
             $table->date('earliest_date')->nullable();

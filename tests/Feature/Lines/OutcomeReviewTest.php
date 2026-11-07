@@ -3,6 +3,7 @@
 namespace Tests\Feature\Lines;
 
 use App\Models\PulseConversation;
+use App\Models\PulseEntity;
 use App\Models\PulseReview;
 use App\Models\User;
 use App\Services\Pulse\Lines\LineException;
@@ -10,7 +11,9 @@ use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\OutcomeService;
 use App\Services\Pulse\Lines\ReviewService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\LinesFixtures;
 use Tests\TestCase;
@@ -30,7 +33,7 @@ class OutcomeReviewTest extends TestCase
         return app(ReviewService::class);
     }
 
-    /** @return array{0: User, 1: \App\Models\PulseEntity, 2: User, 3: PulseConversation} */
+    /** @return array{0: User, 1: PulseEntity, 2: User, 3: PulseConversation} */
     private function enquiryLine(): array
     {
         $customer = $this->person();
@@ -350,7 +353,7 @@ class OutcomeReviewTest extends TestCase
         }
 
         $moderator = $this->person(['role' => 'moderator']);
-        \Illuminate\Support\Facades\DB::table('pulse_profiles')->where('user_id', $moderator->id)->update(['role' => 'moderator']);
+        DB::table('pulse_profiles')->where('user_id', $moderator->id)->update(['role' => 'moderator']);
         $this->reviews()->moderate($moderator->fresh(), $r, true);
 
         $this->assertCount(1, $this->reviews()->forSubject($page));
@@ -361,7 +364,7 @@ class OutcomeReviewTest extends TestCase
         [$customer, $page, , $c] = $this->confirmedLine();
         $this->reviews()->submit($customer, $c, ['rating' => 5]);
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
         PulseReview::create(['user_id' => $customer->id, 'reviewable_type' => $page::class, 'reviewable_id' => $page->id, 'rating' => 1, 'conversation_id' => $c->id]);
     }
 }

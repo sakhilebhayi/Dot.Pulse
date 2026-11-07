@@ -3,12 +3,12 @@
 namespace Tests\Feature\Lines;
 
 use App\Models\PulseBlock;
-use App\Models\PulseConversation;
 use App\Models\PulseMute;
 use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\MuteService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\LinesFixtures;
@@ -129,7 +129,7 @@ class BlockMuteTest extends TestCase
             try {
                 $this->blocks()->blockAsEntity($nope, $page, $this->person());
                 $this->fail('not a responder');
-            } catch (\Illuminate\Auth\Access\AuthorizationException) {
+            } catch (AuthorizationException) {
             }
         }
 

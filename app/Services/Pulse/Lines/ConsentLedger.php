@@ -9,6 +9,7 @@ use App\Models\PulseProfile;
 use App\Models\PulseQuote;
 use App\Models\PulseSignal;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +30,7 @@ class ConsentLedger
     ) {}
 
     /**
-     * @return list<array{key: string, kind: string, sentence: string, since: ?\Carbon\Carbon, until: ?\Carbon\Carbon, withdraw: array{action: string, label: string}}>
+     * @return list<array{key: string, kind: string, sentence: string, since: ?Carbon, until: ?Carbon, withdraw: array{action: string, label: string}}>
      */
     public function entries(User $u): array
     {
