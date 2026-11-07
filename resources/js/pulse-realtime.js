@@ -13,8 +13,9 @@
  *  - user.{id}: notifications; subscribed on every authenticated page.
  */
 function initPulseRealtime() {
+    // No Echo means no Reverb credentials (bootstrap.js already said so once). Short polling carries the live parts
+    // (D14), so this is a normal state, not an error: say nothing more.
     if (typeof window.Echo === 'undefined') {
-        console.error('Laravel Echo not found. Ensure bootstrap.js loaded before pulse-realtime.js.');
         return;
     }
 

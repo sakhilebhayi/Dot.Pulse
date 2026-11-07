@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * Sends a person's digest if, and only if, they asked for one, it is not their quiet time and there is something
  * real to say. Opt-in by construction: no preference row, no digest.
  *
- * Preferences read (pulse_notification_prefs): digest (bool), frequency (daily|weekly; instant and off mean no
+ * Preferences read (pulse_notification_prefs): digest (bool), frequency (instant, daily or weekly; only off means no
  * digest), digest_hour (HH:MM), timezone, last_digest_at, channels.email (false switches email off), categories
  * digest/match (false switches the digest off), and quiet hours: the Lines module's NotificationPrefs::quietNow()
  * when it is installed, otherwise channels.quiet_hours or categories.quiet_hours as {start, end} (HH:MM).
@@ -25,7 +25,9 @@ class DigestSender
     /** Whether this person wants a digest at all (ignores the clock). */
     public function enabled(?PulseNotificationPref $prefs): bool
     {
-        if ($prefs === null || ! $prefs->digest || ! in_array($prefs->frequency, ['daily', 'weekly'], true)) {
+        // The summary is its own opt-in. It carries matches only, which are never emailed as they happen, so a person who
+        // gets conversation email "right away" can still ask for it (daily). Only "off" (no email from Pulse) blocks it.
+        if ($prefs === null || ! $prefs->digest || ! in_array($prefs->frequency, ['instant', 'daily', 'weekly'], true)) {
             return false;
         }
 

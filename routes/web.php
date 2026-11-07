@@ -224,3 +224,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     })->whereNumber('conversation')->name('lines.show');
 });
 // --- end lines-ui ---
+// --- dev-b ---
+// Local and test only (acceptance suite B, tests/e2e/pulse-b): signs the browser in as user {id} without a password.
+// Never registered in production: the route does not exist there.
+if (app()->environment('local', 'testing')) {
+    Route::get('/dev/login-b/{id}', function (int $id) {
+        $user = User::query()->findOrFail($id);
+        auth()->login($user);
+        request()->session()->regenerate();
+        $to = (string) request('to', '/floor');
+
+        return redirect(str_starts_with($to, '/') && ! str_starts_with($to, '//') ? $to : '/floor');
+    })->whereNumber('id')->name('dev.login-b');
+}
+// --- end dev-b ---

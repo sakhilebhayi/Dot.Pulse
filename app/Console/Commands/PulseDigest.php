@@ -28,7 +28,7 @@ class PulseDigest extends Command
 
         PulseNotificationPref::query()
             ->where('digest', true)
-            ->whereIn('frequency', ['daily', 'weekly'])
+            ->whereIn('frequency', ['instant', 'daily', 'weekly'])
             ->orderBy('id')
             ->chunkById(200, function ($prefs) use ($sender, &$sent, &$due, $dry) {
                 foreach ($prefs as $pref) {

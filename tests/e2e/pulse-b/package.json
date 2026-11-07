@@ -1,0 +1,8 @@
+{
+  "name": "pulse-e2e-b",
+  "private": true,
+  "type": "module",
+  "description": "R-41 acceptance B: real-browser journeys for Dot.Pulse (criteria 9, 10, 13-17, 19, 20). Local only, never shipped.",
+  "scripts": { "test": "node run.mjs" },
+  "dependencies": { "playwright-core": "1.52.0", "axe-core": "4.10.2" }
+}

@@ -121,8 +121,6 @@ class NotificationsTest extends MeTestCase
 
         Livewire::actingAs($u)->test(NotificationSettings::class)
             ->set('email.lines', false)
-            ->set('email.matches', true)
-            ->set('inApp.matches', false)
             ->set('frequency', 'daily')
             ->set('digest', true)
             ->set('digestHour', '06:00')
@@ -140,8 +138,6 @@ class NotificationsTest extends MeTestCase
         $this->assertSame('Europe/London', $pref->timezone);
         $this->assertSame('22:00', $pref->quiet_start);
         $this->assertFalse($pref->categories['lines']['email']);
-        $this->assertTrue($pref->categories['matches']['email']);
-        $this->assertFalse($pref->categories['matches']['in_app']);
         $this->assertTrue($pref->categories['digest']['email'], 'the digest toggle drives the digest email');
 
         Livewire::actingAs($u)->test(NotificationSettings::class)
