@@ -84,3 +84,13 @@ Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', \App\Http\Cont
     ->middleware(['signed', 'throttle:20,1'])
     ->name('pulse.digest.unsubscribe');
 // --- end discovery digest (D2) ---
+// --- operator ---
+// Platform moderators only. The component checks again on every request it serves.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/operator', function () {
+        abort_unless(auth()->user()->isPlatformModerator(), 403);
+
+        return view('pulse.operator');
+    })->name('operator');
+});
+// --- end operator ---
