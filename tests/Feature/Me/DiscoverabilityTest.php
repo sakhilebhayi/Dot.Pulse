@@ -80,6 +80,9 @@ class DiscoverabilityTest extends MeTestCase
         }
         $this->assertStringContainsString('An anonymous professional', $html);
         $this->assertStringContainsString('5 to 9 years', $html);
+        $this->assertSame(['bookkeeping', 'payroll'], $card['skills'], 'arrays, not encoded strings');
+        $this->assertStringNotContainsString('[&quot;', $html);
+        $this->assertStringNotContainsString('["', $html);
     }
 
     public function test_open_to_is_saved_and_validated(): void

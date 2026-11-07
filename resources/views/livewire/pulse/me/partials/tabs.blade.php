@@ -11,5 +11,7 @@
 <div class="me-head">
     <h1 class="me-title">You</h1>
     @isset($lede)<p class="me-lede">{{ $lede }}</p>@endisset
-    <x-pulse.tabs :tabs="$tabs" :active="$active" label="Your pages" class="me-tabs" />
+    <div x-data x-init="$nextTick(() => $el.querySelector('[aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest' }))">
+        <x-pulse.tabs :tabs="$tabs" :active="$active" label="Your pages" class="me-tabs" />
+    </div>
 </div>

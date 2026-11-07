@@ -108,8 +108,8 @@
         <div class="me-section__head">
             <h2 id="up-posts">Posts</h2>
             <div class="pk-cluster">
-                <x-pulse.button variant="ghost" size="sm" data-pk-dialog="up-followers" type="button">Followers</x-pulse.button>
-                <x-pulse.button variant="ghost" size="sm" data-pk-dialog="up-following" type="button">Following</x-pulse.button>
+                <x-pulse.button variant="quiet" size="sm" data-pk-dialog="up-followers" type="button">Followers</x-pulse.button>
+                <x-pulse.button variant="quiet" size="sm" data-pk-dialog="up-following" type="button">Following</x-pulse.button>
             </div>
         </div>
         @if ($this->posts->isEmpty())

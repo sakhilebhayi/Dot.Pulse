@@ -31,7 +31,6 @@
             <x-pulse.beat kind="talent" :title="$card['headline'] ?: 'No headline yet'" :place="$card['region']">
                 <ul class="me-facts">
                     <li><span class="me-facts__k">Experience</span><span>{{ $card['experience_band']['label'] ?? 'Not set' }}</span></li>
-                    <li><span class="me-facts__k">Region</span><span>{{ $card['region'] ?? 'Not shown' }}</span></li>
                     @if (! empty($card['open_to']))
                         <li><span class="me-facts__k">Open to</span><span>{{ collect($card['open_to'])->map(fn ($v) => $openLabels[$v] ?? $v)->implode(', ') }}</span></li>
                     @endif

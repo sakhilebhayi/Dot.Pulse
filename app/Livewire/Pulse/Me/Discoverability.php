@@ -83,7 +83,10 @@ class Discoverability extends Component
     public function preview(): array
     {
         $saved = app(ProfileService::class)->profileFor(auth()->user());
-        $clone = $saved->newInstance($saved->getAttributes(), true);
+        // Raw attributes, not fill(): fill() would run the array casts over values that are already encoded.
+        $clone = new PulseProfile;
+        $clone->setRawAttributes($saved->getAttributes(), true);
+        $clone->exists = true;
         $clone->discoverability = 'anonymous';
         $clone->age_confirmed_at ??= now();
 

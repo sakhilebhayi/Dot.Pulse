@@ -50,7 +50,7 @@
         <div class="me-quiet">
             <x-pulse.field name="quietStart" type="time" label="Quiet from" wire:model="quietStart" optional />
             <x-pulse.field name="quietEnd" type="time" label="Until" wire:model="quietEnd" optional />
-            @if ($quietStart || $quietEnd)<x-pulse.button variant="ghost" size="sm" type="button" wire:click="clearQuiet">Clear quiet hours</x-pulse.button>@endif
+            @if ($quietStart || $quietEnd)<x-pulse.button variant="quiet" size="sm" type="button" wire:click="clearQuiet">Clear quiet hours</x-pulse.button>@endif
         </div>
     </div>
 

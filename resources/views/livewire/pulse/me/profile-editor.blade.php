@@ -9,7 +9,7 @@
                 <label class="pk-btn pk-btn--quiet" for="me-avatar">{{ $this->profile->avatar_media_id ? 'Replace photo' : 'Add a photo' }}</label>
                 <input id="me-avatar" class="sr-only me-file" type="file" wire:model="avatar" accept="image/jpeg,image/png,image/webp">
                 @if ($this->profile->avatar_media_id)
-                    <x-pulse.button variant="ghost" wire:click="removeAvatar" type="button">Remove</x-pulse.button>
+                    <x-pulse.button variant="quiet" wire:click="removeAvatar" type="button">Remove</x-pulse.button>
                 @endif
                 <span wire:loading wire:target="avatar" class="pk-field__hint">Uploading</span>
             </div>
@@ -45,7 +45,7 @@
         @foreach ($achievements as $i => $line)
             <div class="me-line" wire:key="ach-{{ $i }}">
                 <x-pulse.field :name="'achievements.'.$i" :id="'ach-'.$i" label="Achievement {{ $i + 1 }}" wire:model="achievements.{{ $i }}" maxlength="160" />
-                <x-pulse.button variant="ghost" size="sm" wire:click="removeAchievement({{ $i }})" type="button" :aria-label="'Remove achievement '.($i + 1)">Remove</x-pulse.button>
+                <x-pulse.button variant="quiet" size="sm" wire:click="removeAchievement({{ $i }})" type="button" :aria-label="'Remove achievement '.($i + 1)">Remove</x-pulse.button>
             </div>
         @endforeach
         @if (count($achievements) < 10)
@@ -75,7 +75,7 @@
                     <x-pulse.toggle :name="'jobs.'.$i.'.current'" :id="'job-current-'.$i" label="I still work here" :checked="$job['current']" wire:model.live="jobs.{{ $i }}.current" />
                     <x-pulse.toggle :name="'jobs.'.$i.'.hide'" :id="'job-hide-'.$i" label="Hide me from this employer" :hint="filled($job['org']) ? 'Employer pages named “'.$job['org'].'” will never find you.' : 'Add the employer name first.'" :checked="$job['hide']" wire:model="jobs.{{ $i }}.hide" />
                 </div>
-                <x-pulse.button variant="ghost" size="sm" wire:click="removeJob({{ $i }})" type="button" :aria-label="'Remove job '.($i + 1)">Remove this job</x-pulse.button>
+                <x-pulse.button variant="quiet" size="sm" wire:click="removeJob({{ $i }})" type="button" :aria-label="'Remove job '.($i + 1)">Remove this job</x-pulse.button>
             </fieldset>
         @endforeach
         @if (count($jobs) < 8)
@@ -86,6 +86,6 @@
     <div class="me-savebar">
         <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="save">Save profile</x-pulse.button>
         @if ($errors->any())<p role="alert" class="pk-field__error"><x-pulse.icon name="alert" :size="16" /><span>Fix the {{ $errors->count() === 1 ? 'line' : 'lines' }} marked above, then save again.</span></p>@endif
-        <x-pulse.button variant="ghost" :href="pulse_route('users.show', ['profileUser' => auth()->id()])">See my page</x-pulse.button>
+        <x-pulse.button variant="quiet" :href="pulse_route('users.show', ['profileUser' => auth()->id()])">See my page</x-pulse.button>
     </div>
 </form>

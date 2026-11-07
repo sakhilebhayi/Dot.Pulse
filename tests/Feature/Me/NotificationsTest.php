@@ -200,7 +200,7 @@ class NotificationsTest extends MeTestCase
         $bell = Livewire::actingAs($u)->test(NotificationBell::class);
         $this->assertSame(1, $bell->instance()->unreadCount);
         $this->assertSame('Moyo sent a request', $bell->instance()->present($u->notifications()->first())['lead']);
-        $bell->assertSee("1 unread")->call('markAllRead');
+        $bell->assertSee('1 unread')->call('markAllRead');
         $this->assertSame(0, $u->unreadNotifications()->count());
     }
 
