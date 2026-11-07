@@ -2,8 +2,10 @@
 
 namespace App\Services\Pulse\Entities;
 
+use App\Models\PulseEntity;
 use App\Models\PulseNeed;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -141,7 +143,7 @@ class NeedService
         ])->validate();
 
         if (! empty($clean['entity_id'])) {
-            $entity = \App\Models\PulseEntity::find($clean['entity_id']);
+            $entity = PulseEntity::find($clean['entity_id']);
 
             if (! $entity || $entity->memberRole($by) === null) {
                 throw ValidationException::withMessages(['entity_id' => 'You can only post a need for a page you belong to.']);
@@ -165,7 +167,7 @@ class NeedService
         }
 
         if (isset($clean['expires_at'])) {
-            $clean['expires_at'] = \Illuminate\Support\Carbon::parse($clean['expires_at']);
+            $clean['expires_at'] = Carbon::parse($clean['expires_at']);
         }
 
         unset($clean['publish']);

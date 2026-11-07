@@ -6,6 +6,8 @@ use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
 use App\Models\PulseMedia;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -142,7 +144,7 @@ class EntityService
         if ($by->id !== $u->id) {
             Gate::forUser($by)->authorize('manageMembers', [$e, $member->role]);
         } elseif ($e->memberRole($by) === null) {
-            throw new \Illuminate\Auth\Access\AuthorizationException;
+            throw new AuthorizationException;
         }
 
         if ($member->role === 'owner') {
@@ -221,7 +223,7 @@ class EntityService
         $stats['response_rate'] = round((clone $answered)->count() / $total, 3);
 
         $seconds = (clone $answered)->orderByDesc('id')->limit(500)->get(['created_at', 'first_response_at'])
-            ->map(fn ($c) => max(0, \Illuminate\Support\Carbon::parse($c->first_response_at)->diffInSeconds(\Illuminate\Support\Carbon::parse($c->created_at), true)))
+            ->map(fn ($c) => max(0, Carbon::parse($c->first_response_at)->diffInSeconds(Carbon::parse($c->created_at), true)))
             ->sort()->values();
 
         if ($seconds->isNotEmpty()) {

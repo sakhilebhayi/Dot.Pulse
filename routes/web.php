@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\Pulse\MediaController;
 use App\Models\Community;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
@@ -56,7 +57,7 @@ if (! Features::enabled(Features::registration())) {
 // --- media ---
 // Images are read through this route only. Authorisation is decided per request in MediaService::canView
 // (public images of live pages to anyone, message media to the people in the conversation).
-Route::get('/media/{mediaFile}/{size?}', \App\Http\Controllers\Pulse\MediaController::class)
+Route::get('/media/{mediaFile}/{size?}', MediaController::class)
     ->whereNumber('mediaFile')
     ->where('size', 'thumb|medium|large')
     ->middleware('throttle:300,1')

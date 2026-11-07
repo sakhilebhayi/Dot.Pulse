@@ -5,6 +5,7 @@ namespace Tests\Feature\Entities;
 use App\Models\PulseNeed;
 use App\Models\PulseSignal;
 use App\Services\Pulse\Entities\NeedService;
+use App\Services\Pulse\Entities\SignalIndexer;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 
@@ -77,7 +78,7 @@ class NeedServiceTest extends EntitiesTestCase
         $need = $this->service()->create($user, $this->data());
 
         $this->travel(31)->days();
-        app(\App\Services\Pulse\Entities\SignalIndexer::class)->syncSubject($need->fresh());
+        app(SignalIndexer::class)->syncSubject($need->fresh());
 
         $this->assertSame('expired', $this->signal($need)->status);
     }

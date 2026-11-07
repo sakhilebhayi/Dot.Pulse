@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Entities;
 
+use App\Models\Community;
+use App\Models\PulseEntity;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
 use App\Models\PulsePost;
@@ -110,7 +112,7 @@ class SignalIndexerTest extends EntitiesTestCase
 
     public function test_entities_are_indexed_as_business_signals_only_while_live(): void
     {
-        $entity = \App\Models\PulseEntity::factory()->create(['name' => 'Karoo Books']);
+        $entity = PulseEntity::factory()->create(['name' => 'Karoo Books']);
         $signal = PulseSignal::where('subject_type', 'entity')->where('subject_id', $entity->id)->firstOrFail();
 
         $this->assertSame('business', $signal->kind);
@@ -122,7 +124,7 @@ class SignalIndexerTest extends EntitiesTestCase
 
     public function test_hiring_pages_carry_their_wanted_skills(): void
     {
-        $entity = \App\Models\PulseEntity::factory()->employer()->create(['hiring_signal' => 'building', 'hiring_skills' => ['Welding', 'Safety Rigging']]);
+        $entity = PulseEntity::factory()->employer()->create(['hiring_signal' => 'building', 'hiring_skills' => ['Welding', 'Safety Rigging']]);
 
         $this->assertSame(['welding', 'safety-rigging'], PulseSignal::where('subject_type', 'entity')->where('subject_id', $entity->id)->value('skills'));
     }
@@ -206,7 +208,7 @@ class SignalIndexerTest extends EntitiesTestCase
 
     private function privateCommunity()
     {
-        return \App\Models\Community::factory()->private()->create();
+        return Community::factory()->private()->create();
     }
 
     public function test_rebuild_resyncs_everything_and_drops_orphans(): void

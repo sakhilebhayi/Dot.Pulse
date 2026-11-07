@@ -3,7 +3,9 @@
 namespace Tests\Feature\Entities;
 
 use App\Models\PulseMedia;
+use App\Models\PulseOffer;
 use App\Models\PulseProfile;
+use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
 use App\Services\Pulse\Entities\MediaService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -11,6 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class MediaServiceTest extends EntitiesTestCase
 {
@@ -94,7 +97,7 @@ class MediaServiceTest extends EntitiesTestCase
     {
         $owner = $this->person();
         $tiff = "MM\x00\x2a\x00\x00\x00\x08".pack('n', 1).pack('nnNn', 0x0112, 3, 1, 6)."\x00\x00".pack('N', 0);
-        $bytes = $this->jpeg(800, 600, ["Exif\x00\x00".$tiff, "SECRETGPS 26.2041S 28.0473E camera-serial-1234"]);
+        $bytes = $this->jpeg(800, 600, ["Exif\x00\x00".$tiff, 'SECRETGPS 26.2041S 28.0473E camera-serial-1234']);
         $this->assertStringContainsString('SECRETGPS', $bytes);
 
         $media = PulseMedia::findOrFail($this->service()->store($owner, $this->upload($bytes), 'avatar'));
@@ -204,7 +207,7 @@ class MediaServiceTest extends EntitiesTestCase
 
         $this->assertIsInt($this->service()->store($a, $this->upload($this->jpeg()), 'message', null, $conversation));
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
         $this->service()->store($outsider, $this->upload($this->jpeg()), 'message', null, $conversation);
     }
 
@@ -231,7 +234,7 @@ class MediaServiceTest extends EntitiesTestCase
         try {
             $this->service()->delete($this->person(), $id);
             $this->fail('a stranger must not delete');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException) {
+        } catch (HttpException) {
         }
 
         $this->service()->delete($owner, $id);
@@ -310,7 +313,7 @@ class MediaServiceTest extends EntitiesTestCase
         $owner = $this->person();
         $entity = $this->page($owner);
         $id = $this->service()->store($owner, $this->upload($this->jpeg()), 'offer', $entity);
-        $offer = \App\Models\PulseOffer::factory()->create(['entity_id' => $entity->id, 'media_ids' => [$id]]);
+        $offer = PulseOffer::factory()->create(['entity_id' => $entity->id, 'media_ids' => [$id]]);
 
         $this->get($this->service()->url($id))->assertOk();
 
@@ -356,7 +359,7 @@ class MediaServiceTest extends EntitiesTestCase
         $this->actingAs($owner)->get('/media/999999/thumb')->assertNotFound();
     }
 
-    /** @param list<\App\Models\User> $people */
+    /** @param list<User> $people */
     private function conversation(array $people): int
     {
         $id = DB::table('pulse_conversations')->insertGetId(['type' => 'direct', 'created_at' => now(), 'updated_at' => now()]);

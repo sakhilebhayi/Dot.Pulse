@@ -5,9 +5,12 @@ namespace Tests\Feature\Entities;
 use App\Models\PulseAuditEntry;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
+use App\Models\PulseOffer;
+use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Services\Pulse\Entities\EntityService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class EntityServiceTest extends EntitiesTestCase
@@ -307,7 +310,7 @@ class EntityServiceTest extends EntitiesTestCase
         $owner = $this->person();
         $entity = $this->service()->create($owner, ['name' => 'Karoo Books', 'is_seller' => true]);
         $entity->forceFill(['moderation' => 'approved'])->save();
-        $offer = \App\Models\PulseOffer::factory()->create(['entity_id' => $entity->id, 'created_by' => $owner->id]);
+        $offer = PulseOffer::factory()->create(['entity_id' => $entity->id, 'created_by' => $owner->id]);
 
         $this->assertSame('live', PulseSignal::where('subject_type', 'offer')->where('subject_id', $offer->id)->value('status'));
 
@@ -329,9 +332,9 @@ class EntityServiceTest extends EntitiesTestCase
     public function test_stats_are_real_counts_and_null_when_nothing_happened(): void
     {
         $entity = $this->page();
-        \App\Models\PulseOffer::factory()->count(2)->create(['entity_id' => $entity->id]);
-        \App\Models\PulseOffer::factory()->paused()->create(['entity_id' => $entity->id]);
-        \App\Models\PulseRole::factory()->create(['entity_id' => $entity->id]);
+        PulseOffer::factory()->count(2)->create(['entity_id' => $entity->id]);
+        PulseOffer::factory()->paused()->create(['entity_id' => $entity->id]);
+        PulseRole::factory()->create(['entity_id' => $entity->id]);
 
         $stats = $this->service()->stats($entity->fresh());
 
@@ -349,7 +352,7 @@ class EntityServiceTest extends EntitiesTestCase
         $now = now()->startOfSecond();
 
         foreach ([[60, true], [180, true], [null, false], [120, true]] as $i => [$seconds, $answered]) {
-            \Illuminate\Support\Facades\DB::table('pulse_conversations')->insert([
+            DB::table('pulse_conversations')->insert([
                 'type' => 'direct', 'created_at' => $now, 'updated_at' => $now,
                 'kind' => 'enquiry', 'status' => 'open', 'initiator_id' => $initiator->id, 'entity_id' => $entity->id,
                 'first_response_at' => $answered ? $now->copy()->addSeconds($seconds) : null,

@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Entities;
 
+use App\Models\PulseMedia;
 use App\Models\PulseOffer;
 use App\Models\PulseSignal;
+use App\Services\Pulse\Entities\ListingModeration;
 use App\Services\Pulse\Entities\OfferService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OfferServiceTest extends EntitiesTestCase
 {
@@ -114,7 +117,7 @@ class OfferServiceTest extends EntitiesTestCase
     {
         $owner = $this->infodotPerson();
         $offer = $this->service()->create($owner, $this->page($owner), $this->offerData() + ['publish' => true]);
-        app(\App\Services\Pulse\Entities\ListingModeration::class)->decide($this->moderator(), $offer, 'removed', 'scam');
+        app(ListingModeration::class)->decide($this->moderator(), $offer, 'removed', 'scam');
 
         $this->assertSame('removed', $this->signal($offer)->status);
 
@@ -127,7 +130,7 @@ class OfferServiceTest extends EntitiesTestCase
         $owner = $this->person();
         $offer = $this->service()->create($owner, $this->page($owner), $this->offerData() + ['publish' => true]);
         $moderator = $this->moderator();
-        $moderation = app(\App\Services\Pulse\Entities\ListingModeration::class);
+        $moderation = app(ListingModeration::class);
 
         $this->assertSame('held', $this->signal($offer)->status);
         $moderation->decide($moderator, $offer, 'approved');
@@ -142,8 +145,8 @@ class OfferServiceTest extends EntitiesTestCase
         $owner = $this->person();
         $offer = PulseOffer::factory()->create(['entity_id' => $this->page($owner)->id]);
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
-        app(\App\Services\Pulse\Entities\ListingModeration::class)->decide($owner, $offer, 'approved');
+        $this->expectException(HttpException::class);
+        app(ListingModeration::class)->decide($owner, $offer, 'approved');
     }
 
     public function test_authorisation_for_stranger_responder_editor_admin_owner(): void
@@ -248,7 +251,7 @@ class OfferServiceTest extends EntitiesTestCase
     {
         $owner = $this->person();
         $entity = $this->page($owner);
-        $foreign = \App\Models\PulseMedia::create([
+        $foreign = PulseMedia::create([
             'user_id' => $owner->id, 'purpose' => 'offer', 'entity_id' => $this->page()->id, 'disk' => 'local', 'mime' => 'image/webp',
             'width' => 10, 'height' => 10, 'bytes' => 1, 'variants' => [],
         ]);

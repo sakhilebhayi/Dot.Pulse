@@ -3,9 +3,11 @@
 namespace App\Services\Pulse\Entities;
 
 use App\Models\PulseEntity;
+use App\Models\PulseEntityMember;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
@@ -107,9 +109,9 @@ class VerificationService
     {
         Gate::forUser($by)->authorize('update', $e);
 
-        $number = (string) Sanitizer::line($number, 40);
+        $number = (string) Sanitizer::line($number, 200);
 
-        if (! preg_match('/^[A-Za-z0-9][A-Za-z0-9\/ .\-]{2,38}[A-Za-z0-9]$/', $number)) {
+        if (mb_strlen($number) > 40 || ! preg_match('/^[A-Za-z0-9][A-Za-z0-9\/ .\-]{2,38}[A-Za-z0-9]$/', $number)) {
             throw ValidationException::withMessages(['number' => 'Enter the registration number as it appears on your registration document.']);
         }
 
@@ -217,7 +219,7 @@ class VerificationService
     {
         $count = 0;
 
-        PulseEntity::query()->whereIn('id', \App\Models\PulseEntityMember::query()->where('user_id', $user->id)->whereIn('role', ['owner', 'admin'])->select('entity_id'))
+        PulseEntity::query()->whereIn('id', PulseEntityMember::query()->where('user_id', $user->id)->whereIn('role', ['owner', 'admin'])->select('entity_id'))
             ->each(function (PulseEntity $e) use ($identity, &$count) {
                 $this->refreshFromInfoDot($e, $identity);
                 $count++;
@@ -298,7 +300,7 @@ class VerificationService
 
     private function lastOutcomeAt(PulseEntity $e): ?string
     {
-        $at = \Illuminate\Support\Facades\DB::table('pulse_conversations')->where('entity_id', $e->id)
+        $at = DB::table('pulse_conversations')->where('entity_id', $e->id)
             ->whereNotNull('outcome_initiator_at')->whereNotNull('outcome_recipient_at')->where('outcome', '!=', 'none')
             ->selectRaw('max(outcome_initiator_at) as a, max(outcome_recipient_at) as b')->first();
 
