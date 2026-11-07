@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class PulseSave extends Model
 {
@@ -14,9 +17,18 @@ class PulseSave extends Model
         'saveable_id',
     ];
 
-    protected function casts(): array
+    public function user(): BelongsTo
     {
-        return [
-        ];
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function saveable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function scopeForUser(Builder $query, User|int $user): Builder
+    {
+        return $query->where('user_id', $user instanceof User ? $user->id : $user);
     }
 }

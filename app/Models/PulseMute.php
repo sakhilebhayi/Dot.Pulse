@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/** A muted topic, business page or person. Quiet and one way: the other side is never told. */
 class PulseMute extends Model
 {
+    public const KINDS = ['topic', 'entity', 'user'];
+
     protected $table = 'pulse_mutes';
 
     protected $fillable = [
@@ -14,9 +18,8 @@ class PulseMute extends Model
         'target',
     ];
 
-    protected function casts(): array
+    public function user(): BelongsTo
     {
-        return [
-        ];
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

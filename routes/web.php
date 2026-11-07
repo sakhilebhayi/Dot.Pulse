@@ -52,3 +52,10 @@ Route::middleware([
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// --- lines ---
+// The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1'])
+    ->get('/api/pulse/pulse-check', \App\Http\Controllers\Pulse\PulseCheckController::class)
+    ->name('pulse.check');
+// --- end lines ---
