@@ -179,4 +179,18 @@ return [
         'grace_hours' => 10,
     ],
 
+    // --- security (R-41 security pass) ---
+    // Response headers. The Content-Security-Policy is enforced; SECURITY_CSP_REPORT_ONLY=true switches it to
+    // report-only without a deploy. The Reverb values describe where the browser opens its websocket (not the
+    // PHP backend's own publish address), so connect-src can allow exactly that origin.
+    'security' => [
+        'csp_report_only' => (bool) env('SECURITY_CSP_REPORT_ONLY', false),
+        'reverb_public' => [
+            'host' => env('REVERB_HOST', 'localhost'),
+            'port' => env('REVERB_PORT', 8080),
+            'scheme' => env('REVERB_SCHEME', 'http'),
+        ],
+    ],
+    // --- end security ---
+
 ];
