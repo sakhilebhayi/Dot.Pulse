@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="One more check">
+    <x-authentication-card heading="One more check." lead="Enter the code from your authenticator app, or a recovery code.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

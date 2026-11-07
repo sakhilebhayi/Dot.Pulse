@@ -1,48 +1,40 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+<x-guest-layout title="Sign in">
+    <x-authentication-card heading="Come in through InfoDot." lead="InfoDot is the only door. One sign-in, and Pulse knows who you are.">
+        <x-slot name="logo"></x-slot>
 
-        <x-validation-errors class="mb-4" />
-
-        @session('status')
-            <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-                {{ $value }}
-            </div>
-        @endsession
-
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-
+        <div class="pk-stack">
             <div>
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <h2>Continue with InfoDot</h2>
+                <p class="pk-muted" style="margin-top: 6px">Open Dot.Pulse from your InfoDot dashboard. You land back here signed in.</p>
             </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
-            </div>
+            @session('status')
+                <p class="au-status" role="status">{{ $value }}</p>
+            @endsession
 
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
+            <x-pulse.button variant="signal" :href="pulse_infodot_url()" block>Sign in with InfoDot</x-pulse.button>
+        </div>
+
+        <details class="au-or" @if ($errors->any()) open @endif>
+            <summary>Use a Pulse password instead</summary>
+            <form method="POST" action="{{ route('login') }}" class="pk-stack">
+                @csrf
+
+                <x-pulse.field name="email" label="Email" type="email" :value="old('email')" required autocomplete="username" />
+                <x-pulse.field name="password" label="Password" type="password" required autocomplete="current-password" />
+
+                <label class="au-check" for="remember_me">
                     <x-checkbox id="remember_me" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+                    <span>Keep me signed in</span>
                 </label>
-            </div>
 
-            <div class="flex items-center justify-end mt-4">
-                @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
-                @endif
-
-                <x-button class="ms-4">
-                    {{ __('Log in') }}
-                </x-button>
-            </div>
-        </form>
+                <div class="pk-cluster" style="justify-content: space-between">
+                    <x-pulse.button type="submit" variant="primary">Sign in</x-pulse.button>
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}">Forgot your password?</a>
+                    @endif
+                </div>
+            </form>
+        </details>
     </x-authentication-card>
 </x-guest-layout>

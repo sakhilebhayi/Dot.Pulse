@@ -1,0 +1,168 @@
+/*
+ * The Floor: tokens. Every colour and every font in the Dot.Pulse interface is declared here and
+ * nowhere else. Roles (see DESIGN.md): chalk is the ground, sheet is a beat, ink carries text and
+ * "their" line, cobalt is the field and "your" line, signal yellow means "this fits" or "selected".
+ *
+ * Theme resolution: the OS preference decides (prefers-color-scheme), and html[data-theme="light"|"dark"]
+ * overrides it. The inline script in layouts/partials/head sets data-theme from the visitor's stored choice
+ * before first paint. Without scripting the OS preference still applies.
+ */
+
+@font-face {
+    font-family: "Archivo";
+    font-style: normal;
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+    font-display: swap;
+    src: url("/fonts/archivo-latin-wdth-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Archivo";
+    font-style: normal;
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+    font-display: swap;
+    src: url("/fonts/archivo-latin-ext-wdth-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url("/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    color-scheme: light;
+
+    /* Palette, light. */
+    --c-ground: #eef0f5;
+    --c-sheet: #ffffff;
+    --c-raised: #f6f7fa;
+    --c-ink: #0b0e1a;
+    --c-ink-2: #2a3045;
+    --c-muted: #4b5266;
+    --c-line: #cdd2de;
+    --c-line-strong: #8d95ab;
+    --c-field: #1f3cff;
+    --c-field-deep: #1328b8;
+    --c-field-ink: #ffffff;
+    --c-field-soft: #dfe4ff;
+    --c-ink-fixed: #0b0e1a;
+    --c-link: #1f3cff;
+    --c-you: #1f3cff;
+    --c-them: #0b0e1a;
+    --c-signal: #ffd400;
+    --c-signal-ink: #4a3a00;
+    --c-on-signal: #0b0e1a;
+    --c-good: #0e7a4b;
+    --c-warn: #9a5b00;
+    --c-bad: #b3261e;
+    --c-good-wash: #dff3e9;
+    --c-warn-wash: #fbebd0;
+    --c-bad-wash: #f9e0de;
+    --c-focus: #1f3cff;
+    --c-overlay: rgb(11 14 26 / 0.55);
+    --c-shadow: rgb(11 14 26 / 0.08);
+    --c-shadow-float: rgb(11 14 26 / 0.22);
+
+    /* Type. */
+    --f-ui: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    --t-display: clamp(2.5rem, 1.35rem + 4.9vw, 4.75rem);
+    --t-title: clamp(1.25rem, 1.08rem + 0.7vw, 1.5rem);
+    --t-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+    --t-ui: 0.9375rem;
+    --t-small: 0.8125rem;
+    --t-mono: 0.75rem;
+
+    /* Space, shape, motion. */
+    --s-xs: 4px;
+    --s-sm: 8px;
+    --s-md: 16px;
+    --s-lg: 24px;
+    --s-xl: 48px;
+    --r-sm: 4px;
+    --r-md: 10px;
+    --r-lg: 18px;
+    --mast-h: 64px;
+    --rail-w: 232px;
+    --floor-w: 680px;
+    --context-w: 320px;
+    --tap: 44px;
+    --ease: cubic-bezier(0.2, 0.9, 0.25, 1);
+    --ease-click: cubic-bezier(0.2, 1.25, 0.4, 1);
+    --d-quick: 140ms;
+    --d-base: 240ms;
+}
+
+/* Palette, dark: same roles, ground goes to ink, cobalt lifts for text and lines. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --c-ground: #0b0e1a;
+        --c-sheet: #141a2e;
+        --c-raised: #1b2240;
+        --c-ink: #eef0f5;
+        --c-ink-2: #d3d8e6;
+        --c-muted: #a5adc4;
+        --c-line: #2c3558;
+        --c-line-strong: #5a6590;
+        --c-field: #2b45ff;
+        --c-field-deep: #1f3cff;
+        --c-field-ink: #ffffff;
+        --c-field-soft: #1f2a66;
+        --c-link: #8d9eff;
+        --c-you: #7a8dff;
+        --c-them: #eef0f5;
+        --c-signal: #ffd400;
+        --c-signal-ink: #ffe680;
+        --c-good: #4fd49b;
+        --c-warn: #f0b24a;
+        --c-bad: #ff8f87;
+        --c-good-wash: #123428;
+        --c-warn-wash: #3a2a10;
+        --c-bad-wash: #3d1b1a;
+        --c-focus: #8d9eff;
+        --c-overlay: rgb(3 5 12 / 0.7);
+        --c-shadow: rgb(0 0 0 / 0.35);
+        --c-shadow-float: rgb(0 0 0 / 0.6);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --c-ground: #0b0e1a;
+    --c-sheet: #141a2e;
+    --c-raised: #1b2240;
+    --c-ink: #eef0f5;
+    --c-ink-2: #d3d8e6;
+    --c-muted: #a5adc4;
+    --c-line: #2c3558;
+    --c-line-strong: #5a6590;
+    --c-field: #2b45ff;
+    --c-field-deep: #1f3cff;
+    --c-field-ink: #ffffff;
+    --c-field-soft: #1f2a66;
+    --c-link: #8d9eff;
+    --c-you: #7a8dff;
+    --c-them: #eef0f5;
+    --c-signal: #ffd400;
+    --c-signal-ink: #ffe680;
+    --c-good: #4fd49b;
+    --c-warn: #f0b24a;
+    --c-bad: #ff8f87;
+    --c-good-wash: #123428;
+    --c-warn-wash: #3a2a10;
+    --c-bad-wash: #3d1b1a;
+    --c-focus: #8d9eff;
+    --c-overlay: rgb(3 5 12 / 0.7);
+    --c-shadow: rgb(0 0 0 / 0.35);
+    --c-shadow-float: rgb(0 0 0 / 0.6);
+}

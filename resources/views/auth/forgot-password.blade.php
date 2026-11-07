@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="Forgot it? Fine">
+    <x-authentication-card heading="Forgot it? Fine." lead="Give us your email. We send a link to choose a new password.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

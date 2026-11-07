@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="Confirm it is you">
+    <x-authentication-card heading="Confirm it is you." lead="This part of Pulse asks twice before it acts.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

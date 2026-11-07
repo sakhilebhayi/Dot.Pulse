@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="Choose a new one">
+    <x-authentication-card heading="Choose a new one." lead="Make it long. You only do this once.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

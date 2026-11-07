@@ -52,3 +52,10 @@ Route::middleware([
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// --- shell ---
+// Component gallery for development, QA and screenshots. Registered only locally and under test.
+if (app()->environment('local', 'testing')) {
+    Route::view('/dev/kit', 'dev.kit')->name('dev.kit');
+}
+// --- /shell ---
