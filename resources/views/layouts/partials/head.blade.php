@@ -13,7 +13,7 @@
 <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
 <link rel="preload" href="{{ asset('fonts/archivo-latin-wdth-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ asset('fonts/jetbrains-mono-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-<script>
+<script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
     (function () {
         document.documentElement.classList.add('js');
         try {

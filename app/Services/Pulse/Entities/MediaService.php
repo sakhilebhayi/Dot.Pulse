@@ -326,21 +326,28 @@ class MediaService
         return $result + ['data' => $data, 'width' => $width, 'height' => $height];
     }
 
+    /**
+     * On the line as it stands now. A person on a line directly counts; a person who answers for a page counts only while
+     * they still hold a role that reads that page's lines (a responder who was removed, or an editor, does not).
+     */
     private function participates(User $user, int $conversationId): bool
     {
         if (! Schema::hasTable('pulse_conversation_user')) {
             return false;
         }
 
-        if (DB::table('pulse_conversation_user')->where('pulse_conversation_id', $conversationId)->where('user_id', $user->id)->exists()) {
+        $row = DB::table('pulse_conversation_user')->where('pulse_conversation_id', $conversationId)->where('user_id', $user->id)->first();
+
+        if ($row !== null && ($row->entity_id === null || \App\Services\Pulse\Lines\Access::canRespondFor($user, (int) $row->entity_id))) {
             return true;
         }
 
-        // A person answering for the page the conversation is with.
-        if (Schema::hasColumn('pulse_conversations', 'entity_id')) {
-            $entityId = DB::table('pulse_conversations')->where('id', $conversationId)->value('entity_id');
+        $sides = DB::table('pulse_conversations')->where('id', $conversationId)->first(['entity_id', 'initiator_entity_id']);
 
-            return $entityId && DB::table('pulse_entity_members')->where('entity_id', $entityId)->where('user_id', $user->id)->exists();
+        foreach ([$sides?->entity_id, $sides?->initiator_entity_id] as $entityId) {
+            if ($entityId !== null && \App\Services\Pulse\Lines\Access::canRespondFor($user, (int) $entityId)) {
+                return true;
+            }
         }
 
         return false;

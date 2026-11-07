@@ -12,6 +12,7 @@ use App\Services\Pulse\Lines\LineService;
 use Closure;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Locked;
 
 /**
  * The actions on a request that are the same in the inbox and on a line's own page: say yes, say not now (with a
@@ -25,11 +26,13 @@ trait AnswersRequests
     public ?string $failure = null;
 
     /** The request the person is choosing a "not now" reason for. */
+    #[Locked]
     public ?int $declining = null;
 
     public string $declineReason = 'not_now';
 
     /** The line whose block is waiting for a confirm. */
+    #[Locked]
     public ?int $blocking = null;
 
     abstract protected function afterAnswer(string $what, int $id): void;

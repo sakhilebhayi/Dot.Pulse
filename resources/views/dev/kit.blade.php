@@ -177,7 +177,7 @@
                 <x-pulse.button variant="quiet" data-pk-dialog="kit-drawer">Open drawer</x-pulse.button>
                 <x-pulse.button variant="quiet" data-pk-dialog="kit-sheet">Open sheet</x-pulse.button>
                 <x-pulse.button variant="danger" data-pk-dialog="kit-confirm">Close this line</x-pulse.button>
-                <x-pulse.button variant="quiet" onclick="pulseToast('Saved for later.', {kind: 'good'})">Show a toast</x-pulse.button>
+                <x-pulse.button variant="quiet" x-data @click="pulseToast('Saved for later.', {kind: 'good'})">Show a toast</x-pulse.button>
             </div>
             <x-pulse.drawer id="kit-drawer" title="Filters" description="Narrow the round without leaving the page.">
                 <x-pulse.chips name="drawer_topics" legend="Topics" :options="['design' => 'Design', 'cycling' => 'Cycling']" />

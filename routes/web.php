@@ -153,7 +153,7 @@ Route::get('/b/{entity:slug}', function (App\Models\PulseEntity $entity) {
         'entity' => $entity,
         'data' => App\Livewire\Pulse\Business\Support\EntityView::data($entity, auth()->user()),
     ]);
-})->middleware('pulse.onboarded')->name('entities.show');
+})->middleware(['pulse.onboarded', 'throttle:120,1'])->name('entities.show'); // the only page a stranger can read: scraping it costs something
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');

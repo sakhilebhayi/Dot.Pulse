@@ -93,8 +93,10 @@ class Metrics
      */
     public function liveListings(): array
     {
-        $offers = PulseOffer::query()->where('status', 'live')->where('moderation', 'approved');
-        $roles = PulseRole::query()->where('status', 'live')->where('moderation', 'approved');
+        // A listing of a page that is suspended, archived, held or removed is not live, whatever its own status says.
+        $liveEntity = fn ($q) => $q->where('status', 'live')->where('moderation', 'approved')->whereNull('deleted_at');
+        $offers = PulseOffer::query()->where('status', 'live')->where('moderation', 'approved')->whereHas('entity', $liveEntity);
+        $roles = PulseRole::query()->where('status', 'live')->where('moderation', 'approved')->whereHas('entity', $liveEntity);
         $needs = PulseNeed::query()->where('status', 'open')->where('moderation', 'approved');
 
         return [

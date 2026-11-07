@@ -13,6 +13,7 @@ use App\Services\Pulse\Lines\QuoteService;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -25,7 +26,10 @@ use Livewire\Component;
  */
 class QuoteRequest extends Component
 {
+    #[Locked]
     public ?int $needId = null;
+
+    #[Locked]
 
     public ?int $offerId = null;
 
@@ -42,7 +46,10 @@ class QuoteRequest extends Component
     public bool $sent = false;
 
     /** @var list<int> */
+    #[Locked]
     public array $lineIds = [];
+
+    #[Locked]
 
     public ?string $group = null;
 
@@ -171,7 +178,7 @@ class QuoteRequest extends Component
             ->whereNotIn('id', array_merge($mine, $hidden, $fixed ? [$fixed] : []))
             ->whereHas('offers', fn ($q) => $q->live()->where('accepts_quotes', true))
             ->with(['offers' => fn ($q) => $q->live()->where('accepts_quotes', true)->select('id', 'entity_id', 'title', 'category')])
-            ->when(trim($this->search) !== '', fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower(trim($this->search)).'%']))
+            ->when(trim($this->search) !== '', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", ['%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower(trim($this->search))).'%']))
             ->orderBy('name')->limit(30)->get();
 
         return $entities->map(function (PulseEntity $e) use ($words) {

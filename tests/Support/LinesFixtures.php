@@ -68,6 +68,9 @@ trait LinesFixtures
             'created_by' => $owner->id,
         ], $attrs));
 
+        // A page is live and approved unless the test says otherwise (moderation is not mass assignable).
+        $entity->forceFill(['moderation' => $attrs['moderation'] ?? 'approved'])->save();
+
         PulseEntityMember::query()->create(['entity_id' => $entity->id, 'user_id' => $owner->id, 'role' => $role]);
 
         return $entity;

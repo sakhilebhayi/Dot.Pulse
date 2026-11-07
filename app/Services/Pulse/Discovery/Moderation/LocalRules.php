@@ -4,6 +4,7 @@ namespace App\Services\Pulse\Discovery\Moderation;
 
 use App\Models\PulsePost;
 use App\Models\User;
+use App\Services\Pulse\Lines\TextGuard;
 use Illuminate\Support\Str;
 
 /**
@@ -102,7 +103,37 @@ class LocalRules
 
         array_push($flags, ...$this->velocity($author, $ctx));
 
+        // Evasion pass: the same word, phrase and contact rules over flattened copies of the text (zero width
+        // characters, look-alike letters, spaced out letters, leetspeak, digits written in other scripts).
+        foreach ($this->flattened($full) as $variant) {
+            array_push($flags, ...$this->terms($variant), ...$this->scams($variant));
+
+            if ($public && empty($ctx['allow_contact'])) {
+                array_push($flags, ...$this->contactDetails($this->sensitiveNumbers($variant)[0]));
+            }
+        }
+
+        $seen = [];
+        $flags = array_values(array_filter($flags, function (array $f) use (&$seen) {
+            $key = $f['code'].'|'.$f['severity'];
+
+            return ! isset($seen[$key]) && ($seen[$key] = true);
+        }));
+
         return $this->result($flags);
+    }
+
+    /**
+     * The flattened copies of a text that differ from it (see TextGuard::flatten).
+     *
+     * @return list<string>
+     */
+    private function flattened(string $full): array
+    {
+        return array_values(array_unique(array_filter(
+            app(TextGuard::class)->flatten($full),
+            fn (string $v) => $v !== $full && $v !== mb_strtolower($full),
+        )));
     }
 
     // -- rules --------------------------------------------------------------------------------------------------

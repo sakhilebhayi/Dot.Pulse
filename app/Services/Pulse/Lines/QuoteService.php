@@ -77,6 +77,23 @@ class QuoteService
         }
 
         $described = Context::describe($context);
+
+        // The cap of three is per thing asked about, not per request: a second request for the same need or offer cannot
+        // widen the circle, and a business that already has a live request for it is not asked again.
+        $asked = PulseConversation::query()
+            ->where('initiator_id', $from->id)->where('kind', 'quote')
+            ->where('context_type', $described['type'])->where('context_id', $described['id'])
+            ->whereIn('status', [PulseConversation::REQUESTED, PulseConversation::OPEN])
+            ->pluck('entity_id')->map(fn ($id) => (int) $id)->unique();
+
+        if ($asked->intersect($ids)->isNotEmpty()) {
+            throw LineException::because('exists', 'You already asked one of those businesses about this. Wait for their answer or close that request first.');
+        }
+
+        if ($asked->merge($ids)->unique()->count() > self::MAX_PROVIDERS) {
+            throw LineException::because('limit', 'Three is the most for one request, counting the businesses you already asked about this. Close one before you ask another.');
+        }
+
         $group = (string) Str::uuid();
 
         $conversations = DB::transaction(function () use ($from, $ids, $card, $described, $group, $stranger) {

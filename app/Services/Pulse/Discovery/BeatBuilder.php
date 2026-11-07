@@ -103,6 +103,10 @@ class BeatBuilder
         $safe->owner_id = null;
         $safe->entity_id = null;
         $safe->place_id = null;
+        // The subject of a talent signal is the profile row: its id is a stable handle on the person.
+        $safe->subject_id = 0;
+        // And the exact moment they became findable is a fingerprint: coarsen it to the start of its week.
+        $safe->published_at = $s->published_at?->copy()->startOfWeek();
 
         return new Beat(
             signal: $safe,
@@ -114,7 +118,7 @@ class BeatBuilder
             place: $region ? ['id' => null, 'slug' => null, 'name' => $region, 'label' => $region, 'level' => 'region'] : null,
             reasons: $this->reasons($match),
             score: (float) ($match['score'] ?? 0),
-            published_at: $s->published_at,
+            published_at: $safe->published_at,
             can_knock: ['allowed' => true, 'mode' => 'request', 'why' => 'You can invite them. They choose whether to say who they are.'],
             saved: $saved,
             match_id: $match['id'] ?? null,

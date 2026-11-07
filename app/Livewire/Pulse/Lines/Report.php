@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -47,7 +48,11 @@ class Report extends Component
         'signal' => PulseSignal::class,
     ];
 
+    #[Locked]
+
     public string $subjectType = 'conversation';
+
+    #[Locked]
 
     public int $subjectId = 0;
 

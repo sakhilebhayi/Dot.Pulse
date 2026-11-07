@@ -344,12 +344,11 @@ class AnonymousInviteTest extends TestCase
         $this->assertSame($openPro->name, $this->lines()->present($this->recruiter, $c)['counterpart']['name']);
     }
 
-    public function test_inviting_by_user_id_still_hides_an_anonymous_professional(): void
+    public function test_an_anonymous_professional_cannot_be_invited_by_user_id_at_all(): void
     {
-        $c = $this->lines()->knock($this->recruiter, ['user' => $this->pro->id, 'as_entity' => $this->employer->id], 'invite', $this->card());
-
-        $this->assertTrue($c->identity_hidden);
-        $this->assertNoIdentity($this->lines()->present($this->recruiter, $c), 'present()');
+        // R-41 security pass: an id learned elsewhere must not confirm that a person is the anonymous card; only the signal addresses them.
+        $this->expectException(LineException::class);
+        $this->lines()->knock($this->recruiter, ['user' => $this->pro->id, 'as_entity' => $this->employer->id], 'invite', $this->card());
     }
 
     public function test_a_hired_outcome_still_does_not_let_the_page_review_a_hidden_professional(): void

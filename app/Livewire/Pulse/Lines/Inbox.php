@@ -10,6 +10,7 @@ use App\Services\Pulse\Lines\Access;
 use App\Services\Pulse\Lines\LineService;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -30,6 +31,8 @@ class Inbox extends Component
 
     #[Url(as: 'tab')]
     public string $tab = 'requests';
+
+    #[Locked]
 
     public ?int $entityId = null;
 

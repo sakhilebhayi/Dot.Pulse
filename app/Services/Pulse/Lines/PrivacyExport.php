@@ -2,8 +2,16 @@
 
 namespace App\Services\Pulse\Lines;
 
+use App\Models\CommunityMembership;
 use App\Models\PulseAuditEntry;
 use App\Models\PulseBlock;
+use App\Models\PulseComment;
+use App\Models\PulseFollower;
+use App\Models\PulseMatch;
+use App\Models\PulseMedia;
+use App\Models\PulsePost;
+use App\Models\PulseReaction;
+use Illuminate\Support\Facades\DB;
 use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Models\PulseEntityBlock;
@@ -26,7 +34,8 @@ use App\Models\User;
  * and doors, pages they belong to, every line they were part of (their own messages in full; the other side's
  * messages as the person saw them; the other side shown by public name only, an anonymous professional's
  * identity never), quotes, reviews they wrote, reports they filed (reason and status, not moderator notes), and
- * the audit rows where they were the actor (action and time).
+ * the audit rows where they were the actor (action and time), their community posts, comments and memberships, the
+ * counts of follows and reactions, their photos (metadata), and the notifications Pulse sent them.
  * Excluded: the other party's email, phone, account details and private settings, other people's reports about
  * them, moderator notes, and the identity of anyone who was anonymous to them.
  */
@@ -74,6 +83,15 @@ class PrivacyExport
             'lines' => $this->lines($user),
             'reviews_written' => PulseReview::query()->where('user_id', $user->id)->get(['rating', 'body', 'pseudonymous', 'moderation', 'created_at', 'revealed_at'])->toArray(),
             'reports_filed' => PulseReport::query()->where('reporter_id', $user->id)->get(['reportable_type', 'reason', 'details', 'status', 'created_at'])->toArray(),
+            'posts' => PulsePost::withTrashed()->where('user_id', $user->id)->orderBy('id')->get(['id', 'community_id', 'type', 'title', 'body', 'status', 'created_at'])->toArray(),
+            'comments' => PulseComment::withTrashed()->where('user_id', $user->id)->orderBy('id')->get(['id', 'pulse_post_id', 'body', 'created_at'])->toArray(),
+            'communities' => CommunityMembership::query()->where('user_id', $user->id)->get(['community_id', 'role', 'created_at'])->toArray(),
+            'follows' => ['following' => PulseFollower::query()->where('follower_id', $user->id)->count(), 'followers' => PulseFollower::query()->where('following_id', $user->id)->count()],
+            'reactions' => PulseReaction::query()->where('user_id', $user->id)->count(),
+            'matches' => ['kept' => PulseMatch::query()->where('user_id', $user->id)->whereNull('dismissed_at')->count()],
+            'photos' => PulseMedia::query()->where('user_id', $user->id)->get(['id', 'purpose', 'mime', 'width', 'height', 'bytes', 'created_at'])->toArray(),
+            'notifications' => DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)->orderBy('created_at')->get(['type', 'data', 'read_at', 'created_at'])
+                ->map(fn ($n) => ['type' => class_basename($n->type), 'data' => json_decode((string) $n->data, true), 'read_at' => $n->read_at, 'at' => $n->created_at])->all(),
             'activity_log' => PulseAuditEntry::query()->where('actor_id', $user->id)->orderBy('id')->get(['action', 'subject_type', 'subject_id', 'created_at'])->toArray(),
         ];
     }
