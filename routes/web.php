@@ -202,3 +202,21 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     })->whereNumber('need')->name('needs.edit');
 });
 // --- end business ---
+// --- lines-ui ---
+// Lines: the inbox, one line's thread, and the side by side comparison of a quote request.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
+
+    Route::get('/lines/quotes/{group}', function (string $group) {
+        abort_unless(\Illuminate\Support\Str::isUuid($group), 404);
+
+        return view('livewire.pulse.lines.pages.quotes', ['group' => $group]);
+    })->name('lines.quotes');
+
+    Route::get('/lines/{conversation}', function (\App\Models\PulseConversation $conversation) {
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('view', $conversation), 404);
+
+        return view('livewire.pulse.lines.pages.show', ['conversation' => $conversation]);
+    })->whereNumber('conversation')->name('lines.show');
+});
+// --- end lines-ui ---
