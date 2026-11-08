@@ -21,7 +21,7 @@ Read after `R41_DOMAIN_SPEC.md`. Where this file and the spec differ, this file 
 - Search results are `{type: signal|entity, score, why[], beat|entity}`; `price_min/price_max` in rand.
 - Moderation: `Moderation\ModerationPipeline::review(...)` returns a `ModerationDecision` (`moderation()` approved|held|removed). `LocalRules::assess` also returns `reason` (author-facing) and `score`.
 - Digest is opt-in (no prefs row = no digest). Signed route `pulse.digest.unsubscribe`.
-- Run `php artisan pulse:places:seed` at deploy (about 900 places); it is not automatic.
+- Run `php artisan pulse:places:seed` at deploy (753 places); it is not automatic.
 - Door signals (`kind=door`, from `Doors::open`) must render in the Floor.
 
 ## Lines (D3) `App\Services\Pulse\Lines`
