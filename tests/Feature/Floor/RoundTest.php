@@ -185,6 +185,24 @@ class RoundTest extends FloorTestCase
         $this->round('work')->assertSee('No work matches yet.')->assertDontSee('caught up');
     }
 
+    public function test_the_empty_work_floor_follows_the_role_of_the_person(): void
+    {
+        // A person looking for work is not pushed to "say what you need".
+        $this->round('work')
+            ->assertSee('Say what you are open to')
+            ->assertSee('Find businesses to follow')
+            ->assertDontSee('Say what you need');
+
+        // An employer is told to post a role, and a seller to add an offer.
+        $boss = $this->person();
+        $page = $this->dEntity($boss, ['name' => 'Hiring House', 'is_seller' => false, 'is_employer' => true]);
+        $this->round('work', $boss)->assertSee('Post a role')->assertDontSee('Say what you need');
+
+        $shop = $this->person();
+        $seller = $this->dEntity($shop, ['name' => 'Selling Shop', 'is_seller' => true, 'is_employer' => false]);
+        $this->round('trade', $shop)->assertSee('Add an offer');
+    }
+
     public function test_with_no_matches_at_all_the_empty_state_is_honest_and_actionable(): void
     {
         $this->round()

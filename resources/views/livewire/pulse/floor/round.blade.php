@@ -1,8 +1,8 @@
 @php
     // First visit, per mode: what to do to get matches. Said once, plainly, with the three things that feed the matcher.
     $empties = [
-        'all' => ['Nothing fits yet.', 'The floor introduces people once it knows you. Say what you need, say what you are open to, or follow a business.'],
-        'trade' => ['Nothing to trade yet.', 'Say what you need and the floor finds sellers. Offer something and it finds buyers.'],
+        'all' => ['Nothing fits yet.', 'The floor introduces people once it knows you. Tell it what you do, what you need or who you follow.'],
+        'trade' => ['Nothing to trade yet.', 'Say what you need and the floor finds sellers. Add an offer and it finds buyers.'],
         'work' => ['No work matches yet.', 'Say what you are open to, or post a role, and the floor starts introducing people.'],
         'local' => ['Nothing near you yet.', 'Local needs your place. Set where you are and the floor looks nearby first.'],
         'learn' => ['Nothing to read yet.', 'Questions, events and news that fit your interests show up here. Follow a business or add interests.'],
@@ -18,9 +18,9 @@
     @if ($firstVisit)
         <x-pulse.empty :title="$emptyTitle" :text="$emptyText">
             <div class="pk-cluster">
-                <x-pulse.button variant="signal" :href="pulse_route('needs.create')">Say what you need</x-pulse.button>
-                <x-pulse.button variant="quiet" :href="pulse_route_first(['me.discover', 'profile.show'])">{{ $mode === 'local' ? 'Set your place' : 'Say what you are open to' }}</x-pulse.button>
-                <x-pulse.button variant="quiet" :href="pulse_route('search')">Find businesses to follow</x-pulse.button>
+                @foreach ($emptyActions as $action)
+                    <x-pulse.button :variant="$loop->first ? 'signal' : 'quiet'" :href="$action['href']">{{ $action['label'] }}</x-pulse.button>
+                @endforeach
             </div>
         </x-pulse.empty>
     @else
@@ -59,7 +59,7 @@
                 @endif
                 <div class="pk-cluster fl-end__links">
                     <x-pulse.button variant="quiet" size="sm" :href="pulse_route('saved')">Your saved beats</x-pulse.button>
-                    <x-pulse.button variant="quiet" size="sm" :href="pulse_route('needs.create')">Say what you need</x-pulse.button>
+                    <x-pulse.button variant="quiet" size="sm" :href="$endAction['href']">{{ $endAction['label'] }}</x-pulse.button>
                 </div>
             </div>
         @endif

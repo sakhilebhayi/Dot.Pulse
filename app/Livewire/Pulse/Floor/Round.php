@@ -4,6 +4,7 @@ namespace App\Livewire\Pulse\Floor;
 
 use App\Livewire\Pulse\Floor\Concerns\ActsOnBeats;
 use App\Livewire\Pulse\Floor\Support\BeatPresenter;
+use App\Livewire\Pulse\Floor\Support\Persona;
 use App\Services\Pulse\Discovery\Floor;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -108,9 +109,11 @@ class Round extends Component
         $this->waiting = max(0, (int) $round['counts']['new'] - $batch);
     }
 
-    public function render(): View
+    public function render(Persona $persona): View
     {
         return view('livewire.pulse.floor.round', [
+            'emptyActions' => $persona->emptyActions(auth()->user(), $this->mode),
+            'endAction' => $persona->endAction(auth()->user()),
             'readyAt' => $this->nextRoundAt ? Carbon::parse($this->nextRoundAt)->timezone(config('app.timezone')) : null,
         ]);
     }
