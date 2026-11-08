@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\Pulse\DigestUnsubscribeController;
 use App\Http\Controllers\Pulse\MediaController;
 use App\Http\Controllers\Pulse\PrivacyExportController;
-use App\Http\Middleware\EnsureOnboarded;
 use App\Livewire\Pulse\Business\Support\EntityView;
 use App\Livewire\Pulse\Need\NeedPage;
 use App\Models\Community;
@@ -27,7 +26,6 @@ use Laravel\Fortify\Features;
 
 // Sends a signed-in person through the short welcome flow once, on any page that carries it. Left off on purpose:
 // the welcome flow itself, notifications, privacy (and its export), errors and sign-in.
-Route::aliasMiddleware('pulse.onboarded', EnsureOnboarded::class);
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])

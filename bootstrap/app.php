@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureOnboarded;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Security headers and the nonce CSP on every response, including errors and the media route.
         $middleware->append(SecurityHeaders::class);
+
+        // Aliases live here, not in routes/web.php: production runs with cached routes (`route:cache`), and a cached
+        // route file is never loaded, so an alias defined there is missing and every page behind it answers 500.
+        $middleware->alias([
+            'pulse.onboarded' => EnsureOnboarded::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
