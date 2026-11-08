@@ -175,7 +175,10 @@ class Search extends Component
 
         foreach ($results as $r) {
             if ($r['type'] === 'signal' && $r['beat'] !== null) {
-                $rows[] = $presenter->present($r['beat'], auth()->user()) + ['result' => 'signal', 'why' => $r['why']];
+                $row = $presenter->present($r['beat'], auth()->user());
+                // "Near you" is already said by the label; the why line does not say it twice.
+                $why = $row['near'] ? array_values(array_filter($r['why'], fn ($w) => ! in_array($w, ['In your city.', 'In your region.'], true))) : $r['why'];
+                $rows[] = $row + ['result' => 'signal', 'why' => $why];
             } elseif ($r['type'] === 'entity') {
                 $rows[] = ['result' => 'entity', 'entity' => $r['entity'], 'why' => $r['why']];
             }

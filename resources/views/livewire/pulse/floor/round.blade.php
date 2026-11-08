@@ -3,7 +3,7 @@
     $empties = [
         'all' => ['Nothing fits yet.', 'The floor introduces people once it knows you. Tell it what you do, what you need or who you follow.'],
         'trade' => ['Nothing to trade yet.', 'Say what you need and the floor finds sellers. Add an offer and it finds buyers.'],
-        'work' => ['No work matches yet.', 'Say what you are open to, or post a role, and the floor starts introducing people.'],
+        'work' => ['No work matches yet.', 'Say what you are open to and the floor starts introducing people. Hiring? Post a role from your business page.'],
         'local' => ['Nothing near you yet.', 'Local needs your place. Set where you are and the floor looks nearby first.'],
         'learn' => ['Nothing to read yet.', 'Questions, events and news that fit your interests show up here. Follow a business or add interests.'],
     ];

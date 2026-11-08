@@ -45,7 +45,8 @@ class EntityView
             'roles' => $roles,
             'ladder' => self::ladder($entity),
             'status' => $verification->summary($entity),
-            'response' => $response['response_rate'] === null ? null : $response,
+            // "1 of 1 answered" says nothing: the numbers appear once there are five first messages to count.
+            'response' => $response['response_rate'] === null || $response['received'] < 5 ? null : $response,
             'stats' => app(EntityService::class)->stats($entity),
             // Earned reviews only: written after a result both sides confirmed, shown once both sides have written theirs.
             'reviews' => $reviews->forSubject($entity, 10),
