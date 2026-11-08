@@ -1611,3 +1611,127 @@ body:has(dialog.pk-dialog[open]) {
         padding-block: 14px;
     }
 }
+
+
+/* ---------- File picker (pulse/file) ---------- */
+.pk-file {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.pk-file__label {
+    font-size: var(--t-small);
+    font-weight: 700;
+}
+
+.pk-file__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    opacity: 0;
+}
+
+.pk-file__zone {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    padding: 12px;
+    border: 1px dashed var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-raised);
+    cursor: pointer;
+    transition: border-color var(--d-base) var(--ease), background var(--d-base) var(--ease);
+}
+
+.pk-file__zone:hover,
+.pk-file__zone.is-over {
+    border-color: var(--c-field);
+    background: var(--c-sheet);
+}
+
+.pk-file__input:focus-visible + .pk-file__zone {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+.pk-file--logo .pk-file__zone {
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: center;
+    gap: 16px;
+}
+
+.pk-file__frame {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: var(--r-sm);
+    background: var(--c-sheet);
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    text-align: center;
+}
+
+.pk-file--logo .pk-file__frame {
+    width: 96px;
+    aspect-ratio: 1;
+}
+
+.pk-file--cover .pk-file__frame {
+    width: 100%;
+    aspect-ratio: 4 / 1;
+}
+
+.pk-file__frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pk-file__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--c-link);
+    font-size: var(--t-small);
+    font-weight: 700;
+}
+
+.pk-file__or {
+    color: var(--c-muted);
+    font-weight: 500;
+}
+
+.pk-file__status {
+    margin: 0;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.pk-file__remove {
+    justify-self: start;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--c-link);
+    font: inherit;
+    font-size: var(--t-small);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.pk-file--invalid .pk-file__zone {
+    border-color: var(--c-bad);
+}
+
+@media (max-width: 599.98px) {
+    .pk-file__or {
+        display: none;
+    }
+}

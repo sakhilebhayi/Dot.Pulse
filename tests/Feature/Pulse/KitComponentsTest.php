@@ -41,6 +41,8 @@ class KitComponentsTest extends TestCase
             'chips' => '<x-pulse.chips name="t" legend="Topics" :options="[\'a\' => \'A\', \'b\' => \'B\']" :selected="[\'a\']" />',
             'toggle' => '<x-pulse.toggle name="digest" label="Send a digest" />',
             'empty' => '<x-pulse.empty title="Nothing yet." text="Say what you need." action="Say" href="/n" />',
+            'file' => '<x-pulse.file name="logo" label="Logo" preview="/p.png" remove-model="remove_logo" />',
+            'sync-meter mini' => "<x-pulse.sync-meter :reasons=\"$r\" :mini=\"true\" />",
             'stat' => '<x-pulse.stat label="Replies" value="12" />',
             'toasts' => '<x-pulse.toasts />',
             'drawer' => '<x-pulse.drawer id="d1" title="Filters">Body</x-pulse.drawer>',
