@@ -17,7 +17,7 @@
     // claim their own pages; the verbs keep the rest. On the phone bar only the five verbs exist, so a specific place lights
     // the verb it belongs to ('parent').
     $verbs = [
-        ['key' => 'floor', 'label' => 'Floor', 'icon' => 'floor', 'href' => pulse_route_first(['floor', 'dashboard']), 'match' => ['floor', 'dashboard', 'posts.*', 'communities.*', 'community.*', 'needs.*', 'offers.*', 'roles.*', 'entities.show', 'signals.*']],
+        ['key' => 'floor', 'label' => 'Floor', 'icon' => 'floor', 'href' => pulse_route_first(['floor', 'dashboard']), 'match' => ['floor', 'local', 'learn', 'dashboard', 'signals.*']],
         ['key' => 'trade', 'label' => 'Trade', 'icon' => 'trade', 'href' => pulse_route('trade'), 'match' => ['trade']],
         ['key' => 'work', 'label' => 'Work', 'icon' => 'work', 'href' => pulse_route('work'), 'match' => ['work']],
         ['key' => 'lines', 'label' => 'Lines', 'icon' => 'lines', 'href' => pulse_route('lines'), 'match' => ['lines', 'lines.*'], 'badge' => 'lines'],
@@ -26,6 +26,7 @@
     $more = array_values(array_filter([
         ['key' => 'search', 'parent' => 'floor', 'label' => 'Search', 'icon' => 'search', 'href' => pulse_route('search'), 'match' => ['search'], 'show' => Route::has('search')],
         ['key' => 'saved', 'parent' => 'floor', 'label' => 'Saved', 'icon' => 'bookmark', 'href' => pulse_route('saved'), 'match' => ['saved'], 'show' => Route::has('saved')],
+        ['key' => 'community', 'parent' => 'floor', 'label' => 'Community', 'icon' => 'lines', 'href' => pulse_route('community.feed'), 'match' => ['community.*', 'communities.*', 'posts.*'], 'show' => Route::has('community.feed')],
         ['key' => 'door', 'parent' => 'you', 'label' => 'Open door', 'icon' => 'door', 'href' => pulse_route('door'), 'match' => ['door'], 'show' => Route::has('door')],
         ['key' => 'moderation', 'parent' => 'floor', 'label' => 'Moderation', 'icon' => 'shield', 'href' => pulse_route('moderation'), 'match' => ['moderation'], 'show' => $user && Route::has('moderation') && $user->canAccessModeration()],
         ['key' => 'operator', 'parent' => 'floor', 'label' => 'Operator', 'icon' => 'chart', 'href' => pulse_route('operator'), 'match' => ['operator'], 'show' => $user && Route::has('operator') && $user->isPlatformModerator()],
@@ -42,12 +43,27 @@
     if ($activeKey === null && $manageSlug !== null) {
         $activeKey = in_array($manageSlug, array_column($businesses, 'slug'), true) ? 'biz:'.$manageSlug : 'you';
     }
+    // A page about one business, offer, role or need belongs to where the person came to it from: the business they run,
+    // else the verb it is about (Trade for what is sold, Work for what is hired, You for their own need).
+    if ($activeKey === null && pulse_route_is('entities.show', 'offers.show', 'roles.show')) {
+        $seen = request()->route('entity');
+        $seenSlug = is_object($seen) ? $seen->slug : (string) $seen;
+        $activeKey = in_array($seenSlug, array_column($businesses, 'slug'), true)
+            ? 'biz:'.$seenSlug
+            : (pulse_route_is('roles.show') ? 'work' : (pulse_route_is('offers.show') || (is_object($seen) && $seen->is_seller) ? 'trade' : 'work'));
+    }
+    if ($activeKey === null && pulse_route_is('needs.*')) {
+        $need = request()->route('need');
+        $activeKey = pulse_route_is('needs.show') && is_object($need) && (int) $need->user_id !== (int) auth()->id() ? 'trade' : 'you';
+    }
     if ($activeKey === null) {
         foreach ($verbs as $verb) {
             if (pulse_route_is(...$verb['match'])) { $activeKey = $verb['key']; break; }
         }
     }
     $activeParent = collect(array_merge($more, $biz))->firstWhere('key', $activeKey)['parent'] ?? $activeKey;
+    // The phone bar has five verbs and no business entry, so a business page lights none of them.
+    $phoneActive = str_starts_with((string) $activeKey, 'biz:') ? null : $activeParent;
     $bellRoute = Route::has('me.notifications');
 @endphp
 <!DOCTYPE html>
@@ -226,7 +242,7 @@
     @unless ($focus)
     <nav class="sh-bar" aria-label="Main, phone">
         @foreach ($verbs as $verb)
-            <a href="{{ $verb['href'] }}" @if ($activeParent === $verb['key']) aria-current="page" @endif>
+            <a href="{{ $verb['href'] }}" @if ($phoneActive === $verb['key']) aria-current="page" @endif>
                 <x-pulse.icon :name="$verb['icon']" :size="22" />
                 <span>{{ $verb['label'] }}</span>
                 @if (! empty($verb['badge']))<span class="sh-badge" data-pulse-badge="{{ $verb['badge'] }}" data-label="{{ $verb['label'] }}" hidden>0</span>@endif

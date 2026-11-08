@@ -63,6 +63,29 @@ class ShellNavTest extends FloorTestCase
         $this->assertNotNull($other);
     }
 
+    public function test_business_need_and_community_pages_light_the_right_item_and_the_phone_bar_none_on_manage(): void
+    {
+        $owner = $this->person();
+        $shop = $this->dEntity($owner, ['name' => 'Kettle and Plum', 'is_seller' => true]);
+        $hirer = $this->dEntity($this->person(), ['name' => 'Hiring House', 'is_seller' => false, 'is_employer' => true]);
+        $need = \App\Models\PulseNeed::factory()->create(['user_id' => $this->me->id]);
+
+        // A business page the person does not run: Trade for a seller, Work for an employer. Their own: the business.
+        $this->assertSame(['Trade'], $this->railActive($this->actingAs($this->me)->get(route('entities.show', $shop))->getContent()));
+        $this->assertSame(['Work'], $this->railActive($this->actingAs($this->me)->get(route('entities.show', $hirer))->getContent()));
+        $this->assertSame(['Kettle and Plum'], $this->railActive($this->actingAs($owner)->get(route('entities.show', $shop))->getContent()));
+
+        // Their own need is theirs ("You"); the community has its own entry, and Floor stays on the floor routes.
+        $this->assertSame(['You'], $this->railActive($this->actingAs($this->me)->get(route('needs.show', $need))->getContent()));
+        $this->assertSame(['Community'], $this->railActive($this->actingAs($this->me)->get(route('community.feed'))->getContent()));
+
+        // The phone bar has no business entry: "You" must not light up on manage pages.
+        $bar = $this->actingAs($owner)->get(route('entities.manage', $shop))->getContent();
+        preg_match('~<nav class="sh-bar".*?</nav>~s', $bar, $nav);
+        $this->assertStringNotContainsString('aria-current', $nav[0]);
+        $this->assertStringContainsString('aria-current="page"', $this->actingAs($owner)->get('/me/profile')->getContent());
+    }
+
     public function test_the_stock_jetstream_profile_sends_people_to_their_floor_profile(): void
     {
         $this->actingAs($this->me)->get('/user/profile')->assertRedirect(route('me.profile'));
