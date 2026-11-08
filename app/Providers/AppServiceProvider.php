@@ -10,6 +10,8 @@ use App\Policies\CommunityPolicy;
 use App\Policies\PulseCommentPolicy;
 use App\Policies\PulsePostPolicy;
 use App\Policies\UserPolicy;
+use App\Services\InfoDot\FakeIdentityClient;
+use App\Services\InfoDot\IdentityClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,7 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Browser end-to-end runs only (tests/e2e/pulse): a fake InfoDot redeem, never outside local or testing.
+        if (env('PULSE_E2E_FAKE_INFODOT') === '1' && $this->app->environment('local', 'testing')) {
+            $this->app->bind(IdentityClient::class, FakeIdentityClient::class);
+        }
     }
 
     /**

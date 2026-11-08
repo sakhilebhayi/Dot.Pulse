@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\InfoDot\IdentityClient;
 use App\Services\InfoDot\InfoDotUnavailable;
+use App\Services\Pulse\Entities\VerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -101,6 +102,13 @@ class EcosystemAuthController extends Controller
 
             if ($user) {
                 $syncTeams($user, $identity);
+
+                // A page linked to an InfoDot company re-reads what InfoDot said about it. Never blocks sign-in.
+                try {
+                    app(VerificationService::class)->refreshForUser($user, $identity);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 
@@ -135,12 +143,12 @@ class EcosystemAuthController extends Controller
     /**
      * A deep link names a page to open after sign-in. Only a path on this app is honoured:
      * a single leading slash, nothing that a browser could read as another host (//, \),
-     * no traversal (..), no control characters. Anything else falls back to the dashboard,
+     * no traversal (..), no control characters. Anything else falls back to the Floor (a first visit is sent on to the welcome flow by the pulse.onboarded middleware),
      * so this can never be turned into an open redirect.
      */
     private function safeRedirect(mixed $redirect): string
     {
-        $fallback = route('dashboard');
+        $fallback = route('floor');
 
         if (! is_string($redirect) || $redirect === '' || strlen($redirect) > 2000 || $redirect[0] !== '/') {
             return $fallback;

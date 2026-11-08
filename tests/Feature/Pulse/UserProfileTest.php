@@ -28,7 +28,7 @@ class UserProfileTest extends TestCase
         $profileUser = User::factory()->withPersonalTeam()->create();
         $viewer = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($viewer)
+        $this->actingAs($this->onboard($viewer))
             ->get("/u/{$profileUser->id}")
             ->assertOk();
     }

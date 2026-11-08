@@ -1,22 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-[x-cloak] {
-    display: none;
-}
-
-/*
- * Reduced motion (WCAG 2.3.3): people who ask the system for less motion get none of it from
- * transitions, animations or smooth scrolling, whichever file or utility class declares them.
- */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
+/* Hallmark v2.0 | theme: The Floor (locked by DESIGN.md, by request) | genre: app + landing | shape: Floor, rail of verbs + one column of beats | signature: the sync meter */
+/* critique: a trading floor where two lines meet at the reasons they share; no gradients, glass, eyebrows or counters of vanity */
+/* waive 64: the unread badge holds a count (a figure) and kind words are mono by DESIGN.md (components); both are set sentence case and untracked */
+/* waive 24b: optical spacings (6, 10, 14, 18 px) are set against the 44 px tap target and the 14 px match node, not a pure 4 px scale */
+/* waive 12: the match nodes and the consent switch click into place with a 2 px overshoot, as the Floor's motion verb says (DESIGN.md); buttons use plain ease-out */
+@import "tailwindcss/base";
+@import "./pulse/tokens.css";
+@import "./pulse/base.css";
+@import "tailwindcss/components";
+@import "./pulse/shell.css";
+@import "./pulse/kit.css";
+@import "./pulse/public.css";
+@import "./pulse/legacy.css";
+@import "./pulse/operator.css";
+@import "./pulse/business.css";
+@import "tailwindcss/utilities";
+@import "./pulse/floor.css";
+@import "./pulse/me.css";
+@import "./pulse/lines.css";

@@ -1,153 +1,207 @@
-<div style="max-width:760px;">
-    <div style="display:flex;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:3px;width:fit-content;margin-bottom:1.25rem;">
-        <button wire:click="$set('tab', 'held')" class="tap" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'held' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'held' ? '#f1c62e' : '#71717a' }};">
-            Held posts
-            <span class="metric-val" style="margin-left:6px;font-size:11px;">{{ $this->heldPosts->count() }}</span>
-        </button>
-        <button wire:click="$set('tab', 'reports')" class="tap" style="padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;background:{{ $tab === 'reports' ? 'rgba(241,198,46,0.12)' : 'transparent' }};color:{{ $tab === 'reports' ? '#f1c62e' : '#71717a' }};">
-            Reports
-            <span class="metric-val" style="margin-left:6px;font-size:11px;">{{ $this->reportCount }}</span>
-        </button>
-    </div>
+@php
+    $tabs = [
+        'held' => ['label' => 'Posts', 'count' => $this->heldPosts->count()],
+        'listings' => ['label' => 'Listings', 'count' => $platform ? $this->listings->count() : 0],
+        'reports' => ['label' => 'Reports', 'count' => $this->reportCount],
+        'lines' => ['label' => 'Messages and reviews', 'count' => $platform ? $this->lineCount : 0],
+    ];
+    if (! $platform) { unset($tabs['listings'], $tabs['lines']); }
+@endphp
+<div class="mq-body">
+    <nav aria-label="Queue sections">
+        <ul class="pk-tabs__list">
+            @foreach ($tabs as $key => $t)
+                <li><button type="button" class="pk-tab" wire:click="$set('tab', '{{ $key }}')" @if ($tab === $key) aria-current="page" @endif>{{ $t['label'] }}@if ($t['count'])<span class="pk-tab__count">{{ $t['count'] }}</span>@endif</button></li>
+            @endforeach
+        </ul>
+    </nav>
 
-    @if($tab === 'held')
-        @if($this->heldPosts->isEmpty())
-            <div class="dot-card" style="padding:2.5rem 1.5rem;text-align:center;">
-                <p style="font-size:13px;color:#71717a;margin:0;">Nothing waiting for review.</p>
-            </div>
+    @if ($notice)<p class="mq-notice" role="status">{{ $notice }}</p>@endif
+
+    {{-- ------------------------------------------------------------ Posts --}}
+    @if ($tab === 'held')
+        @if ($this->heldPosts->isEmpty())
+            <x-pulse.empty title="Nothing waiting for review" text="Posts the rules are unsure about land here. Right now there are none." />
         @endif
 
-        @foreach($this->heldPosts as $post)
+        @foreach ($this->heldPosts as $post)
             @php
                 $status = $post->enrichment?->moderation_status;
                 $badge = match (true) {
-                    $status === 'rejected' => ['AI recommended reject', 'dot-badge-danger'],
-                    $status === 'flagged' => ['AI flagged for review', 'dot-badge-accent'],
-                    default => ['Automated review unavailable', 'dot-badge-neutral'],
+                    $status === 'rejected' => ['AI recommended reject', 'bad'],
+                    $status === 'flagged' => ['AI flagged for review', 'warn'],
+                    default => ['Automated review unavailable', 'neutral'],
                 };
             @endphp
-            <div class="dot-card" style="padding:1.25rem 1.5rem;margin-bottom:1rem;" wire:key="held-{{ $post->id }}">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px;">
-                    <div>
-                        <p style="font-size:13.5px;font-weight:600;color:#f4f4f5;margin:0;">{{ $post->author->name }}</p>
-                        <p style="font-size:11.5px;color:#71717a;margin:2px 0 0;">
-                            {{ $post->community?->name ?? 'No community' }}@if($post->community?->isPrivate()) (private)@endif &middot; {{ ucfirst($post->type) }}
-                        </p>
+            <article class="pk-card mq-item" wire:key="held-{{ $post->id }}">
+                <header class="mq-item__head">
+                    <div class="mq-item__who">
+                        <x-pulse.kind-word :kind="ucfirst(str_replace('_', ' ', $post->type))" />
+                        <span class="mq-item__by">by {{ $post->author->name }}</span>
+                        <span class="pk-muted">{{ $post->community?->name ?? 'No community' }}@if ($post->community?->isPrivate()) (private)@endif</span>
                     </div>
-                    <span class="dot-badge {{ $badge[1] }}">{{ $badge[0] }}</span>
-                </div>
+                    <x-pulse.pill :tone="$badge[1]">{{ $badge[0] }}</x-pulse.pill>
+                </header>
 
-                @if($post->title)
-                    <p style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:600;color:#f4f4f5;margin:0 0 4px;">{{ $post->title }}</p>
-                @endif
-                <p style="font-size:13px;color:#a1a1aa;line-height:1.6;margin:0 0 12px;white-space:pre-line;">{{ $post->body }}</p>
+                @if ($post->title)<h3 class="mq-item__title">{{ $post->title }}</h3>@endif
+                <p class="mq-item__body">{{ $post->body }}</p>
 
-                @if($post->enrichment)
-                    <div style="font-size:11.5px;color:#52525b;margin-bottom:12px;display:flex;flex-direction:column;gap:3px;">
-                        @if($post->enrichment->moderation_rationale)
-                            <p style="margin:0;">{{ $status === 'pending' ? 'Why it is here' : 'AI rationale' }}: {{ $post->enrichment->moderation_rationale }}</p>
+                @include('livewire.pulse.queue.flags', ['flags' => $this->postFlags[$post->id] ?? []])
+
+                @if ($post->enrichment)
+                    <div class="mq-meta">
+                        @if ($post->enrichment->moderation_rationale)
+                            <p>{{ $status === 'pending' ? 'Why it is here' : 'AI rationale' }}: {{ $post->enrichment->moderation_rationale }}</p>
                         @endif
-                        @if($status !== 'pending')
-                            <p style="margin:0;">Spam score: {{ number_format($post->enrichment->spam_score, 2) }} &middot; Safety score: {{ number_format($post->enrichment->safety_score, 2) }}</p>
+                        @if ($status !== 'pending')
+                            <p>Spam score: {{ number_format($post->enrichment->spam_score, 2) }} Safety score: {{ number_format($post->enrichment->safety_score, 2) }}</p>
                         @endif
                     </div>
                 @endif
 
-                @if($rejectingPostId === $post->id)
-                    <div class="inline-form-row">
-                        <input type="text" wire:model="rejectReason" placeholder="Reason for rejecting" class="dot-input" aria-label="Reason" />
-                        <button wire:click="confirmReject({{ $post->id }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;flex-shrink:0;">
-                            Confirm reject
-                        </button>
-                        <button wire:click="cancelReject" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">
-                            Cancel
-                        </button>
+                @if ($rejectingPostId === $post->id)
+                    <div class="mq-form">
+                        <x-pulse.field :id="'reject-'.$post->id" name="rejectReason" label="Reason for rejecting" hint="The author reads this." wire:model="rejectReason" />
+                        <div class="pk-cluster">
+                            <x-pulse.button variant="danger" size="sm" wire:click="confirmReject({{ $post->id }})">Confirm reject</x-pulse.button>
+                            <x-pulse.button variant="quiet" size="sm" wire:click="cancelReject">Cancel</x-pulse.button>
+                        </div>
                     </div>
                 @else
-                    <div class="inline-form-row">
-                        <button wire:click="approve({{ $post->id }})" class="dot-btn tap" style="background:#22c55e;color:#052e10;">
-                            Approve
-                        </button>
-                        <button wire:click="promptReject({{ $post->id }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;">
-                            Reject
-                        </button>
+                    <div class="pk-cluster">
+                        <x-pulse.button size="sm" wire:click="approve({{ $post->id }})">Approve</x-pulse.button>
+                        <x-pulse.button variant="danger" size="sm" wire:click="promptReject({{ $post->id }})">Reject</x-pulse.button>
                     </div>
                 @endif
-            </div>
+            </article>
         @endforeach
-    @else
-        @if($reportGroups->isEmpty())
-            <div class="dot-card" style="padding:2.5rem 1.5rem;text-align:center;">
-                <p style="font-size:13px;color:#71717a;margin:0;">No open reports.</p>
+    @endif
+
+    {{-- ------------------------------------------------------------ Listings --}}
+    @if ($tab === 'listings' && $platform)
+        @if ($this->listings->isEmpty())
+            <x-pulse.empty title="No listings are waiting" text="Offers, roles, needs and business pages the rules held for a person show up here, oldest first." />
+        @else
+            <div class="mq-bar">
+                <p class="pk-muted">Oldest first. Holding or removing needs a reason, and the person who made it reads that reason.</p>
+                <x-pulse.button variant="quiet" size="sm" wire:click="approveClean" wire:confirm="Approve every held listing the rules would let through today? Anything still flagged, and anything no rules checked, stays here.">Approve the clean ones</x-pulse.button>
             </div>
         @endif
 
-        @foreach($reportGroups as $group)
+        @foreach ($this->listings as $item)
             @php
-                $target = $group['target'];
-                $isPost = $target instanceof \App\Models\PulsePost;
-                $isComment = $target instanceof \App\Models\PulseComment;
-                $kind = $isPost ? 'Post' : ($isComment ? 'Comment' : 'Profile');
-                $resolving = $resolvingType === $group['type'] && $resolvingId === $group['id'];
-                $authorName = $isPost || $isComment ? $target?->author?->name : $target?->name;
+                $deciding = $decidingKey === $item['key'];
+                $why = $item['why'];
             @endphp
-            <div class="dot-card" style="padding:1.25rem 1.5rem;margin-bottom:1rem;" wire:key="report-{{ $group['key'] }}">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px;">
-                    <div style="min-width:0;">
-                        <p style="font-size:13.5px;font-weight:600;color:#f4f4f5;margin:0;">{{ $kind }} by {{ $authorName ?? 'a deleted account' }}</p>
-                        <p style="font-size:11.5px;color:#71717a;margin:2px 0 0;">
-                            {{ $group['community'] ?? 'Platform-wide' }}@if($group['private']) (private)@endif
-                        </p>
+            <article class="pk-card mq-item" wire:key="listing-{{ $item['key'] }}">
+                <header class="mq-item__head">
+                    <div class="mq-item__who">
+                        <x-pulse.kind-word :kind="ucfirst($item['noun'])" />
+                        <span class="mq-item__by">@if ($item['author']) by {{ $item['author']->name }} @endif</span>
+                        @if ($item['entity'])<span class="pk-muted">{{ $item['entity']->name }}</span>@endif
                     </div>
-                    <span class="dot-badge dot-badge-danger" style="flex-shrink:0;">{{ $group['count'] }} {{ \Illuminate\Support\Str::plural('report', $group['count']) }}</span>
+                    <x-pulse.pill tone="warn">{{ $item['moderation'] === 'held' ? 'Held by the rules' : 'Waiting, no rules ran' }}</x-pulse.pill>
+                </header>
+
+                <h3 class="mq-item__title">{{ $item['title'] }}</h3>
+                @php $text = \App\Services\Pulse\Operator\ListingText::of($item['model']); @endphp
+                <p class="mq-item__body">{{ \Illuminate\Support\Str::limit(preg_replace('/^'.preg_quote($item['title'], '/').'\s*/', '', $text), 600) }}</p>
+
+                <div class="mq-why">
+                    <p class="mq-why__note">{{ $why['note'] }} <span class="pk-muted">Waiting {{ $item['since']->diffForHumans(null, true) }}.</span></p>
+                    @include('livewire.pulse.queue.flags', ['flags' => $why['flags']])
                 </div>
 
-                @if($isPost)
-                    @if($target->title)
-                        <p style="font-family:'Syne',sans-serif;font-size:14.5px;font-weight:600;color:#f4f4f5;margin:0 0 4px;">{{ $target->title }}</p>
-                    @endif
-                    <p style="font-size:13px;color:#a1a1aa;line-height:1.6;margin:0 0 12px;white-space:pre-line;">{{ $target->body }}</p>
-                @elseif($isComment)
-                    <p style="font-size:13px;color:#a1a1aa;line-height:1.6;margin:0 0 12px;white-space:pre-line;">{{ $target->body }}</p>
-                @elseif($target)
-                    <p style="font-size:13px;color:#a1a1aa;margin:0 0 12px;">
-                        <a href="{{ route('users.show', $target) }}" style="color:#f1c62e;text-decoration:none;">{{ $target->name }}</a>
-                        @if($target->pulseProfile?->headline) &middot; {{ $target->pulseProfile->headline }} @endif
-                    </p>
-                @endif
-
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:{{ count($group['notes']) ? '8px' : '12px' }};">
-                    @foreach($group['reasons'] as $reason => $n)
-                        <span class="dot-badge dot-badge-neutral">{{ \App\Enums\ReportReason::tryFrom($reason)?->label() ?? ucfirst($reason) }} &times; {{ $n }}</span>
-                    @endforeach
-                </div>
-
-                @if(count($group['notes']))
-                    <ul style="font-size:12px;color:#71717a;margin:0 0 12px;padding-left:16px;line-height:1.5;">
-                        @foreach($group['notes'] as $note)
-                            <li>{{ $note }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                @if($resolving)
-                    <div class="inline-form-row">
-                        <input type="text" wire:model="resolveReason" placeholder="Why it is being removed (kept in the log)" class="dot-input" aria-label="Reason" />
-                        <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;flex-shrink:0;">Confirm removal</button>
-                        <button wire:click="cancelResolve" class="dot-btn dot-btn-ghost tap" style="flex-shrink:0;">Cancel</button>
+                @if ($deciding)
+                    <div class="mq-form">
+                        <x-pulse.field :id="'listing-reason-'.str_replace(':', '-', $item['key'])" name="listingReason" :label="$decidingDecision === 'removed' ? 'Why it is being removed' : 'Why it is being held'" hint="The person who made it reads this." wire:model="listingReason" />
+                        <div class="pk-cluster">
+                            <x-pulse.button :variant="$decidingDecision === 'removed' ? 'danger' : 'primary'" size="sm" wire:click="confirmListing">{{ $decidingDecision === 'removed' ? 'Confirm removal' : 'Confirm hold' }}</x-pulse.button>
+                            <x-pulse.button variant="quiet" size="sm" wire:click="cancelListing">Cancel</x-pulse.button>
+                        </div>
                     </div>
-                    @error('resolveReason')<p style="color:#f87171;font-size:11px;margin:6px 0 0;">{{ $message }}</p>@enderror
                 @else
-                    <div class="inline-form-row">
-                        @if($isPost || $isComment)
-                            <button wire:click="promptResolve('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#e24b4a;color:#fff;">Remove {{ strtolower($kind) }}</button>
-                        @else
-                            <button wire:click="resolveReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn tap" style="background:#22c55e;color:#052e10;">Mark reviewed</button>
+                    <div class="pk-cluster">
+                        <x-pulse.button size="sm" wire:click="approveListing('{{ $item['key'] }}')">Approve</x-pulse.button>
+                        @if ($item['moderation'] !== 'held')
+                            <x-pulse.button variant="quiet" size="sm" wire:click="promptListing('{{ $item['key'] }}', 'held')">Hold with a reason</x-pulse.button>
                         @endif
-                        <button wire:click="dismissReports('{{ $group['slug'] }}', {{ $group['id'] }})" class="dot-btn dot-btn-ghost tap">Dismiss</button>
+                        <x-pulse.button variant="danger" size="sm" wire:click="promptListing('{{ $item['key'] }}', 'removed')">Remove</x-pulse.button>
                     </div>
                 @endif
-            </div>
+            </article>
+        @endforeach
+    @endif
+
+    {{-- ------------------------------------------------------------ Reports --}}
+    @if ($tab === 'reports')
+        @if ($reportGroups->isEmpty())
+            <x-pulse.empty title="No open reports" text="When someone reports a post, a person, a page or a listing, it waits here." />
+        @endif
+
+        @foreach ($reportGroups as $group)
+            @include('livewire.pulse.queue.group', ['group' => $group, 'd' => $this->describe($group), 'resolvingType' => $resolvingType, 'resolvingId' => $resolvingId, 'platform' => $platform])
+        @endforeach
+    @endif
+
+    {{-- ------------------------------------------------------------ Messages and reviews --}}
+    @if ($tab === 'lines' && $platform)
+        <p class="pk-muted mq-lead">You see a message or a request here because someone reported it. Anonymous professionals stay anonymous.</p>
+
+        @if ($lineGroups->isEmpty() && $this->heldReviews->isEmpty() && $this->flaggedResults->isEmpty())
+            <x-pulse.empty title="Nothing reported in lines or reviews" text="Reported messages, requests and reviews, reviews the rules held, and results between the same two parties again and again show up here." />
+        @endif
+
+        @foreach ($this->flaggedResults as $result)
+            <article class="pk-card mq-item" wire:key="result-{{ $result['id'] }}">
+                <header class="mq-item__head">
+                    <div class="mq-item__who">
+                        <x-pulse.kind-word kind="Result" />
+                        <span class="mq-item__by">{{ $result['initiator'] }} and {{ $result['recipient'] }}</span>
+                    </div>
+                    <x-pulse.pill tone="warn">Repeated pair</x-pulse.pill>
+                </header>
+                <h3 class="mq-item__title">{{ ucfirst($result['outcome']) }}@if ($result['about']), about {{ $result['about'] }}@endif</h3>
+                <p class="mq-item__body">{{ $result['reason'] }} That is {{ $result['pair_results'] }} in the window. It is out of public counts until you decide.@if ($result['reviews_held']) {{ $result['reviews_held'] }} {{ $result['reviews_held'] === 1 ? 'review is' : 'reviews are' }} held with it.@endif</p>
+                <div class="pk-cluster">
+                    <x-pulse.button size="sm" wire:click="approveResult({{ $result['id'] }})">Approve</x-pulse.button>
+                    <x-pulse.button variant="danger" size="sm" wire:click="discardResult({{ $result['id'] }})" wire:confirm="Discard this result? It will not count and the line can be marked again.">Discard</x-pulse.button>
+                </div>
+            </article>
+        @endforeach
+
+        @foreach ($lineGroups as $group)
+            @include('livewire.pulse.queue.group', ['group' => $group, 'd' => $this->describe($group), 'resolvingType' => $resolvingType, 'resolvingId' => $resolvingId, 'platform' => $platform])
+        @endforeach
+
+        @foreach ($this->heldReviews as $review)
+            @php $d = \App\Services\Pulse\Operator\ReportedSubject::describe($review); @endphp
+            <article class="pk-card mq-item" wire:key="review-{{ $review->id }}">
+                <header class="mq-item__head">
+                    <div class="mq-item__who">
+                        <x-pulse.kind-word kind="Review" />
+                        <span class="mq-item__by">@if ($d['by']) by {{ $d['by'] }} @endif</span>
+                    </div>
+                    <x-pulse.pill tone="warn">Held by the rules</x-pulse.pill>
+                </header>
+                <h3 class="mq-item__title">{{ $d['title'] }}</h3>
+                @if ($d['body'])<p class="mq-item__body">{{ $d['body'] }}</p>@endif
+
+                @if ($removingReviewId === $review->id)
+                    <div class="mq-form">
+                        <x-pulse.field :id="'review-reason-'.$review->id" name="reviewReason" label="Why it is being removed" hint="The writer reads this." wire:model="reviewReason" />
+                        <div class="pk-cluster">
+                            <x-pulse.button variant="danger" size="sm" wire:click="confirmRemoveReview">Confirm removal</x-pulse.button>
+                            <x-pulse.button variant="quiet" size="sm" wire:click="cancelRemoveReview">Cancel</x-pulse.button>
+                        </div>
+                    </div>
+                @else
+                    <div class="pk-cluster">
+                        <x-pulse.button size="sm" wire:click="approveReview({{ $review->id }})">Approve</x-pulse.button>
+                        <x-pulse.button variant="danger" size="sm" wire:click="promptRemoveReview({{ $review->id }})">Remove</x-pulse.button>
+                    </div>
+                @endif
+            </article>
         @endforeach
     @endif
 </div>

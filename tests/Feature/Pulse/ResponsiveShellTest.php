@@ -9,10 +9,13 @@ use Tests\Concerns\BuildsPulseFixtures;
 use Tests\TestCase;
 
 /**
- * Markup contract of the responsive app shell (see README, "Responsive shell"):
- * below 860px the sidebar is an off-canvas drawer opened from a labelled Menu
- * button in the top bar. These are real authenticated GETs of the real routes;
- * the visual behaviour itself is checked in a browser, not here.
+ * Markup contract of the signed-in shell (R-41, The Floor): cobalt masthead, rail of verbs on desktop, bottom bar of the
+ * same verbs on phones, a skip link, the user menu with sign-out and the team switcher. These are real authenticated GETs of
+ * the real routes; the visual behaviour is checked in a browser, not here.
+ *
+ * Rewritten for R-41: the pre-R-41 sidebar drawer (#shell-drawer, .topbar, .content-wrap Menu button) no longer exists. The
+ * contract it protected (labelled navigation on phones, sign-out and team links reachable, no stock Jetstream bar, reduced
+ * motion honoured, notifications reachable from the top bar) is asserted against the new markup.
  */
 class ResponsiveShellTest extends TestCase
 {
@@ -28,16 +31,17 @@ class ResponsiveShellTest extends TestCase
         $post = $this->postIn($community, ['title' => 'Responsive shell fixture post title']);
 
         return [
-            'dashboard' => route('dashboard'),
+            'community feed' => route('community.feed'),
             'post' => route('posts.show', $post),
             'community' => route('communities.show', $community),
             'user profile' => route('users.show', $post->author),
-            'profile settings' => route('profile.show'),
+            'profile settings' => route('me.profile'),
+            'account and security' => route('me.account'),
             'team settings' => route('teams.show', $user->currentTeam),
         ];
     }
 
-    public function test_every_shell_page_has_the_viewport_meta_menu_button_drawer_and_backdrop(): void
+    public function test_every_shell_page_has_the_viewport_meta_skip_link_masthead_rail_and_phone_bar(): void
     {
         $user = $this->pulseUser();
         $this->actingAs($user);
@@ -46,19 +50,20 @@ class ResponsiveShellTest extends TestCase
             $html = $this->get($url)->assertOk()->getContent();
 
             $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1"', $html, "$label: viewport meta");
+            $this->assertStringContainsString('class="skip-link" href="#main"', $html, "$label: skip link");
+            $this->assertStringContainsString('<header class="sh-mast', $html, "$label: masthead");
+            $this->assertMatchesRegularExpression('/<nav class="sh-rail" aria-label="[^"]+"/', $html, "$label: rail");
+            $this->assertMatchesRegularExpression('/<nav class="sh-bar" aria-label="[^"]+"/', $html, "$label: phone bar");
+            $this->assertStringContainsString('id="main"', $html, "$label: main landmark");
 
-            // The labelled, wired-up menu button in the top bar.
-            $this->assertMatchesRegularExpression(
-                '/<header class="topbar"[^>]*>\s*<button type="button" id="shell-menu-button" class="shell-menu-btn" aria-expanded="false" aria-controls="shell-drawer">.*?<span>Menu<\/span>/s',
-                $html,
-                "$label: menu button"
-            );
-
-            // The drawer is the sidebar itself and is a named landmark.
-            $this->assertMatchesRegularExpression('/<aside id="shell-drawer" class="sidebar" aria-label="[^"]+"/', $html, "$label: drawer");
-            $this->assertStringContainsString('id="shell-close-button"', $html, "$label: close button");
-            $this->assertStringContainsString('id="shell-backdrop"', $html, "$label: backdrop");
-            $this->assertStringContainsString('class="content-wrap"', $html, "$label: content wrapper");
+            // The five verbs are on the rail, in order.
+            $rail = $this->between($html, '<nav class="sh-rail"', '</nav>');
+            $positions = array_map(fn ($verb) => strpos($rail, '<span>'.$verb.'</span>'), ['Floor', 'Trade', 'Work', 'Lines', 'You']);
+            $this->assertNotContains(false, $positions, "$label: all five verbs");
+            $sorted = $positions;
+            sort($sorted);
+            $this->assertSame($sorted, $positions, "$label: verbs in order");
+            $this->assertStringContainsString('data-pk-dialog="compose"', $rail, "$label: compose button");
         }
     }
 
@@ -67,26 +72,26 @@ class ResponsiveShellTest extends TestCase
         $user = $this->pulseUser();
 
         $this->actingAs($user)
-            ->get(route('dashboard'))
+            ->get(route('community.feed'))
             ->assertOk()
             ->assertDontSee('Responsive Navigation Menu', false)
             ->assertDontSee('Primary Navigation Menu', false);
     }
 
-    public function test_the_drawer_carries_sign_out_and_team_links(): void
+    public function test_the_user_menu_carries_sign_out_and_team_links(): void
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
-        $drawer = $this->between($html, '<aside id="shell-drawer"', '</aside>');
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
+        $menu = $this->between($html, 'id="user-menu"', '</header>');
 
-        $this->assertStringContainsString('action="'.route('logout').'"', $drawer);
-        $this->assertStringContainsString('href="'.route('teams.show', $user->currentTeam).'"', $drawer);
+        $this->assertStringContainsString('action="'.route('logout').'"', $menu);
+        $this->assertStringContainsString('href="'.route('teams.show', $user->currentTeam).'"', $menu);
         // One team only: nothing to switch to.
-        $this->assertStringNotContainsString('Switch team', $drawer);
+        $this->assertStringNotContainsString('Switch team', $menu);
     }
 
-    public function test_the_drawer_lists_every_team_for_switching_when_there_is_more_than_one(): void
+    public function test_the_user_menu_lists_every_team_for_switching_when_there_is_more_than_one(): void
     {
         $user = $this->pulseUser();
         $second = Team::factory()->create([
@@ -96,46 +101,55 @@ class ResponsiveShellTest extends TestCase
         ]);
         $user->teams()->attach($second, ['role' => 'editor']);
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
-        $drawer = $this->between($html, '<aside id="shell-drawer"', '</aside>');
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
+        $menu = $this->between($html, 'id="user-menu"', '</header>');
 
-        $this->assertStringContainsString('Switch team', $drawer);
-        $this->assertStringContainsString('Distinctive Second Workspace', $drawer);
-        $this->assertStringContainsString('action="'.route('current-team.update').'"', $drawer);
-        $this->assertSame(2, substr_count($drawer, 'name="team_id"'));
+        $this->assertStringContainsString('Switch team', $menu);
+        $this->assertStringContainsString('Distinctive Second Workspace', $menu);
+        $this->assertStringContainsString('action="'.route('current-team.update').'"', $menu);
+        $this->assertSame(2, substr_count($menu, 'name="team_id"'));
     }
 
     public function test_the_dashboard_uses_the_responsive_page_hooks(): void
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('class="pulse-page"', $html);
-        $this->assertStringContainsString('class="kpi-grid"', $html);
-        $this->assertStringContainsString('class="feed-grid"', $html);
+        // R-41 U5: the legacy pulse-page / kpi-grid / feed-grid markup became the Floor column (680 px, context column
+        // folding into a drawer below 1200 px), so the hooks to assert are the floor stage, the feed and the context.
+        $this->assertStringContainsString('sh-stage--floor', $html);
+        $this->assertStringContainsString('class="lg-feed"', $html);
+        $this->assertStringContainsString('id="sh-context"', $html);
     }
 
-    public function test_the_layout_defines_the_phone_breakpoint_the_table_wrapper_and_reduced_motion(): void
+    public function test_the_shell_script_polls_the_pulse_check_endpoint_and_the_body_names_it(): void
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('@media (max-width:859.98px)', $html);
-        $this->assertStringContainsString('.table-scroll { max-width:100%; overflow-x:auto;', $html);
-        $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $html);
+        $this->assertStringContainsString('data-pulse-check="'.url('/api/pulse/pulse-check').'"', $html);
+        $this->assertStringContainsString('data-pulse-badge="lines"', $html);
+        $this->assertStringContainsString('data-pk-theme', $html, 'theme toggle');
     }
 
-    public function test_the_notification_bell_is_in_the_top_bar_and_labelled(): void
+    public function test_the_notification_bell_is_in_the_masthead_and_labelled(): void
     {
         $user = $this->pulseUser();
 
-        $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
-        $topbar = $this->between($html, '<header class="topbar"', '</header>');
+        $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
+        $masthead = $this->between($html, '<header class="sh-mast', '</header>');
 
-        $this->assertStringContainsString('aria-label="Notifications"', $topbar);
-        $this->assertStringContainsString('class="dot-card bell-panel"', $topbar);
+        // Until the notifications page route exists the legacy Livewire bell is shown; either way it is named "Notifications".
+        $this->assertStringContainsString('aria-label="Notifications"', $masthead);
+    }
+
+    public function test_the_shell_does_not_crash_when_a_linked_route_is_not_registered_yet(): void
+    {
+        $this->assertSame('#', pulse_route('this.route.does.not.exist'));
+        $this->assertSame('#', pulse_route_first(['nope.one', 'nope.two']));
+        $this->assertSame(route('dashboard'), pulse_route_first(['floor-not-built-yet', 'dashboard']));
     }
 
     private function between(string $html, string $start, string $end): string

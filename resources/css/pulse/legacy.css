@@ -1,0 +1,813 @@
+/*
+ * Compatibility layer for the pre-R-41 screens that have not been rebuilt on the kit yet: the profile page, the old
+ * notification bell and the profile and team forms. They use .dot-* classes and inline dark-theme colours; this file
+ * maps those onto the Floor tokens so they stay readable in light and dark. The community surfaces (feed, posts,
+ * comments, communities, people lists, trending, report and follow controls) were rebuilt on the kit in R-41 U5 and
+ * use the .lg-* block at the end of this file. Delete a block here when the last view that needs it is gone.
+ * New screens must not use any of it.
+ */
+
+/* Inline colour remaps: the old views hardcode these hexes in style="color:...". */
+.sh-stage [style*="color:#f4f4f5"],
+.sh-stage [style*="color:#d4d4d8"],
+.sh-stage [style*="color: #f4f4f5"] {
+    color: var(--c-ink) !important;
+}
+
+.sh-stage [style*="color:#a1a1aa"],
+.sh-stage [style*="color:#71717a"],
+.sh-stage [style*="color:#52525b"],
+.sh-stage [style*="color:#3f3f46"] {
+    color: var(--c-muted) !important;
+}
+
+.sh-stage [style*="color:#f87171"] {
+    color: var(--c-bad) !important;
+}
+
+.sh-stage [style*="color:#f1c62e"] {
+    color: var(--c-link) !important;
+}
+
+.sh-stage [style*="background:#f1c62e"] {
+    background: var(--c-signal) !important;
+    color: var(--c-on-signal) !important;
+}
+
+.sh-stage [style*="background:rgba(255,255,255,0.04)"],
+.sh-stage [style*="background:rgba(241,198,46,0.06)"] {
+    background: var(--c-raised) !important;
+}
+
+.sh-stage [style*="border:1px solid rgba(255,255,255"],
+.sh-stage [style*="border-bottom:1px solid rgba(255,255,255"],
+.sh-stage [style*="border-top:1px solid rgba(255,255,255"] {
+    border-color: var(--c-line) !important;
+}
+
+.sh-stage [style*="font-family:'Syne'"] {
+    font-family: var(--f-ui) !important;
+    font-stretch: 110%;
+}
+
+.sh-stage [style*="font-family:'Inter'"] {
+    font-family: var(--f-ui) !important;
+}
+
+.sh-stage [style*="font-family:'JetBrains Mono'"] {
+    font-family: var(--f-mono) !important;
+}
+
+/* Old component classes. */
+.dot-card {
+    background: var(--c-sheet);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+}
+
+.dot-card:hover {
+    border-color: var(--c-line-strong);
+}
+
+.metric-val {
+    font-family: var(--f-mono);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dot-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: var(--t-small);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dot-badge-accent {
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+}
+
+.dot-badge-neutral {
+    background: var(--c-raised);
+    color: var(--c-muted);
+    border: 1px solid var(--c-line);
+}
+
+.dot-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--c-raised);
+    border: 1px solid var(--c-line-strong);
+    color: var(--c-ink);
+    font-stretch: 112%;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.dot-row {
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+}
+
+.dot-row:hover {
+    border-color: var(--c-line-strong);
+}
+
+.pulse-page {
+    padding: 0 0 var(--s-xl);
+    max-width: 1100px;
+}
+
+.bell-panel {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    z-index: 90;
+    padding: 12px;
+    color: var(--c-ink);
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+.modal-card {
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.profile-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.profile-head-main {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 14px;
+    font-size: var(--t-small);
+    color: var(--c-muted);
+}
+
+.tap {
+    min-height: 36px;
+}
+
+/* The notification bell panel inside the masthead (legacy Livewire bell). */
+.topbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-field-ink);
+}
+
+.topbar-btn:hover {
+    background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
+}
+
+@media (max-width: 859.98px) {
+
+    .tap {
+        min-height: var(--tap);
+    }
+
+    .bell-panel {
+        position: fixed;
+        top: 68px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-height: calc(100dvh - 140px);
+    }
+}
+
+/* Jetstream form sections (profile, teams, API tokens) come out of Tailwind; give them the Floor's surface. */
+.sh-stage .jet-surface,
+.sh-stage .bg-white.shadow,
+.sh-stage .bg-white.shadow-xl {
+    border: 1px solid var(--c-line);
+    box-shadow: none;
+}
+
+/*
+ * The community surfaces on the Floor kit (R-41, U5): the feed, posts and comments, communities, people lists, trending,
+ * your posts' status, report and follow controls. These replaced the .dot-* markup above for those views; the block
+ * above stays only for the views that have not been rebuilt yet (profile, notification bell, profile forms).
+ */
+.lg-pagetitle {
+    font-size: var(--t-title);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.lg-h {
+    margin-bottom: 12px;
+    font-size: 1.0625rem;
+    font-stretch: 108%;
+}
+
+.lg-small {
+    font-size: var(--t-small);
+}
+
+.lg-none {
+    padding: 24px 0;
+    text-align: center;
+}
+
+.lg-feed {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm) var(--s-md);
+    margin-bottom: var(--s-sm);
+}
+
+.lg-feed > .lg-toolbar,
+.lg-communities .lg-toolbar {
+    margin-bottom: 0;
+}
+
+.lg-communities {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-toolbar .lg-h {
+    margin: 0;
+}
+
+.lg-toolbar__type {
+    min-width: min(100%, 12rem);
+}
+
+.lg-seg {
+    display: flex;
+    gap: var(--s-xs);
+}
+
+.lg-filter {
+    display: flex;
+    align-items: center;
+    gap: var(--s-sm);
+}
+
+.lg-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-md);
+}
+
+/* A post: the same card as a beat, quieter, with no meter and no counters of vanity. */
+.lg-post {
+    display: grid;
+    gap: 12px;
+    transition: box-shadow var(--d-quick) var(--ease);
+}
+
+.lg-post:hover {
+    box-shadow: 0 4px 0 var(--c-shadow);
+}
+
+.lg-post__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.lg-avatar {
+    display: inline-flex;
+    flex: none;
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.lg-post__meta {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 12px;
+    min-width: 0;
+}
+
+.lg-post__name {
+    color: var(--c-ink);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.lg-post__name:hover {
+    text-decoration: underline;
+}
+
+.lg-post__where {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.lg-post__time {
+    margin-left: auto;
+    color: var(--c-muted);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+    white-space: nowrap;
+}
+
+.lg-post__title {
+    font-size: 1.0625rem;
+    font-stretch: 106%;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.lg-post__title a {
+    color: var(--c-ink);
+    text-decoration: none;
+}
+
+.lg-post__title a:hover {
+    color: var(--c-link);
+    text-decoration: underline;
+}
+
+.lg-post__title--lg {
+    font-size: var(--t-title);
+    font-stretch: 112%;
+}
+
+.lg-post__text {
+    color: var(--c-ink-2);
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.lg-clamp,
+.lg-clamp--2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.lg-clamp--2 {
+    -webkit-line-clamp: 2;
+}
+
+.lg-trunc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lg-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lg-tags li {
+    padding: 2px 8px;
+    border-radius: var(--r-sm);
+    background: var(--c-raised);
+    color: var(--c-ink-2);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+}
+
+.lg-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-left: -8px;
+}
+
+.lg-acts__end {
+    margin-left: auto;
+}
+
+.lg-act,
+.lg-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-muted);
+    font: inherit;
+    font-size: var(--t-small);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--d-quick) var(--ease), background-color var(--d-quick) var(--ease);
+}
+
+.lg-act:hover,
+.lg-link:hover {
+    background: var(--c-raised);
+    color: var(--c-ink);
+}
+
+.lg-act--static {
+    cursor: default;
+}
+
+.lg-act--static:hover {
+    background: transparent;
+    color: var(--c-muted);
+}
+
+.lg-act__n {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink-2);
+}
+
+.lg-link--bad {
+    color: var(--c-bad);
+}
+
+.lg-link--done {
+    cursor: default;
+}
+
+.lg-link--done:hover {
+    background: transparent;
+    color: var(--c-muted);
+}
+
+.lg-link--reply {
+    margin-top: 6px;
+    margin-left: 40px;
+}
+
+.lg-act:focus-visible,
+.lg-link:focus-visible,
+.lg-compose__open:focus-visible,
+.lg-trend__btn:focus-visible,
+.lg-post__title a:focus-visible,
+.lg-post__name:focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+.lg-callout {
+    padding: 12px 16px;
+    border-left: 4px solid var(--c-warn);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    background: var(--c-warn-wash);
+}
+
+.lg-callout__title {
+    color: var(--c-warn);
+    font-weight: 700;
+}
+
+.lg-inline {
+    display: grid;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--c-line);
+}
+
+/* Compose */
+.lg-compose {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-compose__open {
+    width: 100%;
+    min-height: var(--tap);
+    padding: 10px 14px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    color: var(--c-muted);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.lg-compose__open:hover {
+    border-color: var(--c-ink);
+    color: var(--c-ink);
+}
+
+.lg-compose__note {
+    flex: 1 1 14rem;
+    font-size: var(--t-small);
+}
+
+/* Lists of people, rows, communities */
+.lg-list {
+    display: grid;
+    gap: 8px;
+}
+
+.lg-list > .pk-row + .pk-row {
+    margin-top: 0;
+}
+
+.lg-person {
+    padding: 10px 12px;
+}
+
+/* A list inside a card is a list, not a stack of cards: hairlines between rows. */
+.pk-card .lg-list {
+    gap: 0;
+}
+
+.pk-card .lg-list > .pk-row {
+    padding-right: 0;
+    padding-left: 0;
+    border: 0;
+    border-bottom: 1px solid var(--c-line);
+    border-radius: 0;
+    background: transparent;
+}
+
+.pk-card .lg-list > .pk-row:last-child {
+    border-bottom: 0;
+}
+
+.lg-rowlink {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lg-rowlink:hover {
+    border-color: var(--c-line-strong);
+}
+
+.lg-cpost .pk-row__main {
+    display: grid;
+    gap: 4px;
+}
+
+.lg-status .lg-h {
+    margin-bottom: 8px;
+}
+
+.lg-trend {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lg-trend__btn {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-sm);
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-ink-2);
+    font-family: var(--f-mono);
+    font-size: var(--t-mono);
+    text-align: left;
+    cursor: pointer;
+}
+
+.lg-trend__btn:hover {
+    background: var(--c-raised);
+    color: var(--c-ink);
+}
+
+.lg-cgrid {
+    display: grid;
+}
+
+.lg-community {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--c-line);
+}
+
+.lg-community:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.lg-community__main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.lg-community__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-weight: 700;
+}
+
+.lg-community__name a {
+    color: var(--c-ink);
+    text-decoration: none;
+}
+
+.lg-community__name a:hover {
+    color: var(--c-link);
+    text-decoration: underline;
+}
+
+.lg-community__industry {
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.lg-community__act {
+    flex: none;
+}
+
+.lg-chead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.lg-chead__main {
+    display: grid;
+    flex: 1 1 16rem;
+    gap: 8px;
+    min-width: 0;
+}
+
+.lg-chead__title {
+    font-size: var(--t-title);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* Comments */
+.lg-comments {
+    display: grid;
+    gap: var(--s-md);
+}
+
+.lg-comments .lg-h {
+    margin-bottom: 0;
+}
+
+.lg-thread {
+    display: grid;
+    gap: 20px;
+}
+
+.lg-comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.lg-comment__main {
+    display: grid;
+    flex: 1;
+    gap: 6px;
+    min-width: 0;
+}
+
+.lg-replies {
+    display: grid;
+    gap: 12px;
+    margin: 12px 0 0 14px;
+    padding-left: 16px;
+    border-left: 2px solid var(--c-line);
+}
+
+.lg-facts {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    font-size: var(--t-small);
+}
+
+.lg-facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-md);
+}
+
+.lg-facts dd {
+    margin: 0;
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* Report popover */
+.lg-report {
+    position: relative;
+    display: inline-flex;
+}
+
+.lg-pop {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 30;
+    width: 20rem;
+    max-width: calc(100vw - 2rem);
+    margin-top: 6px;
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+@media (max-width: 859.98px) {
+    .lg-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lg-act,
+    .lg-link {
+        min-height: var(--tap);
+    }
+
+    .lg-pop {
+        position: fixed;
+        top: auto;
+        right: 1rem;
+        bottom: 5rem;
+        left: 1rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        z-index: 95;
+    }
+
+    .lg-replies {
+        margin-left: 6px;
+        padding-left: 12px;
+    }
+
+    .lg-link--reply {
+        margin-left: 12px;
+    }
+
+    .lg-community {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lg-post,
+    .lg-act,
+    .lg-link {
+        transition: none;
+    }
+}

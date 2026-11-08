@@ -28,6 +28,8 @@ class SuggestedUsers extends Component
         return User::query()
             ->whereKeyNot(auth()->id())
             ->whereNotIn('id', $followingIds)
+            // An anonymous professional is never suggested: they have no page to open and no name to show.
+            ->whereDoesntHave('pulseProfile', fn ($q) => $q->where('discoverability', 'anonymous'))
             ->with('pulseProfile')
             ->get()
             ->sortByDesc(fn (User $u) => $u->pulseProfile?->community_points ?? 0)

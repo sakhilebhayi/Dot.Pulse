@@ -2,28 +2,142 @@
 
 namespace App\Models;
 
+use Database\Factories\PulseProfileFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PulseProfile extends Model
 {
+    /** @use HasFactory<PulseProfileFactory> */
+    use HasFactory;
+
+    public const DISCOVERABILITY = ['off', 'anonymous', 'open'];
+
+    public const CONTACT_POLICIES = ['anyone', 'context', 'requests', 'nobody'];
+
+    public const OPEN_TO = ['work', 'freelance', 'collab', 'mentoring', 'investing', 'suppliers', 'learning'];
+
     protected $fillable = [
         'user_id', 'headline', 'bio', 'avatar_url', 'cover_url', 'location',
         'website', 'skills', 'expertise_tags', 'role', 'community_points',
         'solutions_accepted', 'is_verified',
+        'kind', 'discoverability', 'open_to', 'place_id', 'reach', 'show_place', 'experience_years',
+        'languages', 'interests', 'achievements', 'work_history', 'contact_policy', 'onboarded_at',
+        'age_confirmed_at', 'avatar_media_id', 'moderation',
     ];
 
     protected $casts = [
-        'skills'          => 'array',
-        'expertise_tags'  => 'array',
-        'is_verified'     => 'boolean',
+        'skills' => 'array',
+        'expertise_tags' => 'array',
+        'is_verified' => 'boolean',
         'community_points' => 'integer',
+        'open_to' => 'array',
+        'languages' => 'array',
+        'interests' => 'array',
+        'achievements' => 'array',
+        'work_history' => 'array',
+        'show_place' => 'boolean',
+        'experience_years' => 'integer',
+        'onboarded_at' => 'datetime',
+        'age_confirmed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function place(): BelongsTo
+    {
+        return $this->belongsTo(PulsePlace::class, 'place_id');
+    }
+
+    public function signal(): HasOne
+    {
+        return $this->hasOne(PulseSignal::class, 'subject_id')->where('subject_type', 'profile');
+    }
+
+    /** Found by employers (anonymously or openly): needs the age confirmation and a choice other than off. */
+    public function scopeDiscoverable(Builder $query): Builder
+    {
+        return $query->whereIn('discoverability', ['anonymous', 'open'])->whereNotNull('age_confirmed_at');
+    }
+
+    public function isAdultConfirmed(): bool
+    {
+        return $this->age_confirmed_at !== null;
+    }
+
+    // -- what other people may see of a person, in lists and bylines ----------------------------------------------
+    // One place decides it. An anonymous professional's card must never be tied to a name: no profile link (the page
+    // is a 404 for everyone but them), no headline, no photo. A byline on something they wrote themselves in the
+    // community keeps their name, because posting is public by their own act and it is not the talent card.
+
+    /** True when this person is an anonymous professional and the viewer is someone else. */
+    public static function isHiddenFrom(User $person, ?User $viewer = null): bool
+    {
+        $viewer ??= auth()->user();
+
+        if ($viewer !== null && $viewer->id === $person->id) {
+            return false;
+        }
+
+        return $person->pulseProfile?->discoverability === 'anonymous';
+    }
+
+    /** Whether a link to /u/{id} would open. It would 404 for an anonymous professional, so no link is drawn. */
+    public static function isLinkable(User $person, ?User $viewer = null): bool
+    {
+        return ! self::isHiddenFrom($person, $viewer);
+    }
+
+    /**
+     * The name to show. `authored` is for a byline on something the person wrote in the community (a post, a comment, a
+     * join request): their handle, as they posted it. Anywhere else (people lists, suggestions) an anonymous
+     * professional is not named.
+     */
+    public static function publicName(User $person, ?User $viewer = null, bool $authored = false): string
+    {
+        return ! $authored && self::isHiddenFrom($person, $viewer) ? 'A professional' : (string) $person->name;
+    }
+
+    /** The headline to show in a people list: only for people whose profile is open. Never an anonymous or private one. */
+    public static function publicHeadline(User $person, ?User $viewer = null): ?string
+    {
+        $profile = $person->pulseProfile;
+
+        if ($profile === null || self::isHiddenFrom($person, $viewer)) {
+            return null;
+        }
+
+        $viewer ??= auth()->user();
+
+        if ($viewer !== null && $viewer->id === $person->id) {
+            return filled($profile->headline) ? $profile->headline : null;
+        }
+
+        return $profile->discoverability === 'open' && $profile->isAdultConfirmed() && filled($profile->headline) ? $profile->headline : null;
+    }
+
+    /**
+     * Finished the welcome flow, or already had a profile in use before the flow existed (a headline, an about text, a
+     * place or an open-to choice). Such people are not sent through it.
+     */
+    public function isOnboarded(): bool
+    {
+        return $this->onboarded_at !== null
+            || filled($this->headline)
+            || filled($this->bio)
+            || $this->place_id !== null
+            || ! empty($this->open_to);
+    }
+
+    public function isDiscoverable(): bool
+    {
+        return in_array($this->discoverability, ['anonymous', 'open'], true) && $this->isAdultConfirmed();
     }
 
     public function addPoints(int $points): void

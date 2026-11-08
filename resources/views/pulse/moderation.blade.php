@@ -1,14 +1,12 @@
-<x-app-layout>
+<x-app-layout title="Moderation" width="wide">
+    <div class="mq">
+        <header class="mq-head">
+            <div>
+                <h1 class="mq-title">Moderation queue</h1>
+                <p class="mq-sub">Posts, listings, reports, messages and reviews that wait for a person. Every decision is logged and the author hears it in plain words.</p>
+            </div>
+        </header>
 
-<div class="pulse-page">
-
-    <div style="margin-bottom:2rem;">
-        <h1 style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;color:#f4f4f5;margin:0 0 0.2rem;letter-spacing:-0.01em;">Moderation Queue</h1>
-        <p style="font-size:0.78rem;color:#52525b;margin:0;">Posts held for review and user reports in the communities you moderate</p>
+        <livewire:pulse.moderation-queue />
     </div>
-
-    <livewire:pulse.moderation-queue />
-
-</div>
-
 </x-app-layout>

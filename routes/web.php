@@ -1,42 +1,54 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\Pulse\DigestUnsubscribeController;
+use App\Http\Controllers\Pulse\MediaController;
+use App\Http\Controllers\Pulse\PrivacyExportController;
+use App\Http\Middleware\EnsureOnboarded;
+use App\Livewire\Pulse\Business\Support\EntityView;
+use App\Livewire\Pulse\Need\NeedPage;
 use App\Models\Community;
+use App\Models\PulseConversation;
+use App\Models\PulseEntity;
+use App\Models\PulseNeed;
+use App\Models\PulseOffer;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
+use App\Models\PulseRole;
+use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Lines\Access;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Features;
+
+// Sends a signed-in person through the short welcome flow once, on any page that carries it. Left off on purpose:
+// the welcome flow itself, notifications, privacy (and its export), errors and sign-in.
+Route::aliasMiddleware('pulse.onboarded', EnsureOnboarded::class);
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:10,1,sso')
     ->name('ecosystem.auth');
 
 // Links minted before the token moved into a POST body carried it in the URL. They are no longer honoured:
 // the visitor is sent to the normal sign-in page and the token in the URL is never read.
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'legacy']);
 
-Route::get('/', fn () => view('welcome'));
+// Signed-in people land on the Floor; everyone else sees the front page.
+Route::get('/', fn () => auth()->check() ? redirect()->route('floor') : view('welcome'));
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'pulse.onboarded',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $profile = PulseProfile::firstOrCreate(
-            ['user_id' => $user->id],
-            ['role' => 'customer', 'community_points' => 0],
-        );
-
-        return view('dashboard', [
-            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
-            'totalCommunities' => Community::count(),
-            'myPoints' => $profile->community_points ?? 0,
-        ]);
-    })->name('dashboard');
+    // The Floor replaced the dashboard. The old community feed lives on at /community (see the floor block).
+    Route::get('/dashboard', fn () => redirect()->route('floor'))->name('dashboard');
 
     Route::get('/moderation', fn () => view('pulse.moderation'))->name('moderation');
 
@@ -52,3 +64,231 @@ Route::middleware([
 if (! Features::enabled(Features::registration())) {
     Route::redirect('/register', '/login')->name('register');
 }
+
+// A numeric throttle (`throttle:N,M`) keys its counter by the signed in person alone, so every such route shared one
+// counter: the 30 second badge poll used up the 3 per 10 minutes allowed for the data export. Each now has its own
+// prefix (the third value), so the counters are separate.
+// --- media ---
+// Images are read through this route only. Authorisation is decided per request in MediaService::canView
+// (public images of live pages to anyone, message media to the people in the conversation).
+Route::get('/media/{mediaFile}/{size?}', MediaController::class)
+    ->whereNumber('mediaFile')
+    ->where('size', 'thumb|medium|large')
+    ->middleware('throttle:300,1,media')
+    ->name('pulse.media');
+// --- end media ---
+// --- shell ---
+// Component gallery for development, QA and screenshots. Registered only locally and under test.
+if (app()->environment('local', 'testing')) {
+    Route::view('/dev/kit', 'dev.kit')->name('dev.kit');
+    Route::view('/dev/floor', 'dev.floor')->name('dev.floor');
+}
+// --- /shell ---
+// --- dev ---
+// Local-only sign-in for the demo world (php artisan pulse:demo-seed) and the end-to-end journeys. Registered only
+// locally and under test: in any other environment this route does not exist (a 404). `{who}` is a user id or email,
+// `?to=/path` an optional landing path on this app.
+if (app()->environment('local', 'testing')) {
+    Route::get('/dev/login/{who}', function (Request $request, string $who) {
+        abort_unless(app()->environment('local', 'testing'), 404);
+
+        // `new` makes a brand new person with no Pulse profile, so the welcome flow can be walked from the start.
+        $user = $who === 'new'
+            ? User::factory()->withPersonalTeam()->create(['name' => 'Newcomer '.random_int(100, 999), 'email' => 'new-'.bin2hex(random_bytes(3)).'@demo.pulse.test'])
+            : (ctype_digit($who) ? User::find((int) $who) : User::where('email', $who)->first());
+        abort_if($user === null, 404);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $to = (string) $request->query('to', '');
+        $safe = $to !== '' && $to[0] === '/' && ! str_starts_with($to, '//') && ! str_contains($to, '\\');
+
+        return redirect($safe ? $to : route('floor'));
+    })->name('dev.login');
+
+    // Ends the dev session so a journey can sign in as someone else in the same browser context.
+    Route::get('/dev/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    })->name('dev.logout');
+}
+// --- end dev ---
+// --- lines ---
+// The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1,pulse-check'])
+    ->get('/api/pulse/pulse-check', 'App\\Http\\Controllers\\Pulse\\PulseCheckController')
+    ->name('pulse.check');
+// --- end lines ---
+// --- discovery digest (D2) ---
+// Signed link in the digest email: switches the digest off for the user in the URL. GET (click) and POST (a mail
+// client's one-click List-Unsubscribe-Post). No sign-in needed; the signature is the proof.
+Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscribeController::class)
+    ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
+    ->middleware(['signed', 'throttle:20,1,digest-unsubscribe'])
+    ->name('pulse.digest.unsubscribe');
+// --- end discovery digest (D2) ---
+// --- operator ---
+// Platform moderators only. The component checks again on every request it serves.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+    Route::get('/operator', function () {
+        abort_unless(auth()->user()->isPlatformModerator(), 403);
+
+        return view('pulse.operator');
+    })->name('operator');
+});
+// --- end operator ---
+// --- floor ---
+// The Floor and everything that hangs off it: the four mode pages, a beat in full, search, saved, doors.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+    foreach (['floor' => 'all', 'trade' => 'trade', 'work' => 'work', 'local' => 'local', 'learn' => 'learn'] as $name => $mode) {
+        Route::get('/'.$name, fn () => view('pages.pulse.floor.floor', ['mode' => $mode]))->name($name);
+    }
+
+    Route::get('/s/{signal}', fn (PulseSignal $signal) => view('pages.pulse.floor.detail', ['signal' => $signal]))
+        ->whereNumber('signal')->name('signals.show');
+    Route::get('/search', fn () => view('pages.pulse.floor.search'))->name('search');
+    Route::get('/saved', fn () => view('pages.pulse.floor.saved'))->name('saved');
+    Route::get('/door', fn () => view('pages.pulse.floor.door'))->name('door');
+
+    // The community feed that used to be the dashboard: posts, communities and points.
+    Route::get('/community', function () {
+        $user = auth()->user();
+        $profile = PulseProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            ['role' => 'customer', 'community_points' => 0],
+        );
+
+        return view('dashboard', [
+            'totalPosts' => PulsePost::published()->visibleTo($user)->count(),
+            'totalCommunities' => Community::count(),
+            'myPoints' => $profile->community_points ?? 0,
+        ]);
+    })->name('community.feed');
+});
+// --- end floor ---
+// --- me ---
+// People: welcome flow, the Me hub (profile, discoverability, settings, notifications, privacy), data download.
+// `pulse.onboarded` (registered at the top of this file) is on the Floor, search, saved, doors, lines, business and
+// need pages and the Me pages below. Notifications and privacy are deliberately outside it: reading what Pulse
+// holds about you, and erasing it, are never gated behind a sign-up flow.
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::view('/welcome-in', 'pulse.me.onboarding')->name('onboarding');
+
+    Route::middleware('pulse.onboarded')->group(function () {
+        Route::redirect('/me', '/me/profile')->name('me');
+        Route::view('/me/profile', 'pulse.me.profile')->name('me.profile');
+        Route::view('/me/discoverability', 'pulse.me.discover')->name('me.discover');
+        Route::view('/me/settings', 'pulse.me.settings')->name('me.settings');
+        Route::view('/me/account', 'pulse.me.account')->name('me.account');
+    });
+
+    Route::view('/me/notifications', 'pulse.me.notifications')->name('me.notifications');
+    Route::view('/me/privacy', 'pulse.me.privacy')->name('me.privacy');
+    Route::get('/me/privacy/export', PrivacyExportController::class)
+        ->middleware('throttle:3,10,privacy-export')
+        ->name('me.export');
+});
+// --- end me ---
+// --- business ---
+// Business pages, offers, roles and needs (UI agent U2). Every page re-checks its policy; a page, offer, role or need
+// a person may not see is a 404, never a 403, so the route does not confirm that it exists.
+Route::get('/b/{entity:slug}', function (PulseEntity $entity) {
+    abort_unless(Gate::allows('view', $entity), 404);
+
+    return view('pulse.business.show', [
+        'entity' => $entity,
+        'data' => EntityView::data($entity, auth()->user()),
+    ]);
+})->middleware(['pulse.onboarded', 'throttle:120,1'])->name('entities.show'); // the only page a stranger can read: scraping it costs something
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+    Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');
+
+    Route::get('/b/{entity:slug}/o/{offer:slug}', function (PulseEntity $entity, PulseOffer $offer) {
+        abort_unless(Gate::allows('view', $entity) && Gate::allows('view', $offer), 404);
+
+        return view('pulse.business.offer', ['entity' => $entity, 'offer' => $offer]);
+    })->name('offers.show');
+
+    Route::get('/b/{entity:slug}/r/{role:slug}', function (PulseEntity $entity, PulseRole $role) {
+        // A closed or filled role still answers, so the people who applied can see how it ended.
+        $ended = in_array($role->status, ['closed', 'filled'], true) && $role->moderation === 'approved' && $entity->isLive();
+        abort_unless(Gate::allows('view', $entity) && (Gate::allows('view', $role) || $ended), 404);
+
+        return view('pulse.business.role', ['entity' => $entity, 'role' => $role]);
+    })->name('roles.show');
+
+    $manage = function (PulseEntity $entity, string $tab = 'overview') {
+        $role = $entity->memberRole(auth()->user());
+        abort_if($role === null, 404);
+
+        $allowed = match ($tab) {
+            'page', 'verify' => in_array($role, ['owner', 'admin'], true),
+            'offers', 'roles' => in_array($role, ['owner', 'admin', 'editor'], true),
+            'team' => in_array($role, ['owner', 'admin'], true),
+            'lines' => Access::canRespondFor(auth()->user(), $entity),
+            default => true,
+        };
+        abort_unless($allowed, 403);
+
+        return view('pulse.business.manage', ['entity' => $entity, 'tab' => $tab, 'myRole' => $role]);
+    };
+
+    Route::get('/b/{entity:slug}/manage', $manage)->name('entities.manage');
+    foreach (['page', 'offers', 'roles', 'team', 'lines', 'verify'] as $tab) {
+        Route::get('/b/{entity:slug}/manage/'.$tab, $manage)->defaults('tab', $tab)->name('entities.manage.'.$tab);
+    }
+
+    Route::get('/need/new', fn () => view('pulse.need.create'))->name('needs.create');
+
+    Route::get('/need/{need}', function (PulseNeed $need) {
+        return view('pulse.need.show', ['need' => NeedPage::authorised($need)]);
+    })->whereNumber('need')->name('needs.show');
+
+    Route::get('/need/{need}/edit', function (PulseNeed $need) {
+        abort_unless($need->user_id === auth()->id(), 404);
+
+        return view('pulse.need.edit', ['need' => $need]);
+    })->whereNumber('need')->name('needs.edit');
+});
+// --- end business ---
+// --- lines-ui ---
+// Lines: the inbox, one line's thread, and the side by side comparison of a quote request.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+    Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
+
+    Route::get('/lines/quotes/{group}', function (string $group) {
+        abort_unless(Str::isUuid($group), 404);
+
+        return view('livewire.pulse.lines.pages.quotes', ['group' => $group]);
+    })->name('lines.quotes');
+
+    Route::get('/lines/{conversation}', function (PulseConversation $conversation) {
+        abort_unless(Gate::allows('view', $conversation), 404);
+
+        return view('livewire.pulse.lines.pages.show', ['conversation' => $conversation]);
+    })->whereNumber('conversation')->name('lines.show');
+});
+// --- end lines-ui ---
+// --- dev-b ---
+// Local and test only (acceptance suite B, tests/e2e/pulse-b): signs the browser in as user {id} without a password.
+// Never registered in production: the route does not exist there.
+if (app()->environment('local', 'testing')) {
+    Route::get('/dev/login-b/{id}', function (int $id) {
+        $user = User::query()->findOrFail($id);
+        auth()->login($user);
+        request()->session()->regenerate();
+        $to = (string) request('to', '/floor');
+
+        return redirect(str_starts_with($to, '/') && ! str_starts_with($to, '//') ? $to : '/floor');
+    })->whereNumber('id')->name('dev.login-b');
+
+    // A page that throws, to see the 500 page in a real browser.
+    Route::get('/dev/boom-b', fn () => throw new RuntimeException('Acceptance B: deliberate failure'));
+}
+// --- end dev-b ---

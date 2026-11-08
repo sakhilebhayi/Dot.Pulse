@@ -1,2 +1,15 @@
 User-agent: *
-Disallow:
+# The only public pages are the front page, sign in and a business page (/b/{slug}). Everything else needs an account.
+Disallow: /api/
+Disallow: /livewire/
+Disallow: /media/
+Disallow: /storage/
+Disallow: /me/
+Disallow: /lines/
+Disallow: /s/
+Disallow: /u/
+Disallow: /need/
+Disallow: /auth/
+Disallow: /pulse/
+Disallow: /b/*/manage
+Disallow: /dev/

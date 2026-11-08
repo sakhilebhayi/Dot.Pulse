@@ -6,17 +6,25 @@ use App\Events\PostPublished;
 use App\Models\PulseModerationLog;
 use App\Models\PulsePost;
 use App\Models\PulsePostEnrichment;
+use App\Models\User;
+use App\Services\Pulse\Discovery\Moderation\LocalRules;
+use App\Services\Pulse\Discovery\PostSignalAdapter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Automated first pass over a new post. It fails CLOSED: a post is published
- * only on an explicit "approved" verdict from the model. No key, a timeout,
- * an API error or an answer we cannot read all end the same way -- the post
- * is held for a human (status "flagged") and the author is told it is
- * waiting. Nothing here ever invents an approval.
+ * Automated first pass over a new post.
  *
+ * R-41: the deterministic LocalRules decide first and need no model key, which fixes the production defect where
+ * a host without a key held every post forever.
+ *
+ *   allow -> the post is published
+ *   hold  -> queued for a human (status "flagged"); if a model is configured it adds a second opinion that is
+ *            stored for the moderator, and never publishes or rejects on its own
+ *   block -> rejected (status "removed") with the reason shown to the author
+ *
+ * The model verdicts used by classify()/upsertEnrichment() still fail closed: no verdict is not an approval.
  * Runs from App\Jobs\ModeratePost, never inside the web request.
  */
 class AiModerationService
@@ -39,13 +47,112 @@ class AiModerationService
     }
 
     /**
-     * Classify the post and apply the verdict. Throws ModerationUnavailable
-     * when there is no usable verdict; the post is left untouched (still
-     * pending, still hidden) so the queue can retry.
+     * Decide a pending post. Local rules first (no network); a model is consulted only for a post the rules
+     * held, and only to add a second opinion. Never throws because a key is missing or a model call failed.
      */
     public function moderate(PulsePost $post): PulsePostEnrichment
     {
-        return $this->upsertEnrichment($post, $this->classify($post));
+        $author = $post->author ?? new User;
+        $assessment = app(LocalRules::class)->assess((string) $post->body, $author, [
+            'kind' => 'post',
+            'title' => $post->title,
+            'public' => true,
+            'exclude_post_id' => $post->id,
+        ]);
+
+        $enrichment = match ($assessment['verdict']) {
+            LocalRules::ALLOW => $this->upsertEnrichment($post, [
+                'moderation_status' => 'approved',
+                'moderation_rationale' => 'Passed the automatic checks.',
+            ]),
+            LocalRules::BLOCK => $this->reject($post, (string) $assessment['reason'], $assessment['flags']),
+            default => $this->holdWithSecondOpinion($post, (string) $assessment['reason'], $assessment['flags']),
+        };
+
+        $this->syncSignal($post);
+
+        return $enrichment;
+    }
+
+    /** Keep the discovery index in step with the post. Discovery trouble must never undo a moderation decision. */
+    private function syncSignal(PulsePost $post): void
+    {
+        try {
+            app(PostSignalAdapter::class)->sync($post->fresh() ?? $post);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * The rules said no. The post is removed and the author is shown why (MyPostStatus reads the log).
+     *
+     * @param  list<array{code: string, severity: string, text: string}>  $flags
+     */
+    private function reject(PulsePost $post, string $reason, array $flags): PulsePostEnrichment
+    {
+        $rationale = $reason.' [rules: '.implode(', ', array_column($flags, 'code')).']';
+
+        $enrichment = PulsePostEnrichment::updateOrCreate(
+            ['pulse_post_id' => $post->id],
+            ['moderation_status' => 'rejected', 'moderation_rationale' => $rationale, 'spam_score' => 1.0],
+        );
+
+        if ($post->status === 'pending') {
+            $post->update(['status' => 'removed']);
+            PulseModerationLog::create([
+                'moderator_id' => null,
+                'target_type' => PulsePost::class,
+                'target_id' => $post->id,
+                'action' => 'reject',
+                'rationale' => $reason,
+                'is_ai_decision' => true,
+            ]);
+        }
+
+        return $enrichment;
+    }
+
+    /**
+     * The rules want a person to look. If a model is configured, ask it for a second opinion and keep its answer
+     * on the enrichment for the moderator. The post stays held whatever the model says.
+     *
+     * @param  list<array{code: string, severity: string, text: string}>  $flags
+     */
+    private function holdWithSecondOpinion(PulsePost $post, string $reason, array $flags): PulsePostEnrichment
+    {
+        $rationale = $reason.' [rules: '.implode(', ', array_column($flags, 'code')).']';
+        $extra = [];
+
+        if ($this->isConfigured()) {
+            try {
+                $opinion = $this->classify($post);
+                $extra = [
+                    'summary' => $opinion['summary'] ?? null,
+                    'tags' => $opinion['tags'] ?? [],
+                    'topics' => $opinion['topics'] ?? [],
+                    'keywords' => $opinion['keywords'] ?? [],
+                    'spam_score' => $this->score($opinion['spam_score'] ?? 0.0),
+                    'safety_score' => $this->score($opinion['safety_score'] ?? 1.0),
+                ];
+                $rationale .= ' Second opinion (model): '.$opinion['moderation_status']
+                    .(! empty($opinion['moderation_rationale']) ? ' - '.$opinion['moderation_rationale'] : '').'.';
+            } catch (ModerationUnavailable $e) {
+                $rationale .= ' Second opinion unavailable: '.$e->getMessage();
+            }
+        }
+
+        $enrichment = PulsePostEnrichment::updateOrCreate(
+            ['pulse_post_id' => $post->id],
+            array_merge($extra, ['moderation_status' => 'flagged', 'moderation_rationale' => $rationale]),
+        );
+
+        if ($post->status === 'pending') {
+            $post->update(['status' => 'flagged']);
+            $this->logAiDecision($post, 'flag', $rationale);
+        }
+
+        return $enrichment;
     }
 
     /**

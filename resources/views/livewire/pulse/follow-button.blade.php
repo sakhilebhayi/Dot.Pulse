@@ -1,13 +1,13 @@
 <div>
     @unless($this->isSelf)
         @if($compact)
-            <button wire:click="toggleFollow" class="tap" style="background:none;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:{{ $this->isFollowing ? '#71717a' : '#f1c62e' }};padding:0;">
-                {{ $this->isFollowing ? 'Following' : '+ Follow' }}
-            </button>
-        @else
-            <button wire:click="toggleFollow" class="tap dot-btn {{ $this->isFollowing ? 'dot-btn-ghost' : 'dot-btn-primary' }}" style="flex-shrink:0;">
+            <button wire:click="toggleFollow" type="button" class="lg-link" aria-pressed="{{ $this->isFollowing ? 'true' : 'false' }}">
                 {{ $this->isFollowing ? 'Following' : 'Follow' }}
             </button>
+        @else
+            <x-pulse.button wire:click="toggleFollow" :variant="$this->isFollowing ? 'quiet' : 'primary'" aria-pressed="{{ $this->isFollowing ? 'true' : 'false' }}">
+                {{ $this->isFollowing ? 'Following' : 'Follow' }}
+            </x-pulse.button>
         @endif
     @endunless
 </div>

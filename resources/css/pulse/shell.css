@@ -1,0 +1,704 @@
+/*
+ * The app shell: cobalt masthead, left rail of verbs, the stage, the context column and the phone bottom bar.
+ * Rail 232, floor 680, context 320, masthead 64. Below 1200 the context column is a drawer; below 860 the
+ * rail becomes a bottom bar of five and the floor is full width with 16 px gutters.
+ */
+
+.sh-mast {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: var(--s-md);
+    min-height: var(--mast-h);
+    padding: 0 var(--s-lg);
+    background: var(--c-field);
+    color: var(--c-field-ink);
+}
+
+.sh-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--tap);
+    color: var(--c-field-ink);
+    font-stretch: 125%;
+    font-weight: 800;
+    font-size: 1.125rem;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    flex: none;
+}
+
+.sh-brand:hover {
+    text-decoration: none;
+}
+
+.sh-brand__word span {
+    color: var(--c-signal);
+}
+
+.sh-mast__page {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-stretch: 112%;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+}
+
+/* On a phone the masthead has no room for the page name next to the brand and three icons; each page has its own h1. */
+@media (max-width: 440px) {
+    .sh-mast__page {
+        display: none;
+    }
+}
+
+.sh-mast__dial {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+}
+
+.sh-mast__tools {
+    display: flex;
+    align-items: center;
+    gap: var(--s-sm);
+    margin-left: auto;
+    flex: none;
+}
+
+.sh-search {
+    position: relative;
+    display: none;
+}
+
+.sh-search input {
+    width: 220px;
+    height: 40px;
+    padding: 0 12px 0 38px;
+    border: 1px solid transparent;
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
+    color: var(--c-field-ink);
+    font: inherit;
+    font-size: var(--t-ui);
+}
+
+.sh-search input::placeholder {
+    color: color-mix(in srgb, var(--c-field-ink) 78%, transparent);
+}
+
+.sh-search input:focus {
+    background: var(--c-sheet);
+    color: var(--c-ink);
+    outline: 3px solid var(--c-signal);
+    outline-offset: 0;
+}
+
+.sh-search input:focus::placeholder {
+    color: var(--c-muted);
+}
+
+.sh-search svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.sh-search:focus-within svg {
+    color: var(--c-ink);
+}
+
+.sh-iconbtn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-field-ink);
+    text-decoration: none;
+    transition: background var(--d-quick) var(--ease);
+}
+
+.sh-iconbtn:hover {
+    background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
+    text-decoration: none;
+}
+
+.sh-searchicon {
+    display: inline-flex;
+}
+
+@media (min-width: 1100px) {
+    .sh-searchicon {
+        display: none;
+    }
+}
+
+.sh-iconbtn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sh-badge {
+    position: absolute;
+    top: 3px;
+    right: 1px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: var(--c-signal);
+    color: var(--c-on-signal);
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.sh-badge[hidden] {
+    display: none;
+}
+
+.sh-badge--static {
+    position: static;
+    margin-left: auto;
+}
+
+/* Theme toggle swaps its glyph by theme. */
+.sh-theme .sh-theme__sun {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .sh-theme .sh-theme__sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .sh-theme .sh-theme__moon {
+        display: none;
+    }
+}
+
+:root[data-theme="dark"] .sh-theme .sh-theme__sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .sh-theme .sh-theme__moon {
+    display: none;
+}
+
+/* Menus (user menu, compose list). */
+.sh-menuwrap {
+    position: relative;
+}
+
+.sh-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 80;
+    width: 320px;
+    max-height: calc(100dvh - var(--mast-h) - 24px);
+    overflow: auto;
+    padding: var(--s-sm);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-sheet);
+    color: var(--c-ink);
+    box-shadow: 0 18px 44px var(--c-shadow-float);
+}
+
+.sh-menu__who {
+    padding: 8px 10px 12px;
+    border-bottom: 1px solid var(--c-line);
+    margin-bottom: 6px;
+}
+
+.sh-menu__who strong {
+    display: block;
+    font-stretch: 108%;
+    letter-spacing: -0.01em;
+}
+
+.sh-menu__who span {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.sh-menu__label {
+    padding: 10px 10px 4px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.sh-menu a,
+.sh-menu button.sh-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: var(--tap);
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: transparent;
+    color: var(--c-ink);
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+}
+
+.sh-menu a:hover,
+.sh-menu button.sh-menu__item:hover {
+    background: var(--c-raised);
+    text-decoration: none;
+}
+
+.sh-menu [aria-current="true"],
+.sh-menu [aria-current="page"] {
+    font-weight: 700;
+}
+
+.sh-menu .sh-check {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    color: var(--c-link);
+}
+
+.sh-menu form {
+    margin: 0;
+}
+
+.sh-menu :focus-visible {
+    outline-color: var(--c-focus);
+}
+
+/* Compose menu: a list of intents, the first thing a person does here is say what they want. */
+.sh-compose-intent {
+    display: grid !important;
+    gap: 2px !important;
+    align-items: start !important;
+}
+
+.sh-compose-intent strong {
+    font-stretch: 108%;
+    letter-spacing: -0.01em;
+}
+
+.sh-compose-intent span {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 400;
+}
+
+/* Body: rail + stage */
+.sh-body {
+    display: grid;
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    min-height: calc(100dvh - var(--mast-h));
+}
+
+.sh-rail {
+    position: sticky;
+    top: var(--mast-h);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-lg);
+    height: calc(100dvh - var(--mast-h));
+    padding: var(--s-lg) var(--s-md);
+    overflow-y: auto;
+}
+
+.sh-rail__verbs,
+.sh-rail__more {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sh-verb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--tap);
+    padding: 8px 12px;
+    border-radius: var(--r-md);
+    color: var(--c-ink);
+    font-stretch: 112%;
+    font-weight: 700;
+    font-size: 1.0625rem;
+    letter-spacing: -0.015em;
+    text-decoration: none;
+    transition: background var(--d-quick) var(--ease);
+}
+
+.sh-verb:hover {
+    background: var(--c-sheet);
+    text-decoration: none;
+}
+
+.sh-verb svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+}
+
+.sh-verb[aria-current="page"] {
+    background: var(--c-sheet);
+    box-shadow: inset 4px 0 0 var(--c-field);
+}
+
+.sh-rail__more .sh-verb {
+    min-height: 40px;
+    font-stretch: 100%;
+    font-weight: 500;
+    font-size: var(--t-ui);
+    letter-spacing: 0;
+    color: var(--c-ink-2);
+}
+
+.sh-rail__more .sh-verb[aria-current="page"] {
+    font-weight: 700;
+}
+
+.sh-verb__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sh-rail__sub {
+    padding: 0 12px 6px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.sh-rail__foot {
+    margin-top: auto;
+    padding: 12px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    line-height: 1.4;
+}
+
+.sh-stage {
+    min-width: 0;
+    padding: var(--s-lg);
+}
+
+.sh-stage--wide > .sh-wide {
+    max-width: 1100px;
+}
+
+.sh-stage--floor {
+    display: grid;
+    grid-template-columns: minmax(0, var(--floor-w));
+    justify-content: start; /* every screen's column starts at the same left edge, beside the rail */
+    column-gap: var(--s-lg);
+    align-items: start;
+}
+
+.sh-stage--floor.has-context {
+    grid-template-columns: minmax(0, var(--floor-w)) var(--context-w);
+}
+
+.sh-floor {
+    min-width: 0;
+}
+
+.sh-context {
+    position: sticky;
+    top: calc(var(--mast-h) + var(--s-lg));
+    max-height: calc(100dvh - var(--mast-h) - 48px);
+    overflow-y: auto;
+    display: grid;
+    align-content: start;
+    gap: var(--s-md);
+}
+
+.sh-context-open {
+    display: none;
+}
+
+.sh-pagehead {
+    margin-bottom: var(--s-lg);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--s-md);
+    flex-wrap: wrap;
+}
+
+.sh-pagehead p {
+    margin-top: 6px;
+    color: var(--c-muted);
+}
+
+/* Context drawer below 1200. Without scripting the column simply sits under the floor; the drawer needs the .js class. */
+@media (max-width: 1199.98px) {
+    .sh-stage--floor.has-context {
+        grid-template-columns: minmax(0, var(--floor-w));
+    }
+
+    .sh-context {
+        position: static;
+        max-height: none;
+        margin-top: var(--s-lg);
+    }
+
+    .js .sh-context-open {
+        display: inline-flex;
+    }
+
+    .js .sh-context {
+        position: fixed;
+        z-index: 90;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(360px, 92%);
+        max-height: none;
+        margin: 0;
+        padding: var(--s-lg) var(--s-md);
+        background: var(--c-ground);
+        box-shadow: -18px 0 44px var(--c-shadow-float);
+        transform: translateX(105%);
+        visibility: hidden;
+        transition: transform var(--d-base) var(--ease), visibility 0s linear var(--d-base);
+    }
+
+    .js .sh-context.is-open {
+        transform: none;
+        visibility: visible;
+        transition: transform var(--d-base) var(--ease), visibility 0s;
+    }
+
+    .js .sh-context__close {
+        justify-self: end;
+    }
+}
+
+.sh-context .sh-context__close {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    .js .sh-context__close {
+        display: inline-flex;
+    }
+}
+
+.sh-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 85;
+    background: var(--c-overlay);
+}
+
+/* Compact masthead layout when the dial needs its own row. */
+@media (max-width: 1099.98px) {
+    .sh-mast--dial {
+        flex-wrap: wrap;
+        padding-bottom: 10px;
+    }
+
+    .sh-mast--dial .sh-mast__dial {
+        order: 5;
+        flex-basis: 100%;
+        justify-content: stretch;
+    }
+
+    .sh-mast--dial .pk-dial {
+        width: 100%;
+    }
+
+    .sh-mast--dial .pk-dial__seg {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+}
+
+@media (min-width: 1100px) {
+    .sh-search {
+        display: block;
+    }
+}
+
+/* Phone: bottom bar of five; Compose is a yellow plus in the masthead, never a floating button over the cards. */
+.sh-bar,
+.sh-compose-top {
+    display: none;
+}
+
+/* A phone gets one bar: the mark, then the tools. The name is still the link's label. */
+@media (max-width: 429.98px) {
+    .sh-brand__word {
+        display: none;
+    }
+}
+
+@media (max-width: 859.98px) {
+    .sh-menu {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: calc(var(--mast-h) + 8px);
+        width: auto;
+    }
+
+    .sh-mast {
+        padding: 0 var(--s-sm) 0 var(--s-md);
+        gap: var(--s-sm);
+    }
+
+    .sh-mast__tools .sh-hide-phone {
+        display: none;
+    }
+
+    .sh-brand__word {
+        font-size: 1rem;
+    }
+
+    .sh-body {
+        display: block;
+    }
+
+    .sh-rail {
+        display: none;
+    }
+
+    .sh-stage {
+        padding: var(--s-md) var(--s-md) calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .sh-bar {
+        position: fixed;
+        z-index: 70;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding-bottom: env(safe-area-inset-bottom);
+        border-top: 1px solid var(--c-line);
+        background: var(--c-sheet);
+    }
+
+    .sh-bar a {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        min-height: 60px;
+        padding: 6px 2px;
+        color: var(--c-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .sh-bar a svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .sh-bar a[aria-current="page"] {
+        color: var(--c-ink);
+        box-shadow: inset 0 3px 0 var(--c-field);
+        font-weight: 700;
+    }
+
+    .sh-bar .sh-badge {
+        top: 4px;
+        right: calc(50% - 26px);
+    }
+
+    .sh-compose-top {
+        display: inline-flex;
+        background: var(--c-signal);
+        color: var(--c-on-signal);
+    }
+}
+
+/* Footer notes inside the stage */
+.sh-foot {
+    margin-top: var(--s-xl);
+    padding-top: var(--s-md);
+    border-top: 1px solid var(--c-line);
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.sh-foot a {
+    color: var(--c-muted);
+}
+
+/* Banner / live notice used by the rate limiter. */
+.sh-notice {
+    position: fixed;
+    z-index: 120;
+    right: var(--s-md);
+    bottom: var(--s-md);
+    max-width: 340px;
+    padding: 12px 16px;
+    border-radius: var(--r-md);
+    background: var(--c-ink);
+    color: var(--c-ground);
+    font-size: var(--t-small);
+    box-shadow: 0 12px 30px var(--c-shadow-float);
+}
+
+@media (max-width: 859.98px) {
+    .sh-notice {
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        left: var(--s-md);
+        max-width: none;
+    }
+}
+
+/* A single-task page: one column, nothing to leave by. */
+.sh-body--focus {
+    display: block;
+}
+
+.sh-body--focus .sh-stage {
+    padding-top: var(--s-xl);
+}
+
+/* A long business name truncates inside the rail instead of running past it. */
+.sh-rail__more li,
+.sh-rail__verbs li {
+    min-width: 0;
+}
+
+.sh-rail__more .sh-verb {
+    min-width: 0;
+    max-width: 100%;
+}

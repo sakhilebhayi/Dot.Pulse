@@ -3,7 +3,6 @@
 namespace Tests\Feature\Pulse;
 
 use App\Livewire\Pulse\FollowButton;
-use App\Livewire\Pulse\NotificationBell;
 use App\Models\Community;
 use App\Models\CommunityMembership;
 use App\Models\PulsePost;
@@ -45,13 +44,13 @@ class PulseTest extends TestCase
 
     public function test_dashboard_requires_authentication(): void
     {
-        $this->get('/dashboard')->assertRedirect('/login');
+        $this->get('/community')->assertRedirect('/login');
     }
 
     public function test_authenticated_user_can_view_dashboard(): void
     {
-        $this->actingAs($this->user)
-            ->get('/dashboard')
+        $this->actingAs($this->onboard($this->user))
+            ->get('/community')
             ->assertOk()
             ->assertViewIs('dashboard');
     }
@@ -68,25 +67,26 @@ class PulseTest extends TestCase
             'status' => 'published',
         ]);
 
-        $this->actingAs($this->user)
-            ->get('/dashboard')
+        $this->actingAs($this->onboard($this->user))
+            ->get('/community')
             ->assertSeeLivewire(FollowButton::class);
     }
 
-    public function test_the_dashboard_layout_embeds_the_notification_bell(): void
+    public function test_the_dashboard_layout_shows_the_notifications_badge_link(): void
     {
-        $this->actingAs($this->user)
-            ->get('/dashboard')
-            ->assertSeeLivewire(NotificationBell::class);
+        // R-41: once Me, Notifications exists the shell shows a badge link the poller keeps current; the Livewire
+        // dropdown (NotificationBell) remains for any view that still mounts it.
+        $this->actingAs($this->onboard($this->user))
+            ->get('/community')
+            ->assertSee('href="'.route('me.notifications').'"', false)
+            ->assertSee('data-pulse-badge="notifications"', false);
     }
 
-    public function test_dashboard_creates_profile_if_missing(): void
+    public function test_a_person_with_no_profile_is_sent_through_the_welcome_flow_first(): void
     {
         $this->assertDatabaseMissing('pulse_profiles', ['user_id' => $this->user->id]);
 
-        $this->actingAs($this->user)->get('/dashboard')->assertOk();
-
-        $this->assertDatabaseHas('pulse_profiles', ['user_id' => $this->user->id]);
+        $this->actingAs($this->user)->get('/community')->assertRedirect(route('onboarding'));
     }
 
     public function test_ecosystem_auth_rejects_missing_token(): void

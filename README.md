@@ -55,29 +55,23 @@ Dot.Pulse is one global network, deliberately. Tenancy is not a feature here.
 
 Nothing is anonymous to the database administrator. Private means private from other users, not encrypted at rest.
 
-## Responsive shell
+## The Floor: shell and component kit (R-41)
 
-The app shell (`resources/views/layouts/app.blade.php`) works on a phone. The breakpoint is **860px**: at `min-width:860px` the sidebar is fixed at 260px as before; at `max-width:859.98px` it becomes an off-canvas drawer opened from a labelled **Menu** button in the top bar.
+The interface is "The Floor" (`DESIGN.md`): cobalt masthead, a rail of verbs (Floor, Trade, Work, Lines, You) and a Compose button, a 680 px column of beats, and a context column from 1200 px. Tokens live in `resources/css/pulse/tokens.css` (light, dark by `prefers-color-scheme`, `html[data-theme]` override, `?theme=light|dark` for previews); Archivo (variable, width axis) and JetBrains Mono are self-hosted in `public/fonts/`. Tailwind 3 stays for the Jetstream screens; the new system is plain CSS under `resources/css/pulse/`.
 
-| Hook | What it is |
+| Breakpoint | Layout |
 |---|---|
-| `#shell-menu-button` | The Menu button (`aria-expanded`, `aria-controls="shell-drawer"`). Hidden at 860px and up. |
-| `#shell-drawer` | The sidebar itself (`<aside>`). Closed on a phone it is `visibility:hidden`, so it is out of the tab order and the accessibility tree. |
-| `#shell-backdrop` | Dimmed layer behind the open drawer; clicking it closes the drawer. |
-| `.topbar` | The fixed 54px top bar. `.content-wrap` is offset by exactly that height at every width. |
-| `.table-scroll` | Wrapper for wide tables (see below). |
+| 1200 px and up | Rail 232, floor 680, context 320, masthead 64. |
+| 860 to 1199 px | Rail and floor; the context column becomes a drawer (button in the masthead). |
+| under 860 px | Bottom bar of the same five verbs, floating Compose, full-width floor with 16 px gutters, mode dial on its own row. |
 
-While the drawer is open the top bar and page content are `inert`, the page cannot scroll, Escape or the backdrop closes it, and focus returns to the Menu button. It also closes when a drawer link is followed and when the window grows past 860px. The script is a plain inline one at the end of the layout (no Alpine, no build step). The drawer also holds the team switcher and Log out, which used to sit in the stock Jetstream navigation bar hidden underneath the top bar.
+Layouts: `<x-app-layout title="..." width="wide|floor" :dial="...">` (slots `header`, `context`), `<x-guest-layout>`, `<x-public-layout>`. Links to screens that are not built yet go through `pulse_route('name')`, which answers `#` for an unregistered route. The shell polls `GET /api/pulse/pulse-check` every 30 s while the page is visible to fill the Lines and notification badges, and stays silent on 404 or errors.
 
-Page content uses a few classes defined in the layout: `.pulse-page` (page padding), `.kpi-grid`/`.kpi-card` (stacks under 560px), `.feed-grid` (stacks under 1100px), `.form-grid-2`, `.meta-row` and `.action-row` (wrapping flex rows) and `.tap` (44px minimum touch height under 860px). Inputs are 16px under 860px so iOS does not zoom on focus.
+The kit is `resources/views/components/pulse/*` (each file documents its props at the top). Open `/dev/kit` (local and testing only) for every component, `/dev/floor` for a Floor-shaped page built only from the kit. `resources/css/pulse/legacy.css` maps the pre-R-41 `.dot-*` classes onto the tokens until the old screens are rebuilt; do not use it in new screens.
 
-**Adding a wide table:** wrap it, so the table scrolls inside its own box instead of the page:
+Tests: `tests/Feature/Pulse/ResponsiveShellTest.php` (shell markup contract on the real routes) and `tests/Feature/Pulse/KitComponentsTest.php` (every component renders; the meter draws only from real reasons; copy has no em or en dashes).
 
-```html
-<div class="table-scroll"><table>...</table></div>
-```
-
-Tests: `tests/Feature/Pulse/ResponsiveShellTest.php` asserts the markup contract on the real routes. The layout itself is checked by eye in a browser at 360, 375, 768 and 1280px.
+**Adding a wide table:** wrap it in `<div class="table-scroll">` so the table scrolls inside its own box instead of the page.
 
 ## Tech stack
 

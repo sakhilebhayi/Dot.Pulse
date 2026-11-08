@@ -42,7 +42,7 @@ class PostShowTest extends TestCase
         $post = $this->publishedPost();
         $viewer = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($viewer)
+        $this->actingAs($this->onboard($viewer))
             ->get("/posts/{$post->id}")
             ->assertOk();
     }
@@ -52,7 +52,7 @@ class PostShowTest extends TestCase
         $post = $this->publishedPost();
         $viewer = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($viewer)
+        $this->actingAs($this->onboard($viewer))
             ->get("/posts/{$post->id}")
             ->assertSeeLivewire(FollowButton::class);
     }
@@ -64,7 +64,7 @@ class PostShowTest extends TestCase
         $post->comments()->create(['user_id' => $commenter->id, 'body' => 'A reply from someone else']);
         $viewer = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($viewer)
+        $this->actingAs($this->onboard($viewer))
             ->get("/posts/{$post->id}")
             ->assertOk()
             ->assertSee('A reply from someone else');
@@ -82,7 +82,7 @@ class PostShowTest extends TestCase
         ]);
         $stranger = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($stranger)
+        $this->actingAs($this->onboard($stranger))
             ->get("/posts/{$post->id}")
             ->assertNotFound();
     }
@@ -98,7 +98,7 @@ class PostShowTest extends TestCase
             'status' => 'flagged',
         ]);
 
-        $this->actingAs($author)
+        $this->actingAs($this->onboard($author))
             ->get("/posts/{$post->id}")
             ->assertOk();
     }

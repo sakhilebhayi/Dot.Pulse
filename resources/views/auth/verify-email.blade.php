@@ -1,5 +1,5 @@
-<x-guest-layout>
-    <x-authentication-card>
+<x-guest-layout title="Check your email">
+    <x-authentication-card heading="Check your email." lead="We sent a link. Open it to carry on.">
         <x-slot name="logo">
             <x-authentication-card-logo />
         </x-slot>

@@ -1,3 +1,20 @@
+# R-41 performance: compress text on the way out and let browsers keep the built assets. Each block is skipped
+# silently when the host has not loaded the module, so this can never take the site down.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Vite names its files by content hash (app-GvXF3JAG.css), so a built file never changes under its name.
+    <FilesMatch "-[A-Za-z0-9_-]{8}\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # The self-hosted faces keep their names, so a shorter lifetime and no immutable.
+    <FilesMatch "\.woff2$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

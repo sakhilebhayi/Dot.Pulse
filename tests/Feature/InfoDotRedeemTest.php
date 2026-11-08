@@ -70,7 +70,7 @@ class InfoDotRedeemTest extends TestCase
     {
         Http::fake([self::URL => Http::response($this->identity())]);
 
-        $this->post(route('ecosystem.auth'), ['token' => 'one-time-token'], $this->fromInfodot())->assertRedirect(route('dashboard'));
+        $this->post(route('ecosystem.auth'), ['token' => 'one-time-token'], $this->fromInfodot())->assertRedirect(route('floor'));
 
         $this->assertAuthenticated();
         $user = User::where('email', 'amara@example.test')->firstOrFail();
@@ -107,7 +107,9 @@ class InfoDotRedeemTest extends TestCase
         $this->post(route('ecosystem.auth'), ['token' => 'one-time-token'], $this->fromInfodot())->assertRedirect();
         $user = User::where('email', 'amara@example.test')->firstOrFail();
 
-        $this->get(route('dashboard'))->assertOk();
+        $this->get(route('community.feed'))->assertRedirect(route('onboarding'), 'a first visit goes through the welcome flow once');
+        $this->onboard($user);
+        $this->get(route('community.feed'))->assertOk();
 
         Livewire::actingAs($user)->test(CreatePost::class)
             ->set('body', 'My very first post arriving through InfoDot sign-in.')
@@ -115,8 +117,8 @@ class InfoDotRedeemTest extends TestCase
             ->assertHasNoErrors();
 
         $post = PulsePost::where('user_id', $user->id)->firstOrFail();
-        // Held for moderation (pending, or flagged when no AI key is set): never published unchecked.
-        $this->assertNotSame('published', $post->status);
+        // R-41: the local rules check it (no model key needed) and an ordinary first post goes live.
+        $this->assertSame('published', $post->status);
         $this->assertSame($user->personalTeam()->id, $post->team_id);
         $this->assertSame(1, PulseProfile::where('user_id', $user->id)->count(), 'still one profile after the dashboard visit');
     }
@@ -176,7 +178,7 @@ class InfoDotRedeemTest extends TestCase
         $existing = User::factory()->withPersonalTeam()->create(['email' => 'amara@example.test', 'name' => 'Local Name']);
         Http::fake([self::URL => Http::response($this->identity())]);
 
-        $this->post(route('ecosystem.auth'), ['token' => 't'], $this->fromInfodot())->assertRedirect(route('dashboard'));
+        $this->post(route('ecosystem.auth'), ['token' => 't'], $this->fromInfodot())->assertRedirect(route('floor'));
 
         $this->assertAuthenticatedAs($existing);
         $this->assertSame(1, User::where('email', 'amara@example.test')->count());
@@ -357,7 +359,7 @@ class InfoDotRedeemTest extends TestCase
         $token = $record->id.'|'.$plain;
         Http::fake();
 
-        $this->post(route('ecosystem.auth'), ['token' => $token], $this->fromInfodot())->assertRedirect(route('dashboard'));
+        $this->post(route('ecosystem.auth'), ['token' => $token], $this->fromInfodot())->assertRedirect(route('floor'));
         $this->assertAuthenticatedAs($user);
         Http::assertNothingSent();
 
@@ -421,7 +423,7 @@ class InfoDotRedeemTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_open_redirect_attempts_fall_back_to_the_dashboard(): void
+    public function test_open_redirect_attempts_fall_back_to_the_floor(): void
     {
         $attempts = [
             'https://evil.test/phish',
@@ -447,7 +449,7 @@ class InfoDotRedeemTest extends TestCase
             Cache::flush(); // the throttle has its own test; this loop makes more than 10 requests
 
             $this->post(route('ecosystem.auth'), ['token' => 't', 'redirect' => $attempt], $this->fromInfodot())
-                ->assertRedirect(route('dashboard'));
+                ->assertRedirect(route('floor'));
         }
     }
 
@@ -489,6 +491,7 @@ class InfoDotRedeemTest extends TestCase
         $this->assertFalse((bool) $profile->is_verified);
         $this->assertFalse($user->isPlatformModerator());
         $this->assertFalse($user->canAccessModeration());
+        $this->onboard($user);
         $this->get(route('moderation'))->assertForbidden();
     }
 

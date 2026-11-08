@@ -208,7 +208,9 @@ class CountersAndIndexesTest extends TestCase
         // Guards the FK swaps and index drops in the down() methods, on
         // whichever driver the suite runs on. Three steps: the InfoDot team
         // link, then the two moderation migrations.
-        $this->artisan('migrate:rollback', ['--step' => 3])->assertSuccessful();
+        // R-41 migrations (2026_11_*) sit on top of those three, so they roll back first.
+        $r41 = count(glob(database_path('migrations/2026_11_*.php')));
+        $this->artisan('migrate:rollback', ['--step' => 3 + $r41])->assertSuccessful();
         $this->assertFalse(Schema::hasColumn('teams', 'infodot_team_uuid'));
         $this->assertFalse(Schema::hasTable('community_join_requests'));
         $this->assertFalse(Schema::hasColumn('pulse_reports', 'community_id'));

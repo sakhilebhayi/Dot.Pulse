@@ -27,9 +27,17 @@ class AiModerationFailClosedTest extends TestCase
     use BuildsPulseFixtures;
     use RefreshDatabase;
 
+    /** R-41: a post the local rules hold for a person (a phone number in public text). */
+    private const HOLD_BODY = 'Call me on 082 555 1234 about the van, I am in Benoni.';
+
     private function pending(array $attrs = []): PulsePost
     {
         return PulsePost::factory()->status('pending')->create($attrs);
+    }
+
+    private function pendingHold(array $attrs = []): PulsePost
+    {
+        return $this->pending(array_merge(['body' => self::HOLD_BODY], $attrs));
     }
 
     private function claudeReplies(array $verdict, int $status = 200): void
@@ -43,13 +51,29 @@ class AiModerationFailClosedTest extends TestCase
     {
         // CreatePost used to read services.anthropic.key, which does not
         // exist, so production always ran the mock and approved everything.
+        // R-41: a configured model is consulted only for a post the local rules held, and only for a second
+        // opinion: it can never publish it.
         config(['services.anthropic.api_key' => 'sk-test-key']);
-        $this->claudeReplies(['moderation_status' => 'approved']);
-        $post = $this->pending();
+        $this->claudeReplies(['moderation_status' => 'approved', 'moderation_rationale' => 'Looks like an ordinary sale.']);
+        $post = $this->pendingHold();
 
         (new ModeratePost($post))->handle(app(AiModerationService::class));
 
         Http::assertSentCount(1);
+        $post->refresh();
+        $this->assertSame('flagged', $post->status);
+        $this->assertStringContainsString('Second opinion (model): approved', $post->enrichment->moderation_rationale);
+    }
+
+    public function test_a_post_the_local_rules_allow_never_calls_the_model(): void
+    {
+        config(['services.anthropic.api_key' => 'sk-test-key']);
+        Http::fake();
+        $post = $this->pending();
+
+        (new ModeratePost($post))->handle(app(AiModerationService::class));
+
+        Http::assertNothingSent();
         $this->assertSame('published', $post->fresh()->status);
     }
 
@@ -61,7 +85,7 @@ class AiModerationFailClosedTest extends TestCase
         ]);
         $this->claudeReplies(['moderation_status' => 'approved']);
 
-        (new ModeratePost($this->pending()))->handle(app(AiModerationService::class));
+        (new ModeratePost($this->pendingHold()))->handle(app(AiModerationService::class));
 
         Http::assertSent(function (Request $request) {
             return $request->url() === 'https://api.anthropic.com/v1/messages'
@@ -71,8 +95,9 @@ class AiModerationFailClosedTest extends TestCase
         });
     }
 
-    public function test_a_missing_key_holds_the_post_for_a_human_and_never_approves(): void
+    public function test_a_missing_key_no_longer_holds_every_post_forever(): void
     {
+        // The production defect: with no key every post was held for a human and nothing ever published.
         Event::fake([PostPublished::class]);
         config(['services.anthropic.api_key' => '']);
         Http::fake();
@@ -81,8 +106,31 @@ class AiModerationFailClosedTest extends TestCase
         (new ModeratePost($post))->handle(app(AiModerationService::class));
 
         $post->refresh();
+        $this->assertSame('published', $post->status);
+        $this->assertSame('approved', $post->enrichment->moderation_status);
+        $this->assertDatabaseHas('pulse_moderation_logs', [
+            'target_type' => PulsePost::class,
+            'target_id' => $post->id,
+            'action' => 'approve',
+            'is_ai_decision' => true,
+        ]);
+        Http::assertNothingSent();
+        Event::assertDispatched(PostPublished::class);
+    }
+
+    public function test_a_missing_key_still_holds_a_risky_post_for_a_human(): void
+    {
+        Event::fake([PostPublished::class]);
+        config(['services.anthropic.api_key' => '']);
+        Http::fake();
+        $post = $this->pendingHold();
+
+        (new ModeratePost($post))->handle(app(AiModerationService::class));
+
+        $post->refresh();
         $this->assertSame('flagged', $post->status);
-        $this->assertSame('pending', $post->enrichment->moderation_status);
+        $this->assertSame('flagged', $post->enrichment->moderation_status);
+        $this->assertStringContainsString('contact_in_public', $post->enrichment->moderation_rationale);
         $this->assertDatabaseHas('pulse_moderation_logs', [
             'target_type' => PulsePost::class,
             'target_id' => $post->id,
@@ -93,20 +141,35 @@ class AiModerationFailClosedTest extends TestCase
         Event::assertNotDispatched(PostPublished::class);
     }
 
-    public function test_an_api_error_throws_so_the_queue_retries_it(): void
+    public function test_a_blocked_post_is_rejected_with_a_reason_the_author_can_read(): void
+    {
+        Event::fake([PostPublished::class]);
+        $author = $this->pulseUser();
+        $post = $this->pending(['user_id' => $author->id, 'title' => 'Great opportunity for everyone', 'body' => 'Double your money in 48 hours with our guaranteed returns, join today.']);
+
+        (new ModeratePost($post))->handle(app(AiModerationService::class));
+
+        $this->assertSame('removed', $post->fresh()->status);
+        $this->assertDatabaseHas('pulse_moderation_logs', ['target_id' => $post->id, 'action' => 'reject', 'is_ai_decision' => true]);
+        Event::assertNotDispatched(PostPublished::class);
+
+        Livewire::actingAs($author)->test(MyPostStatus::class)
+            ->assertSee('Great opportunity for everyone')
+            ->assertSee('Removed')
+            ->assertSee('Promises of guaranteed or doubled returns are not allowed');
+    }
+
+    public function test_a_failed_second_opinion_never_stops_a_held_post_waiting_for_a_person(): void
     {
         config(['services.anthropic.api_key' => 'sk-test-key']);
         $this->claudeReplies([], 529);
-        $post = $this->pending();
+        $post = $this->pendingHold();
 
-        $this->expectException(ModerationUnavailable::class);
+        (new ModeratePost($post))->handle(app(AiModerationService::class));
 
-        try {
-            (new ModeratePost($post))->handle(app(AiModerationService::class));
-        } finally {
-            // Still hidden while retries remain.
-            $this->assertSame('pending', $post->fresh()->status);
-        }
+        $post->refresh();
+        $this->assertSame('flagged', $post->status);
+        $this->assertStringContainsString('Second opinion unavailable', $post->enrichment->moderation_rationale);
     }
 
     public function test_when_the_last_try_fails_the_post_is_held_for_review_not_approved(): void
@@ -128,7 +191,7 @@ class AiModerationFailClosedTest extends TestCase
 
         Http::fake(['api.anthropic.com/*' => fn () => throw new ConnectionException('cURL error 28: timed out')]);
         try {
-            $service->moderate($this->pending());
+            $service->classify($this->pending());
             $this->fail('A timeout must not produce a verdict.');
         } catch (ModerationUnavailable) {
             $this->addToAssertionCount(1);
@@ -136,7 +199,7 @@ class AiModerationFailClosedTest extends TestCase
 
         Http::fake(['api.anthropic.com/*' => Http::response(['content' => [['type' => 'text', 'text' => 'sure, looks fine!']]], 200)]);
         try {
-            $service->moderate($this->pending());
+            $service->classify($this->pending());
             $this->fail('Prose with no JSON verdict must not approve.');
         } catch (ModerationUnavailable) {
             $this->addToAssertionCount(1);
@@ -145,7 +208,7 @@ class AiModerationFailClosedTest extends TestCase
         // JSON with no moderation_status used to default to "approved".
         $this->claudeReplies(['summary' => 'Looks ok']);
         $this->expectException(ModerationUnavailable::class);
-        $service->moderate($this->pending());
+        $service->classify($this->pending());
     }
 
     public function test_upsert_without_a_verdict_no_longer_defaults_to_approved(): void
@@ -176,9 +239,10 @@ class AiModerationFailClosedTest extends TestCase
     {
         config(['services.anthropic.api_key' => 'sk-test-key']);
 
-        foreach (['rejected', 'flagged'] as $verdict) {
+        // The model's verdict only annotates a post the rules held; it neither publishes nor removes it.
+        foreach (['rejected', 'flagged', 'approved'] as $verdict) {
             $this->claudeReplies(['moderation_status' => $verdict, 'moderation_rationale' => 'Looks off.']);
-            $post = $this->pending();
+            $post = $this->pendingHold();
 
             (new ModeratePost($post))->handle(app(AiModerationService::class));
 
@@ -223,13 +287,25 @@ class AiModerationFailClosedTest extends TestCase
         $this->assertSame('pending', PulsePost::firstOrFail()->status);
     }
 
-    public function test_end_to_end_without_a_key_the_new_post_is_held_not_published(): void
+    public function test_end_to_end_without_a_key_an_ordinary_post_is_published(): void
     {
         config(['services.anthropic.api_key' => '']);
         $user = $this->pulseUser();
 
         Livewire::actingAs($user)->test(CreatePost::class)
             ->set('body', 'A perfectly ordinary post body for testing.')
+            ->call('publish');
+
+        $this->assertSame('published', PulsePost::firstOrFail()->status);
+    }
+
+    public function test_end_to_end_without_a_key_a_risky_post_is_held_for_a_person(): void
+    {
+        config(['services.anthropic.api_key' => '']);
+        $user = $this->pulseUser();
+
+        Livewire::actingAs($user)->test(CreatePost::class)
+            ->set('body', self::HOLD_BODY)
             ->call('publish');
 
         $this->assertSame('flagged', PulsePost::firstOrFail()->status);

@@ -1,22 +1,25 @@
 <div>
     @if($this->people->isEmpty())
-        <p style="font-size:13px;color:#52525b;text-align:center;padding:1.5rem 0;margin:0;">
-            {{ $mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.' }}
-        </p>
+        <p class="pk-muted lg-none">{{ $mode === 'followers' ? 'No followers yet.' : 'Not following anyone yet.' }}</p>
     @else
-        <div style="display:flex;flex-direction:column;gap:2px;">
+        <div class="lg-list">
             @foreach($this->people as $person)
-                <div class="dot-row" style="display:flex;align-items:center;gap:10px;padding:8px 10px;">
-                    <a href="{{ route('users.show', $person) }}" class="dot-avatar" style="width:32px;height:32px;font-size:12px;">
-                        {{ strtoupper(substr($person->name, 0, 1)) }}
-                    </a>
-                    <div style="flex:1;min-width:0;">
-                        <a href="{{ route('users.show', $person) }}" style="display:block;font-size:13px;font-weight:600;color:#f4f4f5;text-decoration:none;">{{ $person->name }}</a>
-                        @if($person->pulseProfile?->headline)
-                            <p style="font-size:11.5px;color:#71717a;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $person->pulseProfile->headline }}</p>
-                        @endif
-                    </div>
-                    <livewire:pulse.follow-button :user="$person" :compact="true" wire:key="follow-{{ $person->id }}-list-{{ $mode }}" />
+                <div class="pk-row lg-person" wire:key="person-{{ $person->id }}">
+                    @php $hidden = \App\Models\PulseProfile::isHiddenFrom($person, auth()->user()); @endphp
+                    @if($hidden)
+                        <span class="lg-avatar"><x-pulse.avatar name="?" /></span>
+                        <div class="pk-row__main">
+                            <span class="pk-row__title">{{ \App\Models\PulseProfile::publicName($person, auth()->user()) }}</span>
+                            <span class="pk-row__meta lg-trunc">Keeps their profile private.</span>
+                        </div>
+                    @else
+                        <a href="{{ route('users.show', $person) }}" class="lg-avatar" aria-label="{{ $person->name }}"><x-pulse.avatar :name="$person->name" /></a>
+                        <div class="pk-row__main">
+                            <a href="{{ route('users.show', $person) }}" class="pk-row__title">{{ $person->name }}</a>
+                            @if($headline = \App\Models\PulseProfile::publicHeadline($person, auth()->user()))<span class="pk-row__meta lg-trunc">{{ $headline }}</span>@endif
+                        </div>
+                        <livewire:pulse.follow-button :user="$person" :compact="true" wire:key="follow-{{ $person->id }}-list-{{ $mode }}" />
+                    @endif
                 </div>
             @endforeach
         </div>

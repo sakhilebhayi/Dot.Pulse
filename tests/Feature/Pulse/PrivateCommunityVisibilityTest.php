@@ -155,7 +155,7 @@ class PrivateCommunityVisibilityTest extends TestCase
         $this->postIn(null);
 
         $stranger = $this->pulseUser();
-        $response = $this->actingAs($stranger)->get('/dashboard')->assertOk();
+        $response = $this->actingAs($stranger)->get('/community')->assertOk();
 
         $this->assertSame(1, $response->viewData('totalPosts'));
         $this->assertSame(1, PulsePost::visibleTo($stranger)->published()->count());
