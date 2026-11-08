@@ -1,8 +1,8 @@
 <section class="pk-card" aria-labelledby="trending-title">
-    <h2 id="trending-title" class="lg-h">Trending</h2>
+    <h2 id="trending-title" class="lg-h">Tags this week</h2>
 
     @if($this->trending->isEmpty())
-        <p class="pk-muted">Nothing trending yet. Tag a post with #something to get it started.</p>
+        <p class="pk-muted">No tags this week. Put #something in a post to start one.</p>
     @else
         <ul class="lg-trend">
             @foreach($this->trending as $hashtag)

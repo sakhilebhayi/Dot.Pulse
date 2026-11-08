@@ -1750,3 +1750,13 @@ body:has(dialog.pk-dialog[open]) {
         display: none;
     }
 }
+
+/* Developer marker for demo rows (local and test builds only). */
+.pk-demo {
+    padding: 2px 8px;
+    border: 1px dashed var(--c-line-strong);
+    border-radius: var(--r-sm);
+    color: var(--c-muted);
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+}

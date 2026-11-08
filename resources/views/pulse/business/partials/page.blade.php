@@ -9,6 +9,9 @@
     // A guest sees the state of each rung, not the business's own details (registration number, website, company name).
     $ladder = $member ? $d['ladder'] : collect($d['ladder'])->map(fn ($r) => in_array($r['key'], ['registration', 'website', 'phone', 'infodot_team'], true) ? array_merge($r, ['detail' => null]) : $r)->all();
     $statusTone = ['infodot_verified' => 'good', 'infodot_member' => 'signal'][$entity->verification_status] ?? 'neutral';
+    // One verification vocabulary: a page is either vouched for by InfoDot, or it is a claim and the pill says how many checks back it.
+    $nClaimed = collect($ladder)->where('state', 'claimed')->count();
+    $statusLabel = $d['status']['label'];
 @endphp
 <div class="bz bz-page">
     @if (session('bz_notice'))
@@ -37,12 +40,13 @@
                 <h1 class="bz-name">{{ $entity->name }}</h1>
                 @if ($entity->tagline)<p class="bz-tagline">{{ $entity->tagline }}</p>@endif
                 <div class="pk-cluster bz-meta">
-                    <x-pulse.pill :tone="$statusTone">{{ $d['status']['label'] }}</x-pulse.pill>
+                    <x-pulse.pill :tone="$statusTone">{{ $statusLabel }}</x-pulse.pill>
                     @if ($entity->is_seller)<x-pulse.pill>Sells</x-pulse.pill>@endif
                     @if ($entity->is_employer)<x-pulse.pill>Hires</x-pulse.pill>@endif
                     @if ($d['place'])<x-pulse.place-label :name="$d['place']" />@endif
                     @if ($entity->industry)<span class="pk-muted">{{ $entity->industry }}</span>@endif
                     <span class="pk-muted">On Pulse since {{ \App\Support\Moment::date($entity->created_at) }}</span>
+                    <x-pulse.demo-badge :user-id="$entity->created_by" />
                 </div>
             </div>
         </div>
@@ -145,10 +149,9 @@
         <aside class="bz-side pk-stack" aria-label="Trust and facts">
             <section class="pk-card" aria-labelledby="bz-trust">
                 <h2 id="bz-trust">What Pulse can show</h2>
-                @php $nChecked = collect($ladder)->where('state', 'checked')->count(); $nClaimed = collect($ladder)->where('state', 'claimed')->count(); @endphp
                 <p class="pk-muted" style="margin: 6px 0 10px">Checked means Pulse saw it in a real record. Claimed means the business said it and Pulse has not checked.</p>
                 <details class="bz-ladder">
-                    <summary>{{ $nChecked }} of {{ count($ladder) }} checked, {{ $nClaimed }} claimed. See the checks</summary>
+                    <summary>See the checks{{ $nClaimed > 0 ? ' and the '.$nClaimed.' claimed' : '' }}</summary>
                     <x-pulse.ladder :rungs="$ladder" />
                 </details>
             </section>

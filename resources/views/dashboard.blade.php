@@ -8,14 +8,12 @@
 
     <x-slot name="context">
         <livewire:pulse.trending-hashtags />
-        <div class="pk-card lg-mine">
-            <h2 class="lg-h">Your standing</h2>
-            <dl class="lg-facts">
-                <div><dt>Posts on the platform</dt><dd>{{ number_format($totalPosts) }}</dd></div>
-                <div><dt>Communities</dt><dd>{{ number_format($totalCommunities) }}</dd></div>
-                <div><dt>Your points</dt><dd>{{ number_format($myPoints) }}</dd></div>
-            </dl>
-        </div>
+        @if ($myPoints > 0)
+            <div class="pk-card lg-mine">
+                <h2 class="lg-h">Your points</h2>
+                <p><span class="pk-mono">{{ number_format($myPoints) }}</span></p>
+            </div>
+        @endif
     </x-slot>
 
     <div class="pk-stack">
