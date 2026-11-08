@@ -306,7 +306,7 @@ class SearchService
             if (! $anonymousCard && str_contains($title, $t)) {
                 $score += 10;
                 $inTitle++;
-                $why['title'] = 'Matched your words in the title.';
+                $why['title'] = 'Your words are in the title.';
                 if (str_starts_with($title, $t)) {
                     $score += 4;
                 }
@@ -315,19 +315,19 @@ class SearchService
             foreach ($slugs as $sl) {
                 if ($slug !== '' && (str_contains((string) $sl, $slug))) {
                     $score += 6;
-                    $why['topic:'.$sl] = 'Matches the topic '.mb_strtolower(Taxonomy::label((string) $sl)).'.';
+                    $why['topic:'.$sl] = 'About '.mb_strtolower(Taxonomy::label((string) $sl)).'.';
                     break;
                 }
             }
 
             if ($entityName !== '' && str_contains($entityName, $t)) {
                 $score += 8;
-                $why['entity'] = 'Matched the business name.';
+                $why['entity'] = 'The business name fits.';
             }
 
             if (! $anonymousCard && $excerpt !== '' && str_contains($excerpt, $t)) {
                 $score += 3;
-                $why['excerpt'] = 'Matched your words in the description.';
+                $why['excerpt'] = 'Your words are in the description.';
             }
         }
 
@@ -337,7 +337,7 @@ class SearchService
 
         if (! $anonymousCard && mb_strlen($q) >= 3 && str_contains($title, Str::lower($q))) {
             $score += 8;
-            $why['title'] = 'Matched your words in the title.';
+            $why['title'] = 'Your words are in the title.';
         }
 
         if ($score > 0) {
@@ -351,7 +351,7 @@ class SearchService
 
             if ($rank !== null && $rank <= 2) {
                 $score += [3, 2, 1][$rank];
-                $why['place'] = ['They are in your city.', 'They are in your region.', 'They are in your country.'][$rank];
+                $why['place'] = ['In your city.', 'In your region.', 'In your country.'][$rank];
             }
         }
 
@@ -400,11 +400,11 @@ class SearchService
             foreach ($terms as $t) {
                 if (str_contains($name, $t)) {
                     $score += 12;
-                    $why['name'] = 'Matched the business name.';
+                    $why['name'] = 'The business name fits.';
                 }
                 if (str_contains($tag, $t)) {
                     $score += 5;
-                    $why['tagline'] = 'Matched what the business says it does.';
+                    $why['tagline'] = 'It says it does this.';
                 }
             }
 

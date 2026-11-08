@@ -16,7 +16,7 @@ export default {
     j.check('search finds the offer', body.includes('Monthly bookkeeping for small businesses'));
     const bizCards = await una.getByRole('heading', { name: 'Tally Fox Bookkeeping', exact: true }).count();
     j.check('the business is listed once, not twice', bizCards === 1, `${bizCards} cards`);
-    j.check('every result says why', /Matched your words|Matches the topic/.test(body));
+    j.check('every result says why', /Your words are in|About /.test(body));
     await j.snap(una, 'search-results');
 
     // The knock, from the offer card: the context is the offer.
