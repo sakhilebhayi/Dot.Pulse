@@ -92,11 +92,17 @@ class VerificationService
     public function summary(PulseEntity $e): array
     {
         $rungs = $this->ladder($e);
+        $checked = count(array_filter($rungs, fn ($r) => $r['state'] === 'checked'));
+
+        // One vocabulary: a page is vouched for by InfoDot, or it is a claim, and the label says how many checks back it.
+        $label = in_array($e->verification_status, ['infodot_member', 'infodot_verified'], true)
+            ? self::STATUS_LABELS[$e->verification_status]
+            : 'Claimed, '.$checked.' of '.count($rungs).' checked';
 
         return [
             'status' => $e->verification_status,
-            'label' => self::STATUS_LABELS[$e->verification_status] ?? 'Not verified',
-            'checked' => count(array_filter($rungs, fn ($r) => $r['state'] === 'checked')),
+            'label' => $label,
+            'checked' => $checked,
             'claimed' => count(array_filter($rungs, fn ($r) => $r['state'] === 'claimed')),
         ];
     }

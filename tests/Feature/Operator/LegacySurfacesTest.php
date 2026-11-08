@@ -40,7 +40,9 @@ class LegacySurfacesTest extends TestCase
 
         $this->actingAs($user)->get('/community')->assertOk()
             ->assertSee('sh-stage--floor', false)
-            ->assertSee('Trending')
+            ->assertSee('Tags this week')
+            ->assertDontSee('Your points')
+            ->assertDontSee('Your standing')
             ->assertSee('A distinctive restyled post title')
             ->assertSee('Share something with the community');
     }
@@ -178,7 +180,7 @@ class LegacySurfacesTest extends TestCase
             ->assertSee('Not following anyone yet.');
 
         Livewire::actingAs($user)->test(SuggestedUsers::class)->assertSee('No suggestions yet. Check back once more people join.');
-        Livewire::actingAs($user)->test(TrendingHashtags::class)->assertSee('Nothing trending yet.');
+        Livewire::actingAs($user)->test(TrendingHashtags::class)->assertSee('No tags this week.');
         Livewire::actingAs($user)->test(MyPostStatus::class)->assertOk();
     }
 }

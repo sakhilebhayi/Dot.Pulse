@@ -29,7 +29,8 @@ class ViewSweepTest extends TestCase
         'zero minutes' => '/\b0 (minutes|hours|days|seconds)\b/',
         'bad plural' => '/\b1 (minutes|hours|days|seconds|requests|results|messages|reasons|people|businesses|offers|roles|lines|reviews|checks)\b/',
         'template residue' => '/\{\{|\}\}|@php|@if\b|wire:/',
-        'seed text' => '/demo-seed|fixture/i',
+        'seed text' => '/demo-seed|fixture|fictional/i',
+        'second verification vocabulary' => '/\bNot verified\b|[Cc]laimed, not verified/',
         'raw date object' => '/\bCarbon\b/',
     ];
 

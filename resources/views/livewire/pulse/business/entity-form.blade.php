@@ -18,12 +18,7 @@
         <div class="bz-notice" role="status"><x-pulse.icon name="info" :size="18" /><p>{{ $notice }}</p></div>
     @endif
 
-    @if ($errors->any())
-        <div class="bz-notice bz-notice--bad" role="alert">
-            <x-pulse.icon name="alert" :size="18" />
-            <p>{{ $errors->first() }}</p>
-        </div>
-    @endif
+    <x-pulse.error-banner :inline="['name', 'tagline', 'about', 'industry', 'website', 'public_email', 'public_phone', 'founded_year', 'team_size', 'contact_policy', 'registration_number', 'infodot_team', 'logo', 'cover', 'service_area_text', 'place_query']" />
 
     @if ($editing && $this->entity)
         <div class="bz-state">
@@ -55,13 +50,14 @@
     @endif
 
     <form wire:submit="save" class="bz-form" novalidate>
+        <div class="bz-form__cols">
+            <div class="bz-form__col">
         <section class="bz-block" aria-labelledby="bz-basics">
             <h2 id="bz-basics">The basics</h2>
             <x-pulse.field name="name" label="Business name" wire:model="name" maxlength="140" required autocomplete="organization" />
             <x-pulse.field name="tagline" label="Tagline" wire:model="tagline" maxlength="160" optional hint="One line on what you do. It shows on every card." />
             <x-pulse.textarea name="about" label="About" wire:model="about" rows="6" maxlength="5000" optional hint="Plain words. No phone numbers or email in here: contact details unlock after someone knocks." />
         </section>
-
         <section class="bz-block" aria-labelledby="bz-does">
             <h2 id="bz-does">What this page does</h2>
             <p class="pk-muted">A page sells, hires, or both. Switch off what does not apply.</p>
@@ -80,7 +76,6 @@
                 @endif
             </div>
         </section>
-
         <section class="bz-block" aria-labelledby="bz-where">
             <h2 id="bz-where">Where you are</h2>
             <div class="bz-combo">
@@ -99,7 +94,18 @@
             </div>
             <x-pulse.field name="service_area_text" label="Where you serve" wire:model="service_area_text" optional hint="Places separated by commas, for example Gauteng, Limpopo, remote." />
         </section>
-
+            </div>
+            <div class="bz-form__col">
+        <section class="bz-block" aria-labelledby="bz-pics">
+            <h2 id="bz-pics">Pictures</h2>
+            <p class="pk-muted">JPEG, PNG or WebP, up to 5 MB. The preview is the crop people see.</p>
+            <div class="bz-pics">
+                <x-pulse.file name="logo" label="Logo" optional shape="logo" wire:model="logo" empty="No logo yet" remove-model="remove_logo" :removed="$remove_logo"
+                    :preview="$logoPreview ?: ($editing && $this->entity?->logo_media_id ? app(\App\Services\Pulse\Entities\MediaService::class)->url($this->entity->logo_media_id, 'medium') : null)" />
+                <x-pulse.file name="cover" label="Cover" optional shape="cover" wire:model="cover" empty="No cover yet" hint="Wide pictures work best. The centre is kept." remove-model="remove_cover" :removed="$remove_cover"
+                    :preview="$coverPreview ?: ($editing && $this->entity?->cover_media_id ? app(\App\Services\Pulse\Entities\MediaService::class)->url($this->entity->cover_media_id, 'large') : null)" />
+            </div>
+        </section>
         <section class="bz-block" aria-labelledby="bz-reach">
             <h2 id="bz-reach">How people reach you</h2>
             <x-pulse.select name="contact_policy" label="Who can knock" wire:model="contact_policy" :options="[
@@ -114,7 +120,6 @@
             </div>
             <x-pulse.field name="website" type="url" label="Website" wire:model="website" optional placeholder="https://" hint="Shown as claimed. Pulse does not check that the site is yours." />
         </section>
-
         <section class="bz-block" aria-labelledby="bz-team">
             <h2 id="bz-team">Team and culture</h2>
             <div class="bz-pair">
@@ -127,42 +132,6 @@
                 <x-pulse.field name="culture_perks" label="What you offer people" wire:model="culture_perks" optional hint="Real perks only, separated by commas." />
             @endif
         </section>
-
-        <section class="bz-block" aria-labelledby="bz-pics">
-            <h2 id="bz-pics">Pictures</h2>
-            <p class="pk-muted">JPEG, PNG or WebP, up to 5 MB. Pulse re-saves every picture and removes hidden data. The previews show the crop people will see.</p>
-            <div class="bz-pics">
-                <div class="bz-pic">
-                    <x-pulse.field name="logo" label="Logo" optional>
-                        <input id="logo" name="logo" type="file" class="pk-control" accept="image/jpeg,image/png,image/webp" wire:model="logo" aria-describedby="logo-error">
-                    </x-pulse.field>
-                    <div class="bz-frame bz-frame--logo" aria-label="Logo preview">
-                        @if ($logoPreview)<img src="{{ $logoPreview }}" alt="Logo preview">
-                        @elseif ($editing && $this->entity?->logo && ! $remove_logo)<img src="{{ app(\App\Services\Pulse\Entities\MediaService::class)->url($this->entity->logo_media_id, 'medium') }}" alt="Current logo">
-                        @else<span>No logo yet</span>@endif
-                    </div>
-                    <div wire:loading wire:target="logo" class="pk-muted">Uploading</div>
-                    @if ($editing && $this->entity?->logo_media_id)
-                        <x-pulse.toggle name="remove_logo" label="Remove the current logo" :checked="$remove_logo" wire:model.live="remove_logo" />
-                    @endif
-                </div>
-                <div class="bz-pic bz-pic--cover">
-                    <x-pulse.field name="cover" label="Cover" optional hint="Wide pictures work best. The centre is kept.">
-                        <input id="cover" name="cover" type="file" class="pk-control" accept="image/jpeg,image/png,image/webp" wire:model="cover" aria-describedby="cover-hint cover-error">
-                    </x-pulse.field>
-                    <div class="bz-frame bz-frame--cover" aria-label="Cover preview">
-                        @if ($coverPreview)<img src="{{ $coverPreview }}" alt="Cover preview">
-                        @elseif ($editing && $this->entity?->cover && ! $remove_cover)<img src="{{ app(\App\Services\Pulse\Entities\MediaService::class)->url($this->entity->cover_media_id, 'large') }}" alt="Current cover">
-                        @else<span>No cover yet</span>@endif
-                    </div>
-                    <div wire:loading wire:target="cover" class="pk-muted">Uploading</div>
-                    @if ($editing && $this->entity?->cover_media_id)
-                        <x-pulse.toggle name="remove_cover" label="Remove the current cover" :checked="$remove_cover" wire:model.live="remove_cover" />
-                    @endif
-                </div>
-            </div>
-        </section>
-
         <section class="bz-block" aria-labelledby="bz-cred">
             <h2 id="bz-cred">Credibility</h2>
             <p class="pk-muted">Pulse shows what you say as a claim and what it can see as a check. It never calls a business verified.</p>
@@ -177,6 +146,8 @@
                 <p class="pk-muted">Linking an InfoDot company is on the <a href="{{ route('entities.manage.verify', ['entity' => $this->entity->slug]) }}">Verify tab</a>.</p>
             @endif
         </section>
+            </div>
+        </div>
 
         <div class="bz-actions">
             @if ($editing)

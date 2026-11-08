@@ -325,6 +325,6 @@ class VerificationServiceTest extends EntitiesTestCase
 
         $this->assertSame(1, $summary['checked']); // owner email
         $this->assertSame(1, $summary['claimed']); // website
-        $this->assertSame('Not verified', $summary['label']);
+        $this->assertMatchesRegularExpression('/^Claimed, 1 of \d+ checked$/', $summary['label']);
     }
 }

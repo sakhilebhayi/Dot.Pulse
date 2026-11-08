@@ -74,6 +74,7 @@ class Search extends Component
 
     public function updated(string $name): void
     {
+        // Only typing opens the suggestions; a submit, a pick or any filter closes them.
         $this->suggestOpen = $name === 'q' && mb_strlen(trim($this->q)) >= 2;
 
         if (in_array($name, ['q', 'kind', 'mode', 'place', 'remote', 'priceMin', 'priceMax', 'employment'], true)) {
@@ -174,7 +175,10 @@ class Search extends Component
 
         foreach ($results as $r) {
             if ($r['type'] === 'signal' && $r['beat'] !== null) {
-                $rows[] = $presenter->present($r['beat'], auth()->user()) + ['result' => 'signal', 'why' => $r['why']];
+                $row = $presenter->present($r['beat'], auth()->user());
+                // "Near you" is already said by the label; the why line does not say it twice.
+                $why = $row['near'] ? array_values(array_filter($r['why'], fn ($w) => ! in_array($w, ['In your city.', 'In your region.'], true))) : $r['why'];
+                $rows[] = $row + ['result' => 'signal', 'why' => $why];
             } elseif ($r['type'] === 'entity') {
                 $rows[] = ['result' => 'entity', 'entity' => $r['entity'], 'why' => $r['why']];
             }

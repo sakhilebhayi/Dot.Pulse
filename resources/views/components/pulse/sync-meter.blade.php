@@ -9,10 +9,12 @@
 
     Props: reasons  array of ['code' => 'need_offer', 'text' => 'You need bookkeeping, they offer bookkeeping', 'weight' => 30]
            youLabel, themLabel  end labels (default You and Them), pass '' to hide the ends
+           mini     bool; only the two lines and their nodes, small, for a compact row that carries the reasons as chips beside it.
+                    Hidden from assistive tech: the chips are the words.
            remove   Livewire method name; when set each reason gets a "Stop using this" button calling remove('code'),
                     which is how a person taps a reason off (Floor::removeReason)
 --}}
-@props(['reasons' => [], 'youLabel' => 'You', 'themLabel' => 'Them', 'remove' => null])
+@props(['reasons' => [], 'youLabel' => 'You', 'themLabel' => 'Them', 'remove' => null, 'mini' => false])
 @php
     $items = collect($reasons)->map(fn ($r) => [
         'code' => (string) data_get($r, 'code', ''),
@@ -37,8 +39,8 @@
         $dThem = $path(array_reverse($them));
         $summary = ($n === 1 ? 'Your line and their line meet at 1 reason: ' : 'Your line and their line meet at '.$n.' reasons: ').$items->pluck('text')->implode('; ').'.';
     @endphp
-    <figure {{ $attributes->merge(['class' => 'pk-meter'.($n <= 3 ? ' pk-meter--cols' : '')]) }} data-pk-meter style="--n: {{ $n }}">
-        <div class="pk-meter__plot" role="img" aria-label="{{ $summary }}">
+    <figure {{ $attributes->merge(['class' => 'pk-meter'.($mini ? ' pk-meter--mini' : ($n <= 3 ? ' pk-meter--cols' : ''))]) }} data-pk-meter style="--n: {{ $n }}" @if ($mini) aria-hidden="true" @endif>
+        <div class="pk-meter__plot" @if (! $mini) role="img" aria-label="{{ $summary }}" @endif>
             <svg class="pk-meter__svg pk-meter__svg--you" viewBox="0 0 {{ $w }} 100" preserveAspectRatio="none" focusable="false" aria-hidden="true">
                 <path class="pk-meter__line pk-meter__line--you" d="{{ $dYou }}"/>
             </svg>
@@ -49,6 +51,7 @@
                 <span class="pk-meter__node" style="left: {{ round(($i + 0.5) / $n * 100, 2) }}%; --i: {{ $i }}" aria-hidden="true"></span>
             @endforeach
         </div>
+        @unless ($mini)
         @if ($youLabel !== '' || $themLabel !== '')
             <div class="pk-meter__ends" aria-hidden="true"><span>{{ $youLabel }}</span><span>{{ $themLabel }}</span></div>
         @endif
@@ -63,5 +66,6 @@
                 </li>
             @endforeach
         </ul>
+        @endunless
     </figure>
 @endif

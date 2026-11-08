@@ -5,7 +5,7 @@
         <div class="pk-stack">
             <div>
                 <h2>Continue with InfoDot</h2>
-                <p class="pk-muted" style="margin-top: 6px">Open Dot.Pulse from your InfoDot dashboard. You land back here signed in.</p>
+                <p class="pk-muted" style="margin-top: 6px">The button takes you to InfoDot. Sign in there, then open Dot.Pulse from your dashboard and you land back here signed in.</p>
             </div>
 
             @session('status')

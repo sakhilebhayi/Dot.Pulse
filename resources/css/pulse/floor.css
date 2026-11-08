@@ -175,6 +175,134 @@
     background: var(--c-raised);
 }
 
+/* Compact row: a small strand, then one line of reasons that never wraps or grows the row. */
+.fl-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.fl-mini {
+    flex: none;
+    display: block;
+}
+
+.fl-compact .fl-chips {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+
+.fl-compact .fl-chip {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.fl-compact .fl-chip:not(:first-child) {
+    flex-shrink: 0;
+}
+
+.fl-more-reasons {
+    flex: none;
+    color: var(--c-muted);
+}
+
+.fl-compact .fl-thread-toggle {
+    flex: none;
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 599.98px) {
+    .fl-compact {
+        flex-wrap: wrap;
+        row-gap: 0;
+    }
+
+    .fl-compact .fl-chips {
+        flex: 1 1 0;
+    }
+
+    .fl-compact .fl-thread-toggle {
+        flex-basis: 100%;
+        text-align: left;
+    }
+}
+
+.fl-beat--compact .pk-beat__body {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.fl-beat--compact .pk-beat__title {
+    font-size: 1.125rem;
+}
+
+.fl-beat--compact .pk-beat__from {
+    margin-top: 10px;
+}
+
+.fl-beat--compact .pk-beat__meter {
+    margin-top: 10px;
+}
+
+.fl-beat--compact .pk-beat__actions {
+    margin-top: 10px;
+}
+
+.fl-beat--compact .fl-thread-toggle {
+    margin-top: 2px;
+    min-height: 40px;
+}
+
+.fl-why--quiet {
+    color: var(--c-muted);
+}
+
+.fl-beat .pk-beat__meter:has(> .fl-why--quiet) {
+    margin-top: 8px;
+    padding: 0;
+    background: none;
+}
+
+/* A revisit with nothing new: one line above what was seen, not a block that replaces the first screen. */
+.fl-caught {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+    margin: 0 0 4px;
+    padding: 12px 16px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    color: var(--c-ink-2);
+    font-size: var(--t-small);
+}
+
+.fl-caught strong {
+    color: var(--c-ink);
+    font-weight: 700;
+}
+
+.fl-caught a {
+    margin-left: auto;
+}
+
+.fl-caught + .fl-earlier {
+    margin-top: 16px;
+    padding-top: 0;
+    border-top: 0;
+}
+
 /* Seen earlier: the same beats, quieter, below the new ones */
 .fl-earlier {
     margin-top: 32px;

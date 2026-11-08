@@ -26,7 +26,8 @@ class RoundTest extends FloorTestCase
         $this->round()
             ->assertSee('Bookkeeping for small shops')
             ->assertSee('You need bookkeeping, they offer bookkeeping')
-            ->assertSee('Both in Johannesburg')
+            ->assertDontSee('Both in Johannesburg')
+            ->assertSee('Near you')
             ->assertSee('Monthly books and VAT returns.')
             ->assertSee('data-beat="'.$signal->id.'"', false)
             ->assertSee('Stop using this');
@@ -88,10 +89,62 @@ class RoundTest extends FloorTestCase
         $again = $this->round();
         $again->assertSee('Seen earlier')
             ->assertSee('Seen already')
-            ->assertSee('Nothing new since you last looked.')
             ->assertSee("That's the round. You are caught up.", false)
             ->assertDontSee('Nothing fits yet.');
         $this->assertTrue($again->get('beats')[0]['earlier']);
+    }
+
+    public function test_a_revisit_keeps_the_strand_on_every_seen_beat_and_the_caught_up_note_is_one_line(): void
+    {
+        [$signal] = $this->offerFor('Seen offer');
+        $this->round()->call('markSeen', [$signal->id]);
+
+        $html = $this->round()->html();
+
+        // The caught up note is a one line banner above the strip, not the big block that replaced the first screen.
+        $this->assertStringContainsString('fl-caught', $html);
+        $this->assertStringNotContainsString('class="pk-end"', $html);
+        $this->assertStringNotContainsString('Nothing new since you last looked.', $html);
+        $this->assertLessThan(strpos($html, 'Seen earlier'), strpos($html, 'fl-caught'));
+
+        // The seen beat still draws its strand, small, with its reason chip beside it.
+        $this->assertStringContainsString('pk-meter--mini', $html);
+        $this->assertStringContainsString('You need bookkeeping, they offer bookkeeping', $html);
+    }
+
+    public function test_the_top_beats_carry_the_whole_strand_and_the_rest_a_small_one(): void
+    {
+        $reasons = fn (int $i) => [
+            ['code' => 'need_offer', 'text' => "You need bookkeeping {$i}, they offer it", 'weight' => 40, 'ref' => "b{$i}"],
+            ['code' => 'topic', 'text' => "You follow accounting {$i}", 'weight' => 24, 'ref' => "a{$i}"],
+        ];
+
+        foreach (range(1, 5) as $i) {
+            $this->offerFor("Offer number {$i}", $reasons($i));
+        }
+
+        $html = $this->round()->html();
+
+        // Three full beats and two compact rows with the small strand (their full thread opens on "Show how it fits").
+        $this->assertSame(3, substr_count($html, 'fl-beat--lead'));
+        $this->assertSame(2, substr_count($html, 'fl-beat--compact'));
+        $this->assertSame(2, substr_count($html, 'pk-meter--mini'));
+    }
+
+    public function test_where_and_when_are_labels_and_a_place_only_beat_says_so(): void
+    {
+        $this->offerFor('Has a real reason');
+        $this->offerFor('Only nearby', [
+            ['code' => 'place_city', 'text' => 'They are in Johannesburg, in your city.', 'weight' => 14, 'ref' => 'x'],
+            ['code' => 'fresh', 'text' => 'Posted today.', 'weight' => 5, 'ref' => null],
+        ]);
+
+        $html = $this->round()->html();
+
+        $this->assertStringNotContainsString('Posted today.', $html);
+        $this->assertStringNotContainsString('in your city', $html);
+        $this->assertStringContainsString('Near you', $html);
+        $this->assertStringContainsString('Nearby, no other reason yet.', $html);
     }
 
     public function test_a_seen_beat_leaves_after_24_hours_and_when_acted_on(): void
@@ -130,6 +183,24 @@ class RoundTest extends FloorTestCase
         $this->round('all')->assertSee("That's the round. You are caught up.", false)->assertSee('Everything that fits you has been shown.')->assertDontSee('Old trade thing');
         // Work mode: nothing was ever shown there, so it must not claim anything was caught up.
         $this->round('work')->assertSee('No work matches yet.')->assertDontSee('caught up');
+    }
+
+    public function test_the_empty_work_floor_follows_the_role_of_the_person(): void
+    {
+        // A person looking for work is not pushed to "say what you need".
+        $this->round('work')
+            ->assertSee('Say what you are open to')
+            ->assertSee('Find businesses to follow')
+            ->assertDontSee('Say what you need');
+
+        // An employer is told to post a role, and a seller to add an offer.
+        $boss = $this->person();
+        $page = $this->dEntity($boss, ['name' => 'Hiring House', 'is_seller' => false, 'is_employer' => true]);
+        $this->round('work', $boss)->assertSee('Post a role')->assertDontSee('Say what you need');
+
+        $shop = $this->person();
+        $seller = $this->dEntity($shop, ['name' => 'Selling Shop', 'is_seller' => true, 'is_employer' => false]);
+        $this->round('trade', $shop)->assertSee('Add an offer');
     }
 
     public function test_with_no_matches_at_all_the_empty_state_is_honest_and_actionable(): void
@@ -296,7 +367,9 @@ class RoundTest extends FloorTestCase
         $this->assertSame(1, substr_count($html, "('topic')"));
         $this->assertStringNotContainsString("('fresh')", $html);
         $this->assertStringNotContainsString("('responsive')", $html);
-        $this->assertStringContainsString('Posted today.', $html);
+        // Recency, place and reply speed are labels, not reasons: they are never a node or a chip on the strand.
+        $this->assertStringNotContainsString('Posted today.', $html);
+        $this->assertStringNotContainsString('They answer quickly.', $html);
     }
 
     public function test_people_and_businesses_a_person_blocked_or_muted_never_show(): void

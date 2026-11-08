@@ -21,7 +21,9 @@ use Livewire\Component;
  *
  *   <livewire:pulse.lines.inbox />                        the signed-in person's lines (and their pages')
  *   <livewire:pulse.lines.inbox :entity-id="$page->id" /> one page's lines
- *   :start-tab="open" picks the first tab (requests by default).
+ *   :start-tab="open" picks the first tab. Without one, it opens on the first tab that has something in it: requests
+ *   when someone is waiting for an answer, then open, sent and closed. An empty tab as the front door reads as an empty
+ *   inbox while the badge says there is something.
  */
 class Inbox extends Component
 {
@@ -49,11 +51,32 @@ class Inbox extends Component
     {
         $this->entityId = $entityId;
 
-        if ($startTab !== null && array_key_exists($startTab, self::TABS)) {
-            $this->tab = $startTab;
+        $asked = $startTab ?? request()->query('tab');
+
+        if (is_string($asked) && array_key_exists($asked, self::TABS)) {
+            $this->tab = $asked;
+        } else {
+            $this->tab = $this->firstTabWithContent(app(LineService::class));
         }
 
         $this->normalise();
+    }
+
+    /** The first tab that holds a line, so the page never opens on an empty tab while another one has the news. */
+    private function firstTabWithContent(LineService $lines): string
+    {
+        $user = auth()->user();
+        $scope = $this->meOnly ? 'none' : $this->entityId;
+
+        foreach (['requests', 'open', 'sent', 'closed'] as $tab) {
+            $has = $lines->inbox($user, array_filter(['entity_id' => $scope]) + ['tab' => $tab, 'per_page' => 1])->total() > 0;
+
+            if ($has) {
+                return $tab;
+            }
+        }
+
+        return 'requests';
     }
 
     public function hydrate(): void

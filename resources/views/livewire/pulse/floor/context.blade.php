@@ -13,13 +13,17 @@
 
     <section class="pk-card fl-ctx" aria-labelledby="ctx-open">
         <h2 id="ctx-open" class="fl-ctx__title">What you have open</h2>
-        <dl class="fl-facts">
-            <div><dt>Needs</dt><dd class="pk-mono">{{ $needs }}</dd></div>
-            <div><dt>Roles live</dt><dd class="pk-mono">{{ $roles }}</dd></div>
-            <div><dt><a href="{{ pulse_route('saved') }}">Saved</a></dt><dd class="pk-mono">{{ $saved }}</dd></div>
-        </dl>
+        @if ($needs + $roles + $saved > 0)
+            <dl class="fl-facts">
+                @if ($needs > 0)<div><dt>Needs</dt><dd class="pk-mono">{{ $needs }}</dd></div>@endif
+                @if ($roles > 0)<div><dt>Roles live</dt><dd class="pk-mono">{{ $roles }}</dd></div>@endif
+                @if ($saved > 0)<div><dt><a href="{{ pulse_route('saved') }}">Saved</a></dt><dd class="pk-mono">{{ $saved }}</dd></div>@endif
+            </dl>
+        @else
+            <p class="pk-muted">Nothing yet. What you post or save is counted here.</p>
+        @endif
         <div class="pk-cluster">
-            <x-pulse.button size="sm" variant="quiet" :href="pulse_route('needs.create')">Say what you need</x-pulse.button>
+            <x-pulse.button size="sm" variant="quiet" :href="$action['href']">{{ $action['label'] }}</x-pulse.button>
         </div>
     </section>
 

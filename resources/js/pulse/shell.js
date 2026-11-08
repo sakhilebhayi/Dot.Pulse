@@ -100,6 +100,30 @@ function selectTab(tab) {
     });
 }
 
+/* ---------- Clipped tab rows: a fade on the side that has more ---------- */
+function markClipped(list) {
+    const max = list.scrollWidth - list.clientWidth;
+    list.classList.toggle('is-clip-end', max > 2 && list.scrollLeft < max - 2);
+    list.classList.toggle('is-clip-start', max > 2 && list.scrollLeft > 2);
+}
+
+function prepareTabRows() {
+    $$('.pk-tabs__list').forEach((list) => {
+        if (!list.hasAttribute('data-clip-watched')) {
+            list.setAttribute('data-clip-watched', '');
+            list.addEventListener('scroll', () => markClipped(list), { passive: true });
+            // Keep the current tab in view, so a clipped row never hides where you are.
+            const here = list.querySelector('[aria-current="page"], [aria-selected="true"]');
+            if (here && list.scrollWidth > list.clientWidth) {
+                list.scrollLeft = Math.max(0, here.offsetLeft - 24);
+            }
+        }
+        markClipped(list);
+    });
+}
+
+window.addEventListener('resize', prepareTabRows);
+
 /* ---------- Toasts ---------- */
 let toastTimer = new WeakMap();
 
@@ -193,6 +217,18 @@ function setBadge(kind, count) {
     });
 }
 
+/* The Lines badge adds unread lines to requests waiting. The link opens the tab that holds what the number counts. */
+function setLinesLink(requests, unread) {
+    $$('[data-pulse-badge="lines"]').forEach((el) => {
+        const host = el.closest('a');
+        if (!host) return;
+        if (!host.hasAttribute('data-base-href')) host.setAttribute('data-base-href', host.getAttribute('href') || '');
+        const base = (host.getAttribute('data-base-href') || '').split('?')[0];
+        if (!base) return;
+        host.setAttribute('href', requests > 0 ? base + '?tab=requests' : unread > 0 ? base + '?tab=open' : host.getAttribute('data-base-href'));
+    });
+}
+
 async function poll() {
     if (pollStopped || document.hidden) return;
     const url = document.body.getAttribute('data-pulse-check');
@@ -211,6 +247,7 @@ async function poll() {
         const data = await response.json();
         pollFailures = 0;
         setBadge('lines', (Number(data.lines_unread) || 0) + (Number(data.requests) || 0));
+        setLinesLink(Number(data.requests) || 0, Number(data.lines_unread) || 0);
         setBadge('notifications', data.notifications);
     } catch (e) {
         pollFailures += 1; // network or server trouble: back off, never complain
@@ -440,13 +477,14 @@ document.addEventListener('livewire:init', () => {
 function init() {
     syncThemeButtons();
     prepareMeters();
+    prepareTabRows();
     if (document.body.getAttribute('data-pulse-check')) {
         poll();
         schedulePoll();
     }
 
     // Meters inserted later by Livewire.
-    new MutationObserver(() => requestAnimationFrame(() => prepareMeters())).observe(document.body, {
+    new MutationObserver(() => requestAnimationFrame(() => { prepareMeters(); prepareTabRows(); })).observe(document.body, {
         childList: true,
         subtree: true,
     });

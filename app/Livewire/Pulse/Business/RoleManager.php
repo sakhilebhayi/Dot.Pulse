@@ -217,7 +217,7 @@ class RoleManager extends Component
                 }
             }
         } catch (ValidationException $e) {
-            $this->fail($e, ['entity' => 'title', 'role' => 'title']);
+            $this->fail($e, ['entity' => 'title', 'role' => 'title', 'skills' => 'skills_text']);
 
             return;
         }

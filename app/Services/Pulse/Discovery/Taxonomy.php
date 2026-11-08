@@ -69,17 +69,18 @@ class Taxonomy
                 $label = Str::lower($entry['label']);
                 $score = 0;
 
+                // Prefix of the label, or of one of its words ("Pool building" for "build"): never the middle of a word,
+                // and an alias counts only from its start. "Pool plumbing" is an alias of Pool building, and a person who
+                // typed "plumbing" did not ask for pools.
                 if (str_starts_with($label, $needle)) {
                     $score = 4;
-                } elseif (str_contains($label, $needle)) {
+                } elseif (preg_match('/(?:^|[\s\-\/&,(])'.preg_quote($needle, '/').'/u', $label) === 1) {
                     $score = 2;
                 }
 
                 foreach ($entry['aliases'] as $alias) {
                     if (str_starts_with($alias, $needle)) {
                         $score = max($score, 3);
-                    } elseif (str_contains($alias, $needle)) {
-                        $score = max($score, 1);
                     }
                 }
 

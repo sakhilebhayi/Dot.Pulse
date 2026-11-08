@@ -143,6 +143,12 @@ class NeedService
             'visibility' => ['sometimes', Rule::in(['open', 'matched'])],
             'entity_id' => ['sometimes', 'nullable', 'integer', Rule::exists('pulse_entities', 'id')],
             'expires_at' => ['sometimes', 'nullable', 'date', 'after:now', 'before:+120 days'],
+        ], [
+            'title.required' => 'Say what you need in a line.',
+            'title.min' => 'Say it in a few more words.',
+            'title.max' => 'Keep it to 140 characters. Put the rest in details.',
+            'needed_by.after_or_equal' => 'Pick today or a later day.',
+            'expires_at.after' => 'Pick a day in the future.',
         ])->validate();
 
         if (! empty($clean['entity_id'])) {

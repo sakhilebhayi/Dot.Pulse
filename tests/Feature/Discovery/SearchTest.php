@@ -45,9 +45,9 @@ class SearchTest extends TestCase
         $res = $this->search('plumbing');
 
         $this->assertSame(['Plumbing repairs and geysers', 'Handyman'], $this->titles($res));
-        $this->assertContains('Matched your words in the title.', $res['results'][0]['why']);
-        $this->assertContains('Matches the topic plumbing.', $res['results'][0]['why']);
-        $this->assertContains('Matched your words in the description.', $res['results'][1]['why']);
+        $this->assertContains('Your words are in the title.', $res['results'][0]['why']);
+        $this->assertContains('About plumbing.', $res['results'][0]['why']);
+        $this->assertContains('Your words are in the description.', $res['results'][1]['why']);
         $this->assertGreaterThan($res['results'][1]['score'], $res['results'][0]['score']);
     }
 
@@ -71,7 +71,7 @@ class SearchTest extends TestCase
         $this->assertContains($res['results'][0]['type'], ['signal', 'entity']);
 
         if ($res['results'][0]['type'] === 'entity') {
-            $this->assertContains('Matched the business name.', $res['results'][0]['why']);
+            $this->assertContains('The business name fits.', $res['results'][0]['why']);
             $this->assertSame('Claims', substr((string) ($res['results'][0]['entity']['verification'] ?? 'Claims'), 0, 6));
         }
     }
@@ -301,6 +301,6 @@ class SearchTest extends TestCase
         $res = $this->search('paving');
 
         $this->assertSame('Paving in Sandton', $this->titles($res)[0]);
-        $this->assertContains('They are in your city.', $res['results'][0]['why']);
+        $this->assertContains('In your city.', $res['results'][0]['why']);
     }
 }

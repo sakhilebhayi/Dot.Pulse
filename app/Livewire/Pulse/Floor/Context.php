@@ -24,7 +24,7 @@ class Context extends Component
         // Re-rendering is the refresh.
     }
 
-    public function render(): View
+    public function render(\App\Livewire\Pulse\Floor\Support\Persona $persona): View
     {
         $user = auth()->user();
 
@@ -36,6 +36,7 @@ class Context extends Component
             ->count();
 
         return view('livewire.pulse.floor.context', [
+            'action' => $persona->endAction($user),
             'door' => $door,
             'doorUntil' => $door ? BeatPresenter::until($door->closes_at) : null,
             'needs' => PulseNeed::query()->where('user_id', $user->id)->where('status', 'open')->count(),

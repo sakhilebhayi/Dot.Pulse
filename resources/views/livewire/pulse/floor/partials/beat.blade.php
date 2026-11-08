@@ -3,8 +3,9 @@
     behaves the same wherever it turns up.
 
     Needs: $b (the beat array), $mode ('floor' | 'search' | 'saved'), optional $why (list of sentences from search),
-    optional $compact (up to three reason chips, the full thread on expand; the first card of a list is drawn in full)
-    and optional $quiet (a beat seen earlier: lighter, same actions).
+    optional $lead (the top one to three beats of a round: the full strand), optional $first (the very first, which also says
+    "Best match for you"), optional $compact (every other beat: a small strand beside one line of up to three reason
+    chips, the full thread on expand) and optional $quiet (a beat seen earlier: lighter, same actions).
     The host component supplies save, unsave, dismiss and removeReason (see Concerns\ActsOnBeats).
 --}}
 @php
@@ -20,6 +21,9 @@
     $lead = ($lead ?? false) && $meter->toHtml() !== '';
     $compact = ($compact ?? false) && $meter->toHtml() !== '';
     $quiet = $quiet ?? false;
+    $first = ($first ?? false) && $lead;
+    $mini = $compact ? \App\Livewire\Pulse\Floor\Support\MeterHtml::render($reasons, null, false, 'Them', true) : null;
+    $nearbyOnly = (bool) ($b['nearby_only'] ?? false);
     $row = ($row ?? false) || $mode === 'search';
     $chips = collect($reasons)->pluck('text')->filter()->values();
 @endphp
@@ -29,6 +33,7 @@
     :href="$b['url'] ?? route('signals.show', $sid)"
     :time="$b['when'] ?? null"
     :place="$b['place']['label'] ?? null"
+    :near="(bool) ($b['near'] ?? false)"
     wire:key="beat-{{ $sid }}"
     data-beat="{{ $sid }}"
     tabindex="-1"
@@ -77,15 +82,17 @@
             <p class="fl-why">{{ implode(' ', $why) }}</p>
         </x-slot>
     @elseif ($compact || $lead)
-        {{-- Compact: three reason chips, the thread on expand. The lead card shows the whole thread on a wide screen and the chips on a phone. --}}
+        {{-- Compact: a small strand beside one line of up to three reason chips, the thread on expand. The lead card shows the whole thread on a wide screen and the chips on a phone. --}}
         <x-slot name="meter">
-            @if ($lead)<p class="fl-lead-note">Best match for you, {{ \App\Support\Moment::plural($chips->count(), 'reason') }}.</p>@endif
-            <div @class(['fl-lead-phone' => $lead])>
+            @if ($first)<p class="fl-lead-note">Best match for you, {{ \App\Support\Moment::plural($chips->count(), 'reason') }}.</p>@endif
+            <div @class(['fl-lead-phone' => $lead, 'fl-compact' => $compact])>
+                @if ($mini)<span class="fl-mini">{{ $mini }}</span>@endif
                 <ul class="fl-chips" aria-label="Why this fits">
                     @foreach ($chips->take(3) as $text)
                         <li class="fl-chip">{{ $text }}</li>
                     @endforeach
                 </ul>
+                @if ($chips->count() > 3)<span class="fl-small fl-more-reasons">+{{ $chips->count() - 3 }}</span>@endif
                 <button type="button" class="fl-link fl-thread-toggle" x-on:click="thread = ! thread" x-bind:aria-expanded="thread" aria-controls="thread-{{ $sid }}">
                     <span x-show="! thread">Show how it fits</span><span x-show="thread" x-cloak>Hide how it fits</span>
                 </button>
@@ -94,6 +101,8 @@
         </x-slot>
     @elseif ($meter->toHtml() !== '')
         <x-slot name="meter">{{ $meter }}</x-slot>
+    @elseif ($nearbyOnly)
+        <x-slot name="meter"><p class="fl-why fl-why--quiet">Nearby, no other reason yet.</p></x-slot>
     @endif
 
     <x-slot name="actions">

@@ -24,7 +24,7 @@ class SearchTest extends FloorTestCase
 
         $this->search(['q' => 'bookkeeping'])
             ->assertSee('Bookkeeping for small shops')
-            ->assertSee('Matched your words in the title.')
+            ->assertSee('Your words are in the title.')
             ->assertSee('1 result')
             ->assertSee('data-beat="'.$signal->id.'"', false);
     }
@@ -108,7 +108,7 @@ class SearchTest extends FloorTestCase
     {
         $this->dEntity($this->person(), ['name' => 'Highveld Cycle Works', 'tagline' => 'Repairs and custom builds']);
 
-        $this->search(['q' => 'highveld'])->assertSee('Highveld Cycle Works')->assertSee('Matched the business name.');
+        $this->search(['q' => 'highveld'])->assertSee('Highveld Cycle Works')->assertSee('The business name fits.');
     }
 
     public function test_no_results_suggests_posting_a_need(): void
@@ -174,5 +174,14 @@ class SearchTest extends FloorTestCase
         $this->offerFor('Bookkeeping for small shops');
 
         $this->actingAs($this->me)->get(route('search', ['q' => 'bookkeeping']))->assertOk()->assertSee('Bookkeeping for small shops');
+    }
+
+    public function test_a_search_closes_the_suggestions_and_never_suggests_from_the_middle_of_a_word_or_an_alias(): void
+    {
+        $this->search(['q' => 'plum'])->set('q', 'plumbing')->assertSet('suggestOpen', true)->call('submit')->assertSet('suggestOpen', false);
+
+        $labels = array_column((new \App\Services\Pulse\Discovery\Taxonomy)->suggest('plumbing', 'any', 8), 'label');
+        $this->assertContains('Plumbing', $labels);
+        $this->assertNotContains('Pool building', $labels, 'an alias like "pool plumbing" is not a reason to suggest pools');
     }
 }
