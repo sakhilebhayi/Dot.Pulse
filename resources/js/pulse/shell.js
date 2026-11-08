@@ -100,6 +100,30 @@ function selectTab(tab) {
     });
 }
 
+/* ---------- Clipped tab rows: a fade on the side that has more ---------- */
+function markClipped(list) {
+    const max = list.scrollWidth - list.clientWidth;
+    list.classList.toggle('is-clip-end', max > 2 && list.scrollLeft < max - 2);
+    list.classList.toggle('is-clip-start', max > 2 && list.scrollLeft > 2);
+}
+
+function prepareTabRows() {
+    $$('.pk-tabs__list').forEach((list) => {
+        if (!list.hasAttribute('data-clip-watched')) {
+            list.setAttribute('data-clip-watched', '');
+            list.addEventListener('scroll', () => markClipped(list), { passive: true });
+            // Keep the current tab in view, so a clipped row never hides where you are.
+            const here = list.querySelector('[aria-current="page"], [aria-selected="true"]');
+            if (here && list.scrollWidth > list.clientWidth) {
+                list.scrollLeft = Math.max(0, here.offsetLeft - 24);
+            }
+        }
+        markClipped(list);
+    });
+}
+
+window.addEventListener('resize', prepareTabRows);
+
 /* ---------- Toasts ---------- */
 let toastTimer = new WeakMap();
 
@@ -453,13 +477,14 @@ document.addEventListener('livewire:init', () => {
 function init() {
     syncThemeButtons();
     prepareMeters();
+    prepareTabRows();
     if (document.body.getAttribute('data-pulse-check')) {
         poll();
         schedulePoll();
     }
 
     // Meters inserted later by Livewire.
-    new MutationObserver(() => requestAnimationFrame(() => prepareMeters())).observe(document.body, {
+    new MutationObserver(() => requestAnimationFrame(() => { prepareMeters(); prepareTabRows(); })).observe(document.body, {
         childList: true,
         subtree: true,
     });

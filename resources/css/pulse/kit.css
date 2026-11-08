@@ -1162,6 +1162,21 @@ select.pk-control {
     scrollbar-width: none;
 }
 
+.pk-tabs__list.is-clip-end {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+}
+
+.pk-tabs__list.is-clip-start {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px);
+    mask-image: linear-gradient(90deg, transparent, #000 36px);
+}
+
+.pk-tabs__list.is-clip-start.is-clip-end {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent);
+}
+
 .pk-tab {
     display: inline-flex;
     align-items: center;

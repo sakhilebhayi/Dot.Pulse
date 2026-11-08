@@ -555,6 +555,13 @@
     display: none;
 }
 
+/* A phone gets one bar: the mark, then the tools. The name is still the link's label. */
+@media (max-width: 429.98px) {
+    .sh-brand__word {
+        display: none;
+    }
+}
+
 @media (max-width: 859.98px) {
     .sh-menu {
         position: fixed;
