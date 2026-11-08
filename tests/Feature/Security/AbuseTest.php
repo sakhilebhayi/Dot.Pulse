@@ -4,14 +4,15 @@ namespace Tests\Feature\Security;
 
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
-use App\Models\PulseReview;
-use App\Models\User;
+use App\Services\Pulse\Discovery\Floor;
+use App\Services\Pulse\Discovery\SearchService;
 use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\KnockBudget;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\OutcomeService;
 use App\Services\Pulse\Lines\QuoteService;
+use App\Services\Pulse\Lines\ReportService;
 use App\Services\Pulse\Lines\ReviewService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /** Spam, budget games, quote and review manipulation, outcome forgery, block evasion and the rate limits. */
@@ -93,7 +95,7 @@ class AbuseTest extends TestCase
         $before = app(KnockBudget::class)->remaining($from);
         try {
             app(LineService::class)->knock($from, ['entity' => $page->id], 'enquiry', $this->card(['what' => 'x']));
-        } catch (\Illuminate\Validation\ValidationException) {
+        } catch (ValidationException) {
         }
 
         $this->assertSame($before, app(KnockBudget::class)->remaining($from));
@@ -277,10 +279,10 @@ class AbuseTest extends TestCase
         $blocked = $this->w('blocked');
         $owner = $this->w('sellerOwner');
 
-        $round = app(\App\Services\Pulse\Discovery\Floor::class)->round($blocked, 'all');
+        $round = app(Floor::class)->round($blocked, 'all');
         $this->assertSame([], collect($round['beats'])->filter(fn ($b) => ($b->from['entity']['id'] ?? null) === $this->w('seller')->id)->all());
 
-        $search = app(\App\Services\Pulse\Discovery\SearchService::class)->search($blocked, 'Geyser');
+        $search = app(SearchService::class)->search($blocked, 'Geyser');
         $this->assertSame([], collect($search['results'])->filter(fn ($r) => ($r['type'] ?? '') === 'signal' && ($r['beat']->signal->entity_id ?? null) === $this->w('seller')->id)->all());
     }
 
@@ -305,7 +307,7 @@ class AbuseTest extends TestCase
         $me = $this->w('stranger');
 
         config(['pulse.lines.rate_limits.report' => 3]);
-        $reports = app(\App\Services\Pulse\Lines\ReportService::class);
+        $reports = app(ReportService::class);
         $targets = collect(range(1, 3))->map(fn () => $this->person());
         foreach ($targets as $t) {
             $reports->report($me, $t, 'spam', null);
@@ -318,7 +320,7 @@ class AbuseTest extends TestCase
         }
 
         config(['pulse.security.rate_limits.search' => 4]);
-        $search = app(\App\Services\Pulse\Discovery\SearchService::class);
+        $search = app(SearchService::class);
         for ($i = 0; $i < 4; $i++) {
             $search->search($me, 'geyser');
         }

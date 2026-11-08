@@ -8,26 +8,34 @@ use App\Livewire\Pulse\Me\Privacy;
 use App\Models\Community;
 use App\Models\PulseComment;
 use App\Models\PulseConversation;
+use App\Models\PulseMatch;
 use App\Models\PulseMedia;
 use App\Models\PulseMessage;
+use App\Models\PulseNotificationPref;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
+use App\Models\PulseReport;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
 use App\Models\User;
-use App\Services\Pulse\Discovery\Digest\DigestBuilder;
+use App\Services\Pulse\Discovery\Floor;
 use App\Services\Pulse\Entities\MediaService;
+use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\SignalIndexer;
 use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\ContactGate;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
+use App\Services\Pulse\Lines\NotificationPrefs;
 use App\Services\Pulse\Lines\PrivacyEraser;
 use App\Services\Pulse\Lines\PrivacyExport;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -56,8 +64,8 @@ class PopiaComplianceTest extends TestCase
         $this->assertSame('off', PulseProfile::query()->where('user_id', $minor->id)->value('discoverability'));
         $this->assertNotNull($component->get('problem'));
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
-        app(\App\Services\Pulse\Entities\ProfileService::class)->setDiscoverability($minor, 'anonymous');
+        $this->expectException(ValidationException::class);
+        app(ProfileService::class)->setDiscoverability($minor, 'anonymous');
     }
 
     public function test_finishing_onboarding_without_the_age_declaration_is_refused_even_when_the_steps_are_forged(): void
@@ -103,7 +111,7 @@ class PopiaComplianceTest extends TestCase
 
         $this->assertSame('off', PulseProfile::query()->where('user_id', $pro->id)->value('discoverability'));
         $this->assertSame('paused', $this->w('talentSignal')->fresh()->status);
-        $this->assertNull(collect(app(\App\Services\Pulse\Discovery\Floor::class)->round($this->w('employerOwner'), 'work')['beats'])->first(fn ($b) => $b->kind === 'talent'));
+        $this->assertNull(collect(app(Floor::class)->round($this->w('employerOwner'), 'work')['beats'])->first(fn ($b) => $b->kind === 'talent'));
         $this->actingAs($this->w('employerOwner'))->get('/s/'.$this->w('talentSignal')->id)->assertNotFound();
 
         // The contact policy.
@@ -115,16 +123,16 @@ class PopiaComplianceTest extends TestCase
         $this->assertFalse(app(ContactGate::class)->can($stranger, $mine->fresh())['allowed']);
 
         // The digest.
-        app(\App\Services\Pulse\Lines\NotificationPrefs::class)->update($mine, ['digest' => true]);
+        app(NotificationPrefs::class)->update($mine, ['digest' => true]);
         $ledger->withdraw($mine, 'digest.off');
-        $this->assertFalse((bool) \App\Models\PulseNotificationPref::query()->where('user_id', $mine->id)->value('digest'));
+        $this->assertFalse((bool) PulseNotificationPref::query()->where('user_id', $mine->id)->value('digest'));
     }
 
     public function test_a_consent_row_belonging_to_someone_else_cannot_be_withdrawn(): void
     {
         $theirs = $this->w('line'); // the stranger's line with the seller page
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         app(ConsentLedger::class)->withdraw($this->w('needOwner'), 'line.close:'.$theirs->id);
     }
 
@@ -133,21 +141,21 @@ class PopiaComplianceTest extends TestCase
         $a = $this->w('stranger');
         $b = $this->w('needOwner');
         foreach ([$a, $b] as $u) {
-            app(\App\Services\Pulse\Lines\NotificationPrefs::class)->update($u, ['digest' => true]);
+            app(NotificationPrefs::class)->update($u, ['digest' => true]);
         }
 
-        $url = \Illuminate\Support\Facades\URL::signedRoute('pulse.digest.unsubscribe', ['user' => $a->id]);
+        $url = URL::signedRoute('pulse.digest.unsubscribe', ['user' => $a->id]);
         $this->get($url)->assertOk();
 
-        $this->assertFalse((bool) \App\Models\PulseNotificationPref::query()->where('user_id', $a->id)->value('digest'));
-        $this->assertTrue((bool) \App\Models\PulseNotificationPref::query()->where('user_id', $b->id)->value('digest'));
+        $this->assertFalse((bool) PulseNotificationPref::query()->where('user_id', $a->id)->value('digest'));
+        $this->assertTrue((bool) PulseNotificationPref::query()->where('user_id', $b->id)->value('digest'));
 
         // The signature of one person cannot be pointed at another, and an unsigned or altered link does nothing.
         $forged = str_replace('/'.$a->id.'?', '/'.$b->id.'?', $url);
         $this->get($forged)->assertForbidden();
         $this->get(route('pulse.digest.unsubscribe', ['user' => $b->id]))->assertForbidden();
         $this->post($forged)->assertForbidden();
-        $this->assertTrue((bool) \App\Models\PulseNotificationPref::query()->where('user_id', $b->id)->value('digest'));
+        $this->assertTrue((bool) PulseNotificationPref::query()->where('user_id', $b->id)->value('digest'));
     }
 
     // ------------------------------------------------------------------ export
@@ -177,7 +185,7 @@ class PopiaComplianceTest extends TestCase
     public function test_a_moderators_own_export_never_carries_the_lines_they_reviewed(): void
     {
         $mod = $this->w('moderator');
-        \App\Models\PulseReport::query()->create(['reporter_id' => $this->w('stranger')->id, 'reportable_type' => PulseConversation::class, 'reportable_id' => $this->w('line')->id, 'reason' => 'spam', 'status' => 'open']);
+        PulseReport::query()->create(['reporter_id' => $this->w('stranger')->id, 'reportable_type' => PulseConversation::class, 'reportable_id' => $this->w('line')->id, 'reason' => 'spam', 'status' => 'open']);
 
         $json = json_encode(PrivacyExport::forUser($mod));
 
@@ -207,7 +215,7 @@ class PopiaComplianceTest extends TestCase
         $post = PulsePost::factory()->create(['user_id' => $me->id, 'title' => 'My erased post title', 'body' => 'My erased post body']);
         PulseComment::factory()->create(['pulse_post_id' => $post->id, 'user_id' => $me->id, 'body' => 'My erased comment']);
         PulseSave::query()->create(['user_id' => $me->id, 'saveable_type' => 'signal', 'saveable_id' => $this->w('talentSignal')->id]);
-        \App\Models\PulseMatch::query()->create(['user_id' => $me->id, 'signal_id' => $this->w('talentSignal')->id, 'score' => 10, 'reasons' => [], 'computed_at' => now()]);
+        PulseMatch::query()->create(['user_id' => $me->id, 'signal_id' => $this->w('talentSignal')->id, 'score' => 10, 'reasons' => [], 'computed_at' => now()]);
         $paths = PulseMedia::query()->whereIn('id', [$messageMedia, $avatarMedia])->get()->flatMap(fn ($m) => collect($m->variants)->pluck('path'))->all();
         $this->assertNotEmpty($paths);
         foreach ($paths as $p) {

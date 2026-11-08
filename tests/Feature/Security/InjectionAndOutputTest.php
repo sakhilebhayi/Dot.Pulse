@@ -3,15 +3,16 @@
 namespace Tests\Feature\Security;
 
 use App\Livewire\Pulse\Lines\QuoteRequest as QuoteRequestSheet;
+use App\Livewire\Pulse\Me\Concerns\PresentsNotifications;
+use App\Livewire\Pulse\Me\ProfileEditor;
 use App\Models\PulseDoor;
 use App\Models\PulseMedia;
-use App\Models\PulseSignal;
+use App\Models\PulseMessage;
 use App\Models\User;
 use App\Notifications\PulseNotice;
 use App\Services\Pulse\Discovery\SearchService;
 use App\Services\Pulse\Entities\MediaService;
 use App\Services\Pulse\Lines\LineService;
-use App\Services\Pulse\Lines\Notifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Mime\Email;
 use Tests\TestCase;
 
 /** Output encoding, SQL, uploads, redirects, CSRF scope and what goes into email. */
@@ -83,7 +86,7 @@ class InjectionAndOutputTest extends TestCase
         $x = self::XSS;
         $user = $this->w('stranger');
 
-        $component = Livewire::actingAs($user)->test(\App\Livewire\Pulse\Me\ProfileEditor::class)->set('headline', 'H'.$x)->set('bio', 'B'.$x)->call('save');
+        $component = Livewire::actingAs($user)->test(ProfileEditor::class)->set('headline', 'H'.$x)->set('bio', 'B'.$x)->call('save');
         $this->assertNoLiveMarkup($component->html(), 'profile editor');
         $this->assertNoLiveMarkup($this->actingAs($user)->get('/u/'.$user->id)->getContent(), 'public profile');
         $this->assertNoLiveMarkup($this->actingAs($this->w('needOwner'))->get('/u/'.$user->id)->getContent(), 'public profile seen by another');
@@ -95,7 +98,7 @@ class InjectionAndOutputTest extends TestCase
         $payload = [
             'type' => 'line_request',
             'category' => 'lines',
-            "title" => "Thandi sent an enquiry\r\nBcc: attacker@example.test",
+            'title' => "Thandi sent an enquiry\r\nBcc: attacker@example.test",
             'body' => 'About: [Verify your account](//evil.example/login) and ![x](//evil.example/p.png) <a href="//evil.example">click</a>',
             'url' => 'http://pulse.infodot.app/lines/1',
         ];
@@ -112,7 +115,7 @@ class InjectionAndOutputTest extends TestCase
         }
 
         // The message as actually built has one subject header and no injected Bcc.
-        $email = (new \Symfony\Component\Mime\Email)->subject($mail->subject)->from('a@example.test')->to('b@example.test')->text('x');
+        $email = (new Email)->subject($mail->subject)->from('a@example.test')->to('b@example.test')->text('x');
         $this->assertFalse($email->getHeaders()->has('Bcc'));
     }
 
@@ -120,7 +123,7 @@ class InjectionAndOutputTest extends TestCase
     {
         $list = new class
         {
-            use \App\Livewire\Pulse\Me\Concerns\PresentsNotifications;
+            use PresentsNotifications;
 
             public function check(?string $url): ?string
             {
@@ -309,13 +312,13 @@ class InjectionAndOutputTest extends TestCase
         $responder = $this->w('sellerResponder');
 
         $id = app(MediaService::class)->store($this->w('stranger'), $this->upload($this->png()), 'message', null, $line->id);
-        app(\App\Models\PulseMessage::class)->newQuery()->where('pulse_conversation_id', $line->id)->first()?->update(['media_id' => $id]);
+        app(PulseMessage::class)->newQuery()->where('pulse_conversation_id', $line->id)->first()?->update(['media_id' => $id]);
         $this->actingAs($responder)->get(app(MediaService::class)->url($id))->assertOk();
 
         DB::table('pulse_entity_members')->where('user_id', $responder->id)->delete();
 
         $this->actingAs($responder->fresh())->get(app(MediaService::class)->url($id))->assertNotFound();
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
         app(MediaService::class)->store($responder->fresh(), $this->upload($this->png()), 'message', null, $line->id);
     }
 }

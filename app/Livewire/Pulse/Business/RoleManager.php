@@ -6,6 +6,7 @@ use App\Livewire\Pulse\Business\Support\HandlesServiceErrors;
 use App\Models\PulseEntity;
 use App\Models\PulsePlace;
 use App\Models\PulseRole;
+use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\EntityService;
@@ -15,8 +16,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -29,13 +30,11 @@ class RoleManager extends Component
     use HandlesServiceErrors;
 
     #[Locked]
-
     public int $entityId;
 
     public string $mode = 'list';
 
     #[Locked]
-
     public ?int $roleId = null;
 
     public string $title = '';
@@ -213,7 +212,7 @@ class RoleManager extends Component
                 $role = $roles->publish($user, $role);
 
                 if ($role->isLive()) {
-                    app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'role', $role->id);
+                    app(Matcher::class)->refreshAfter($user, 'role', $role->id);
                 }
             }
         } catch (ValidationException $e) {

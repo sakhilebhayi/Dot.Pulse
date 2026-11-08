@@ -6,6 +6,7 @@ use App\Livewire\Pulse\Business\Support\HandlesServiceErrors;
 use App\Models\PulseEntity;
 use App\Models\PulseOffer;
 use App\Models\PulsePlace;
+use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\MediaService;
@@ -14,8 +15,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -29,14 +30,12 @@ class OfferManager extends Component
     use WithFileUploads;
 
     #[Locked]
-
     public int $entityId;
 
     /** list | edit */
     public string $mode = 'list';
 
     #[Locked]
-
     public ?int $offerId = null;
 
     public string $title = '';
@@ -229,7 +228,7 @@ class OfferManager extends Component
                 $offer = $offers->publish($user, $offer);
 
                 if ($offer->isLive()) {
-                    app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'offer', $offer->id);
+                    app(Matcher::class)->refreshAfter($user, 'offer', $offer->id);
                 }
             }
         } catch (ValidationException $e) {

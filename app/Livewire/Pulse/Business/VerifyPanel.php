@@ -12,8 +12,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -25,7 +25,6 @@ class VerifyPanel extends Component
     use HandlesServiceErrors;
 
     #[Locked]
-
     public int $entityId;
 
     public string $registration_number = '';

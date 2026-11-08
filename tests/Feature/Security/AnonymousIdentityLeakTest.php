@@ -8,8 +8,10 @@ use App\Models\PulseProfile;
 use App\Models\PulseSave;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Notifications\PulseNotice;
+use App\Services\Pulse\Discovery\Floor;
+use App\Services\Pulse\Discovery\SearchService;
 use App\Services\Pulse\Entities\SignalIndexer;
-use App\Services\Pulse\Lines\AuditLog;
 use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\PrivacyExport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,7 +126,7 @@ class AnonymousIdentityLeakTest extends TestCase
 
     public function test_the_search_cannot_be_used_to_find_the_suburb_or_the_name(): void
     {
-        $search = fn (string $q) => app(\App\Services\Pulse\Discovery\SearchService::class)->search($this->employer, $q);
+        $search = fn (string $q) => app(SearchService::class)->search($this->employer, $q);
 
         foreach (['Rosebank', 'Thandiwe', 'Zulu', 'Mkhize', 'thandi.private', $this->pro->email] as $needle) {
             $found = collect($search($needle)['results'])->filter(fn ($r) => ($r['beat']->kind ?? null) === 'talent');
@@ -136,14 +138,14 @@ class AnonymousIdentityLeakTest extends TestCase
         // A place filter at city level must not narrow below the region.
         $suburb = PulsePlace::query()->where('slug', 'rosebank-ext-7')->first();
         $other = PulsePlace::query()->create(['level' => 'city', 'country_code' => 'ZA', 'region' => 'Gauteng', 'city' => 'Benoni', 'name' => 'Benoni', 'slug' => 'benoni-1']);
-        $count = fn (string $slug) => collect(app(\App\Services\Pulse\Discovery\SearchService::class)->search($this->employer, 'bookkeeping', ['place' => $slug])['results'])
+        $count = fn (string $slug) => collect(app(SearchService::class)->search($this->employer, 'bookkeeping', ['place' => $slug])['results'])
             ->filter(fn ($x) => ($x['beat']->kind ?? null) === 'talent')->count();
         $this->assertSame($count($other->slug), $count($suburb->slug), 'filtering by the suburb must not reveal whether the person lives in it');
     }
 
     public function test_the_beat_array_has_no_profile_id_no_owner_and_no_precise_time(): void
     {
-        $round = app(\App\Services\Pulse\Discovery\Floor::class)->round($this->employer, 'work');
+        $round = app(Floor::class)->round($this->employer, 'work');
         $beat = collect($round['beats'])->first(fn ($b) => $b->kind === 'talent');
         $this->assertNotNull($beat);
 
@@ -191,7 +193,7 @@ class AnonymousIdentityLeakTest extends TestCase
         // Mail is built from the notification payloads; render the ones the employer would get.
         $notices = $this->employer->notifications()->get();
         foreach ($notices as $n) {
-            $mail = (new \App\Notifications\PulseNotice($n->data, ['mail']))->toMail($this->employer);
+            $mail = (new PulseNotice($n->data, ['mail']))->toMail($this->employer);
             $this->assertClean($mail->subject.' '.implode(' ', $mail->introLines).' '.implode(' ', $mail->outroLines), 'a notification email');
         }
         $this->assertNotEmpty($notices);
@@ -202,7 +204,7 @@ class AnonymousIdentityLeakTest extends TestCase
         $profile = PulseProfile::query()->where('user_id', $this->pro->id)->first();
         $profile->forceFill(['work_history' => [['title' => 'Bookkeeper', 'org' => 'Acme Works Pty', 'employer' => 'Acme Works Pty', 'current' => true, 'hide_from_employer' => true]]])->save();
 
-        $round = app(\App\Services\Pulse\Discovery\Floor::class)->round($this->employer, 'work');
+        $round = app(Floor::class)->round($this->employer, 'work');
         $this->assertNull(collect($round['beats'])->first(fn ($b) => $b->kind === 'talent'), 'a person who hid themselves from this employer is not shown to it');
 
         $this->actingAs($this->employer)->get('/s/'.$this->signal->id)->assertNotFound();
@@ -211,7 +213,7 @@ class AnonymousIdentityLeakTest extends TestCase
     public function test_only_a_live_approved_employer_page_opens_the_talent_cards(): void
     {
         $employer = $this->w('employer');
-        $search = fn () => collect(app(\App\Services\Pulse\Discovery\SearchService::class)->search($this->employer, 'bookkeeping')['results'])->filter(fn ($r) => ($r['beat']->kind ?? null) === 'talent')->count();
+        $search = fn () => collect(app(SearchService::class)->search($this->employer, 'bookkeeping')['results'])->filter(fn ($r) => ($r['beat']->kind ?? null) === 'talent')->count();
 
         $this->assertSame(1, $search());
 

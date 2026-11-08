@@ -24,6 +24,7 @@ use App\Models\PulseSignal;
 use App\Models\PulseUserBadge;
 use App\Models\User;
 use App\Notifications\PulseNotice;
+use App\Services\Pulse\Entities\InvitationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -110,7 +111,7 @@ class PrivacyEraser
             $result['notifications'] = DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)
                 ->where('type', PulseNotice::class)->delete();
             DB::table('pulse_knock_budgets')->where('user_id', $user->id)->delete();
-            $result['invitations'] = DB::table('pulse_entity_invitations')->where('email_hash', \App\Services\Pulse\Entities\InvitationService::hash((string) $user->email))->delete();
+            $result['invitations'] = DB::table('pulse_entity_invitations')->where('email_hash', InvitationService::hash((string) $user->email))->delete();
 
             // Reviews they wrote: unlinked from a name, kept as the other side's record.
             $result['reviews'] = DB::table('pulse_reviews')->where('user_id', $user->id)->update(['pseudonymous' => true, 'updated_at' => now()]);

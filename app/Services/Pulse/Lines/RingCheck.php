@@ -5,6 +5,7 @@ namespace App\Services\Pulse\Lines;
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\User;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -93,7 +94,7 @@ class RingCheck
     }
 
     /** Confirmed results inside the window, as a query builder over the conversations table. */
-    private function resultsQuery(): \Illuminate\Database\Query\Builder
+    private function resultsQuery(): Builder
     {
         $since = now()->subDays(max(1, (int) config('pulse.ring.window_days', 90)));
 

@@ -6,26 +6,27 @@ use App\Models\CommunityMembership;
 use App\Models\PulseAuditEntry;
 use App\Models\PulseBlock;
 use App\Models\PulseComment;
-use App\Models\PulseFollower;
-use App\Models\PulseMatch;
-use App\Models\PulseMedia;
-use App\Models\PulsePost;
-use App\Models\PulseReaction;
-use Illuminate\Support\Facades\DB;
 use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Models\PulseEntityBlock;
 use App\Models\PulseEntityMember;
+use App\Models\PulseFollower;
+use App\Models\PulseMatch;
+use App\Models\PulseMedia;
 use App\Models\PulseMessage;
 use App\Models\PulseMute;
 use App\Models\PulseNeed;
 use App\Models\PulseNotificationPref;
+use App\Models\PulsePost;
 use App\Models\PulseProfile;
 use App\Models\PulseQuote;
+use App\Models\PulseReaction;
 use App\Models\PulseReport;
 use App\Models\PulseReview;
 use App\Models\PulseSave;
 use App\Models\User;
+use App\Services\Pulse\Entities\InvitationService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Everything Pulse holds that is about one person, for the privacy page ("download my data").
@@ -92,7 +93,7 @@ class PrivacyExport
             'photos' => PulseMedia::query()->where('user_id', $user->id)->get(['id', 'purpose', 'mime', 'width', 'height', 'bytes', 'created_at'])->toArray(),
             'notifications' => DB::table('notifications')->where('notifiable_type', $user->getMorphClass())->where('notifiable_id', $user->id)->orderBy('created_at')->get(['type', 'data', 'read_at', 'created_at'])
                 ->map(fn ($n) => ['type' => class_basename($n->type), 'data' => json_decode((string) $n->data, true), 'read_at' => $n->read_at, 'at' => $n->created_at])->all(),
-            'team_invitations' => DB::table('pulse_entity_invitations')->where('email_hash', \App\Services\Pulse\Entities\InvitationService::hash((string) $user->email))
+            'team_invitations' => DB::table('pulse_entity_invitations')->where('email_hash', InvitationService::hash((string) $user->email))
                 ->orderBy('id')->get(['role', 'expires_at', 'accepted_at', 'declined_at', 'revoked_at', 'created_at'])->map(fn ($i) => (array) $i)->all(),
             'activity_log' => PulseAuditEntry::query()->where('actor_id', $user->id)->orderBy('id')->get(['action', 'subject_type', 'subject_id', 'created_at'])->toArray(),
         ];

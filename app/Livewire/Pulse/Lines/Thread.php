@@ -49,7 +49,6 @@ class Thread extends Component
     ];
 
     #[Locked]
-
     public int $conversationId = 0;
 
     public string $body = '';
@@ -61,7 +60,6 @@ class Thread extends Component
     public ?string $confirming = null;
 
     #[Locked]
-
     public ?int $reportingMessage = null;
 
     public function mount(PulseConversation $conversation, LineService $lines): void

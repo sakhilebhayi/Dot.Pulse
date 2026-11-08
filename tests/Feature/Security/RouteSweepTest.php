@@ -3,9 +3,10 @@
 namespace Tests\Feature\Security;
 
 use App\Models\PulseReport;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -76,7 +77,7 @@ class RouteSweepTest extends TestCase
 
         $urls = [
             '/floor', '/trade', '/work', '/local', '/learn', '/search', '/saved', '/door', '/lines', '/community', '/moderation', '/operator', '/dashboard',
-            '/lines/'.$w('line')->id, '/lines/quotes/'.\Illuminate\Support\Str::uuid(), '/s/'.$w('talentSignal')->id,
+            '/lines/'.$w('line')->id, '/lines/quotes/'.Str::uuid(), '/s/'.$w('talentSignal')->id,
             '/b/'.$w('seller')->slug.'/manage', '/b/'.$w('seller')->slug.'/manage/team', '/b/'.$w('seller')->slug.'/o/'.$w('offer')->slug,
             '/b/'.$w('seller')->slug.'/r/'.$w('role')->slug, '/need/'.$w('need')->id, '/need/'.$w('need')->id.'/edit', '/need/new', '/business/new',
             '/u/'.$w('stranger')->id, '/me', '/me/profile', '/me/discoverability', '/me/settings', '/me/notifications', '/me/privacy', '/me/privacy/export',
@@ -124,7 +125,7 @@ class RouteSweepTest extends TestCase
             ['/moderation', ['stranger' => 403, 'sellerOwner' => 403, 'moderator' => 200]],
             ['/operator', ['stranger' => 403, 'sellerOwner' => 403, 'moderator' => 200]],
             ['/u/'.$w('pro')->id, ['stranger' => 404, 'employerOwner' => 404, 'moderator' => 404]], // an anonymous professional's page does not exist for anyone else
-            ['/lines/quotes/'.\Illuminate\Support\Str::uuid(), ['stranger' => 404, 'sellerOwner' => 404]],
+            ['/lines/quotes/'.Str::uuid(), ['stranger' => 404, 'sellerOwner' => 404]],
         ];
 
         $failures = [];
@@ -213,7 +214,7 @@ class RouteSweepTest extends TestCase
         $responder = $this->w('sellerResponder');
         $this->actingAs($responder)->get('/b/'.$this->w('seller')->slug.'/manage/lines')->assertOk();
 
-        \Illuminate\Support\Facades\DB::table('pulse_entity_members')->where('user_id', $responder->id)->delete();
+        DB::table('pulse_entity_members')->where('user_id', $responder->id)->delete();
 
         $this->actingAs($responder->fresh())->get('/b/'.$this->w('seller')->slug.'/manage/lines')->assertNotFound();
         $this->actingAs($responder->fresh())->get('/lines/'.$this->w('line')->id)->assertNotFound();

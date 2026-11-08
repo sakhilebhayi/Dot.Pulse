@@ -4,6 +4,7 @@ namespace Tests\Feature\Floor;
 
 use App\Livewire\Pulse\Floor\Search;
 use App\Models\PulseNeed;
+use App\Services\Pulse\Discovery\Taxonomy;
 use Livewire\Livewire;
 
 class SearchTest extends FloorTestCase
@@ -180,7 +181,7 @@ class SearchTest extends FloorTestCase
     {
         $this->search(['q' => 'plum'])->set('q', 'plumbing')->assertSet('suggestOpen', true)->call('submit')->assertSet('suggestOpen', false);
 
-        $labels = array_column((new \App\Services\Pulse\Discovery\Taxonomy)->suggest('plumbing', 'any', 8), 'label');
+        $labels = array_column((new Taxonomy)->suggest('plumbing', 'any', 8), 'label');
         $this->assertContains('Plumbing', $labels);
         $this->assertNotContains('Pool building', $labels, 'an alias like "pool plumbing" is not a reason to suggest pools');
     }

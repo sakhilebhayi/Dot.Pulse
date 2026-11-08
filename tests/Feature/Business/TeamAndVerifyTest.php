@@ -4,6 +4,8 @@ namespace Tests\Feature\Business;
 
 use App\Livewire\Pulse\Business\TeamManager;
 use App\Livewire\Pulse\Business\VerifyPanel;
+use App\Livewire\Pulse\Me\Invitations;
+use App\Models\PulseEntityInvitation;
 use Livewire\Livewire;
 
 class TeamAndVerifyTest extends BusinessTestCase
@@ -32,8 +34,8 @@ class TeamAndVerifyTest extends BusinessTestCase
 
         $this->assertNull($page->memberRole($newcomer), 'an invitation is not a membership');
 
-        $invitation = \App\Models\PulseEntityInvitation::query()->firstOrFail();
-        Livewire::actingAs($newcomer)->test(\App\Livewire\Pulse\Me\Invitations::class)->call('accept', $invitation->id)->assertSee('You joined');
+        $invitation = PulseEntityInvitation::query()->firstOrFail();
+        Livewire::actingAs($newcomer)->test(Invitations::class)->call('accept', $invitation->id)->assertSee('You joined');
         $this->assertSame('editor', $page->memberRole($newcomer));
 
         $c = Livewire::actingAs($owner)->test(TeamManager::class, ['entity' => $page]);

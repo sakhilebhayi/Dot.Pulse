@@ -13,15 +13,15 @@ use App\Livewire\Pulse\Me\NotificationList;
 use App\Livewire\Pulse\Need\NeedForm;
 use App\Livewire\Pulse\Need\NeedPage;
 use App\Models\PulseConversation;
-use App\Models\PulseEntity;
 use App\Models\PulseMessage;
 use App\Models\PulseNeed;
-use App\Models\User;
 use App\Services\Pulse\Lines\LineService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Messages\SimpleMessage;
+use Illuminate\Notifications\Notification;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 /**
@@ -211,16 +211,24 @@ class LivewireTamperTest extends TestCase
     public function test_knocking_with_a_page_as_the_sender_needs_the_right_to_answer_for_it(): void
     {
         // A responder of the seller page is not an employer; an editor cannot answer for any page.
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
         app(LineService::class)->knock($this->w('sellerEditor'), ['signal' => $this->w('talentSignal')->id, 'as_entity' => $this->w('seller')->id], 'invite', $this->card());
     }
 
     public function test_notifications_can_only_be_read_and_opened_by_their_owner(): void
     {
         $owner = $this->w('sellerOwner');
-        $owner->notify(new \Illuminate\Notifications\Messages\SimpleMessage ? new class extends \Illuminate\Notifications\Notification {
-            public function via($n): array { return ['database']; }
-            public function toArray($n): array { return ['title' => 'Mine', 'category' => 'lines', 'url' => '/floor']; }
+        $owner->notify(new SimpleMessage ? new class extends Notification
+        {
+            public function via($n): array
+            {
+                return ['database'];
+            }
+
+            public function toArray($n): array
+            {
+                return ['title' => 'Mine', 'category' => 'lines', 'url' => '/floor'];
+            }
         } : null);
         $id = $owner->notifications()->first()->id;
 

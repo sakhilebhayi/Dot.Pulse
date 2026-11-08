@@ -25,7 +25,6 @@ class QuoteRequest extends Component
     public bool $sent = false;
 
     #[Locked]
-
     public ?int $lineId = null;
 
     public string $what = '';

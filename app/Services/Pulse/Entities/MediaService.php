@@ -6,6 +6,7 @@ use App\Models\PulseEntity;
 use App\Models\PulseMedia;
 use App\Models\PulseProfile;
 use App\Models\User;
+use App\Services\Pulse\Lines\Access;
 use GdImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -338,14 +339,14 @@ class MediaService
 
         $row = DB::table('pulse_conversation_user')->where('pulse_conversation_id', $conversationId)->where('user_id', $user->id)->first();
 
-        if ($row !== null && ($row->entity_id === null || \App\Services\Pulse\Lines\Access::canRespondFor($user, (int) $row->entity_id))) {
+        if ($row !== null && ($row->entity_id === null || Access::canRespondFor($user, (int) $row->entity_id))) {
             return true;
         }
 
         $sides = DB::table('pulse_conversations')->where('id', $conversationId)->first(['entity_id', 'initiator_entity_id']);
 
         foreach ([$sides?->entity_id, $sides?->initiator_entity_id] as $entityId) {
-            if ($entityId !== null && \App\Services\Pulse\Lines\Access::canRespondFor($user, (int) $entityId)) {
+            if ($entityId !== null && Access::canRespondFor($user, (int) $entityId)) {
                 return true;
             }
         }

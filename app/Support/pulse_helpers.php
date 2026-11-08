@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PulseEntityMember;
 use Illuminate\Support\Facades\Route;
 
 if (! function_exists('pulse_route')) {
@@ -103,7 +104,7 @@ if (! function_exists('pulse_my_businesses')) {
         }
 
         try {
-            $rows = \App\Models\PulseEntityMember::query()
+            $rows = PulseEntityMember::query()
                 ->join('pulse_entities as e', 'e.id', '=', 'pulse_entity_members.entity_id')
                 ->where('pulse_entity_members.user_id', $id)
                 ->whereNull('e.deleted_at')

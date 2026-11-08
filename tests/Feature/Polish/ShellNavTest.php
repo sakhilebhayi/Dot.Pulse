@@ -2,7 +2,8 @@
 
 namespace Tests\Feature\Polish;
 
-use App\Models\PulseEntityMember;
+use App\Models\PulseNeed;
+use App\Models\User;
 use Tests\Feature\Floor\FloorTestCase;
 
 class ShellNavTest extends FloorTestCase
@@ -68,7 +69,7 @@ class ShellNavTest extends FloorTestCase
         $owner = $this->person();
         $shop = $this->dEntity($owner, ['name' => 'Kettle and Plum', 'is_seller' => true]);
         $hirer = $this->dEntity($this->person(), ['name' => 'Hiring House', 'is_seller' => false, 'is_employer' => true]);
-        $need = \App\Models\PulseNeed::factory()->create(['user_id' => $this->me->id]);
+        $need = PulseNeed::factory()->create(['user_id' => $this->me->id]);
 
         // A business page the person does not run: Trade for a seller, Work for an employer. Their own: the business.
         $this->assertSame(['Trade'], $this->railActive($this->actingAs($this->me)->get(route('entities.show', $shop))->getContent()));
@@ -95,7 +96,7 @@ class ShellNavTest extends FloorTestCase
 
     public function test_the_welcome_flow_is_a_single_task_page_with_no_rail_bar_or_compose(): void
     {
-        $fresh = \App\Models\User::factory()->withPersonalTeam()->create();
+        $fresh = User::factory()->withPersonalTeam()->create();
 
         $html = $this->actingAs($fresh)->get('/welcome-in')->assertOk()->getContent();
 

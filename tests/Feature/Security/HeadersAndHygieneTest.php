@@ -4,7 +4,7 @@ namespace Tests\Feature\Security;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
+use Illuminate\Support\Facades\Route;
 use Tests\Support\LinesFixtures;
 use Tests\TestCase;
 
@@ -96,7 +96,7 @@ class HeadersAndHygieneTest extends TestCase
     public function test_the_debug_page_does_not_leak_stack_traces_when_debug_is_off(): void
     {
         config(['app.debug' => false]);
-        \Illuminate\Support\Facades\Route::get('/__boom', fn () => throw new \RuntimeException('secret-db-password-xyz'));
+        Route::get('/__boom', fn () => throw new \RuntimeException('secret-db-password-xyz'));
 
         $response = $this->get('/__boom');
 

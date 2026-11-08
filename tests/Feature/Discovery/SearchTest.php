@@ -4,6 +4,8 @@ namespace Tests\Feature\Discovery;
 
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Discovery\Floor;
+use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\SearchService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -110,14 +112,14 @@ class SearchTest extends TestCase
 
         $this->assertEqualsCanonicalizing(['Tiling for a bathroom', 'Tiling for a patio'], $this->titles($this->search('tiling')));
 
-        app(\App\Services\Pulse\Discovery\Floor::class)->dismiss($this->me, $drop, 'not_interested');
+        app(Floor::class)->dismiss($this->me, $drop, 'not_interested');
 
         $this->assertDatabaseHas('pulse_matches', ['user_id' => $this->me->id, 'signal_id' => $drop->id]);
         $this->assertNotNull(DB::table('pulse_matches')->where('user_id', $this->me->id)->where('signal_id', $drop->id)->value('dismissed_at'));
         $this->assertSame(['Tiling for a bathroom'], $this->titles($this->search('tiling')));
 
         // A matching run never reopens a dismissed row.
-        app(\App\Services\Pulse\Discovery\Matcher::class)->forUser($this->me);
+        app(Matcher::class)->forUser($this->me);
         $this->assertNotNull(DB::table('pulse_matches')->where('user_id', $this->me->id)->where('signal_id', $drop->id)->value('dismissed_at'));
         $this->assertNotNull($keep->id);
     }

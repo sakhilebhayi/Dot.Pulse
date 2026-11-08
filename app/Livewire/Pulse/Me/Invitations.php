@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pulse\Me;
 
+use App\Models\PulseEntityInvitation;
 use App\Services\Pulse\Entities\InvitationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
@@ -14,7 +15,7 @@ class Invitations extends Component
 {
     public ?string $notice = null;
 
-    /** @return Collection<int, \App\Models\PulseEntityInvitation> */
+    /** @return Collection<int, PulseEntityInvitation> */
     #[Computed]
     public function pending()
     {

@@ -24,6 +24,7 @@ use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\VerificationService;
 use App\Services\Pulse\Lines\ResponseStats;
+use App\Support\Moment;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -226,11 +227,11 @@ class BeatDetail extends Component
         }
 
         $rate = (int) round(((float) $s['response_rate']) * 100);
-        $line = "Answered {$s['answered']} of ".\App\Support\Moment::plural((int) $s['received'], 'first message').' in the last '.\App\Support\Moment::plural((int) $s['window_days'], 'day')." ({$rate} percent).";
+        $line = "Answered {$s['answered']} of ".Moment::plural((int) $s['received'], 'first message').' in the last '.Moment::plural((int) $s['window_days'], 'day')." ({$rate} percent).";
 
         if (($s['median_first_response_seconds'] ?? null) !== null) {
             $sec = (int) $s['median_first_response_seconds'];
-            $line .= ' Usually '.\App\Support\Moment::within($sec).'.';
+            $line .= ' Usually '.Moment::within($sec).'.';
         }
 
         return $line;

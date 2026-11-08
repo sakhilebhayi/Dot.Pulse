@@ -3,12 +3,10 @@
 namespace Tests\Feature\Security;
 
 use App\Models\PulseDoor;
-use App\Models\PulseNeed;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
 use App\Models\PulseSignal;
 use App\Models\User;
-use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\SearchService;
 use App\Services\Pulse\Entities\NeedService;
 use App\Services\Pulse\Entities\ProfileService;

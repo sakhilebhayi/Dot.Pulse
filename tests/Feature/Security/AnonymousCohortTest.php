@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Livewire\Pulse\Floor\BeatDetail;
+use App\Models\PulseEntity;
 use App\Models\PulseMatch;
 use App\Models\PulseProfile;
 use App\Models\PulseSignal;
@@ -13,9 +14,11 @@ use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\SearchService;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\SignalIndexer;
+use App\Services\Pulse\Entities\TalentCohort;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Support\DiscoveryFixtures;
 use Tests\TestCase;
@@ -103,7 +106,7 @@ class AnonymousCohortTest extends TestCase
 
     private function assertDeniedInvite(PulseSignal $signal): void
     {
-        $page = \App\Models\PulseEntity::query()->where('name', 'Karoo Logistics')->first();
+        $page = PulseEntity::query()->where('name', 'Karoo Logistics')->first();
 
         try {
             app(LineService::class)->knock($this->employer, ['signal' => $signal->id, 'as_entity' => $page->id], 'invite', ['what' => 'We would like to talk about a welding role']);
@@ -116,7 +119,7 @@ class AnonymousCohortTest extends TestCase
     public function test_a_cohort_of_five_can_be_invited(): void
     {
         $signals = $this->many(5);
-        $page = \App\Models\PulseEntity::query()->where('name', 'Karoo Logistics')->first();
+        $page = PulseEntity::query()->where('name', 'Karoo Logistics')->first();
 
         $line = app(LineService::class)->knock($this->employer, ['signal' => $signals[0]->id, 'as_entity' => $page->id], 'invite', ['what' => 'We would like to talk about a welding role']);
 
@@ -189,7 +192,7 @@ class AnonymousCohortTest extends TestCase
         // Someone the employer blocked leaves the cohort again.
         [$sixth] = $this->pro();
         $this->assertCount(6, $this->found('welding'));
-        \Illuminate\Support\Facades\DB::table('pulse_blocks')->insert(['blocker_id' => $this->employer->id, 'blocked_id' => $sixth->id, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('pulse_blocks')->insert(['blocker_id' => $this->employer->id, 'blocked_id' => $sixth->id, 'created_at' => now(), 'updated_at' => now()]);
         AnonymousCohort::flush();
         $this->assertCount(5, $this->found('welding'));
         $this->assertNotNull($blocked);
@@ -213,7 +216,7 @@ class AnonymousCohortTest extends TestCase
     public function test_a_card_with_no_skills_is_never_shown_to_an_employer(): void
     {
         $this->many(5);
-        \Illuminate\Support\Facades\DB::table('pulse_signals')->where('kind', 'talent')->update(['skills' => '[]']);
+        DB::table('pulse_signals')->where('kind', 'talent')->update(['skills' => '[]']);
 
         $this->assertSame([], $this->found('', ['kind' => 'talent']));
     }
@@ -228,10 +231,10 @@ class AnonymousCohortTest extends TestCase
     public function test_the_hiring_signal_count_is_a_band_and_null_below_five(): void
     {
         $this->many(4);
-        $page = \App\Models\PulseEntity::query()->where('name', 'Karoo Logistics')->first();
+        $page = PulseEntity::query()->where('name', 'Karoo Logistics')->first();
         $page->forceFill(['hiring_signal' => 'active', 'hiring_skills' => ['Welding'], 'place_id' => $this->geo->jhb->id])->save();
 
-        $count = app(\App\Services\Pulse\Entities\TalentCohort::class);
+        $count = app(TalentCohort::class);
         $this->assertNull($count->countFor($page));
 
         $this->pro();

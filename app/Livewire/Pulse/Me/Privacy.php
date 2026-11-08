@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pulse\Me;
 
+use App\Http\Controllers\Pulse\PrivacyExportController;
 use App\Models\PulseBlock;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityBlock;
@@ -13,13 +14,12 @@ use App\Services\Pulse\Lines\BlockService;
 use App\Services\Pulse\Lines\ConsentLedger;
 use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\MuteService;
-use App\Http\Controllers\Pulse\PrivacyExportController;
 use App\Services\Pulse\Lines\PrivacyEraser;
 use App\Services\Pulse\Lines\StepUp;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Component;
 

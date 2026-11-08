@@ -30,7 +30,6 @@ class QuoteRequest extends Component
     public ?int $needId = null;
 
     #[Locked]
-
     public ?int $offerId = null;
 
     /** @var list<int> chosen businesses, at most three */
@@ -50,7 +49,6 @@ class QuoteRequest extends Component
     public array $lineIds = [];
 
     #[Locked]
-
     public ?string $group = null;
 
     public ?string $failure = null;

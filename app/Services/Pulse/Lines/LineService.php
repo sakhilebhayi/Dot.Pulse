@@ -6,7 +6,6 @@ use App\Models\PulseConversation;
 use App\Models\PulseDoor;
 use App\Models\PulseEntity;
 use App\Models\PulseEntityBlock;
-use App\Models\PulseEntityMember;
 use App\Models\PulseMessage;
 use App\Models\PulseProfile;
 use App\Models\PulseRole;

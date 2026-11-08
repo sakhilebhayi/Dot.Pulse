@@ -13,6 +13,7 @@ use App\Livewire\Pulse\Lines\QuoteRequest as LinesQuoteRequest;
 use App\Livewire\Pulse\Me\NotificationSettings;
 use App\Livewire\Pulse\Me\Onboarding;
 use App\Livewire\Pulse\Need\NeedForm;
+use App\Models\PulseOffer;
 use App\Models\PulseProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,7 +95,7 @@ class ValidationVoiceTest extends BusinessTestCase
     {
         $person = $this->person();
         $page = $this->page();
-        $offer = \App\Models\PulseOffer::factory()->create(['entity_id' => $page->id]);
+        $offer = PulseOffer::factory()->create(['entity_id' => $page->id]);
 
         $c = Livewire::actingAs($person)->test(LinesQuoteRequest::class, ['offerId' => $offer->id])->set('card.what', '')->call('send');
         $this->assertVoice($c, 'quote request');

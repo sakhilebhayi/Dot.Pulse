@@ -35,7 +35,6 @@ class Inbox extends Component
     public string $tab = 'requests';
 
     #[Locked]
-
     public ?int $entityId = null;
 
     /** Only the lines that are mine as a person, not the ones I answer for through a page. */

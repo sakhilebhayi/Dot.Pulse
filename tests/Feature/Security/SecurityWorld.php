@@ -2,14 +2,7 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\PulseConversation;
-use App\Models\PulseEntity;
-use App\Models\PulseNeed;
-use App\Models\PulseOffer;
 use App\Models\PulseProfile;
-use App\Models\PulseRole;
-use App\Models\PulseSignal;
-use App\Models\User;
 use App\Services\Pulse\Lines\LineService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

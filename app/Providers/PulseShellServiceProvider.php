@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\Pulse\ProfileRedirectController;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Jetstream\Http\Controllers\Livewire\UserProfileController;
 
 /**
  * Owned by the shell agent (R-41). Loads the shell helpers (pulse_route and friends) and
@@ -22,6 +24,6 @@ class PulseShellServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->app->bind(\Laravel\Jetstream\Http\Controllers\Livewire\UserProfileController::class, \App\Http\Controllers\Pulse\ProfileRedirectController::class);
+        $this->app->bind(UserProfileController::class, ProfileRedirectController::class);
     }
 }

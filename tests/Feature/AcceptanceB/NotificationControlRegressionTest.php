@@ -5,6 +5,8 @@ namespace Tests\Feature\AcceptanceB;
 use App\Models\PulseNotificationPref;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Notifications\PulseNotice;
+use App\Services\Pulse\Discovery\Digest\DigestNotification;
 use App\Services\Pulse\Discovery\Digest\DigestSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +57,7 @@ class NotificationControlRegressionTest extends TestCase
         Notification::fake();
 
         $this->assertTrue(app(DigestSender::class)->send($me), 'onboarding saves frequency=instant with the summary on');
-        Notification::assertSentTo($me, \App\Services\Pulse\Discovery\Digest\DigestNotification::class);
+        Notification::assertSentTo($me, DigestNotification::class);
     }
 
     public function test_the_digest_command_picks_up_instant_people_when_their_hour_comes(): void
@@ -67,7 +69,7 @@ class NotificationControlRegressionTest extends TestCase
         $this->travelTo(now('UTC')->setTime(3, 0));
 
         $this->artisan('pulse:digest')->assertSuccessful();
-        Notification::assertSentTo($me, \App\Services\Pulse\Discovery\Digest\DigestNotification::class);
+        Notification::assertSentTo($me, DigestNotification::class);
     }
 
     public function test_off_still_means_no_summary(): void
@@ -99,7 +101,7 @@ class NotificationControlRegressionTest extends TestCase
     public function test_the_transactional_mail_greets_the_recipient_by_first_name_and_signs_as_pulse(): void
     {
         $me = new User(['name' => 'Sipho Moyo', 'email' => 's@example.test']);
-        $mail = (new \App\Notifications\PulseNotice(['title' => 'Someone sent an enquiry', 'url' => 'http://x.test/lines/1'], ['mail']))->toMail($me);
+        $mail = (new PulseNotice(['title' => 'Someone sent an enquiry', 'url' => 'http://x.test/lines/1'], ['mail']))->toMail($me);
 
         $this->assertSame('Hi Sipho,', $mail->greeting);
         $this->assertSame('Dot.Pulse', $mail->salutation);

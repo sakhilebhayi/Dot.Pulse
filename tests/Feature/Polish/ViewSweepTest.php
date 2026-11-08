@@ -9,6 +9,7 @@ use App\Models\PulseSignal;
 use App\Models\User;
 use Database\Seeders\PulseDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportRedirects\SupportRedirects;
 use Tests\TestCase;
 
 /**
@@ -66,7 +67,7 @@ class ViewSweepTest extends TestCase
     {
         // A component that aborts while mounting (a 404 for someone else's line) leaves Livewire's redirector bound in a
         // long-lived test process. A real request starts clean, so the sweep does too.
-        $stack = &\Livewire\Features\SupportRedirects\SupportRedirects::$redirectorCacheStack;
+        $stack = &SupportRedirects::$redirectorCacheStack;
         if ($stack !== []) {
             $this->app->instance('redirect', $stack[0]);
             $stack = [];

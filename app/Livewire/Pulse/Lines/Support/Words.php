@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pulse\Lines\Support;
 
+use App\Support\Moment;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
@@ -53,7 +54,7 @@ class Words
     /** A short relative time: "2 h ago", "Yesterday", "12 Nov". */
     public static function ago(mixed $when): string
     {
-        return \App\Support\Moment::when($when);
+        return Moment::when($when);
     }
 
     /** A length of time with no direction: "3 days", "2 hours". */
@@ -72,18 +73,18 @@ class Words
 
     public static function date(mixed $when): string
     {
-        return \App\Support\Moment::date($when);
+        return Moment::date($when);
     }
 
     /** Relative within a week, "12 Nov" after. The exact time belongs in a title attribute (Moment::full). */
     public static function time(mixed $when): string
     {
-        return \App\Support\Moment::when($when);
+        return Moment::when($when);
     }
 
     public static function full(mixed $when): string
     {
-        return \App\Support\Moment::full($when);
+        return Moment::full($when);
     }
 
     /**

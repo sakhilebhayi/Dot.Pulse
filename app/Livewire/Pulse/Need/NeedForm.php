@@ -7,6 +7,7 @@ use App\Models\PulseEntity;
 use App\Models\PulseEntityMember;
 use App\Models\PulseNeed;
 use App\Models\PulsePlace;
+use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Discovery\Places\PlaceRepository;
 use App\Services\Pulse\Discovery\Taxonomy;
 use App\Services\Pulse\Entities\NeedService;
@@ -14,8 +15,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -27,7 +28,6 @@ class NeedForm extends Component
     use HandlesServiceErrors;
 
     #[Locked]
-
     public ?int $needId = null;
 
     public string $kind = 'need';
@@ -237,7 +237,7 @@ class NeedForm extends Component
         }
 
         if ($need->moderation === 'approved') {
-            app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user, 'need', $need->id);
+            app(Matcher::class)->refreshAfter($user, 'need', $need->id);
         }
 
         session()->flash('bz_notice', match (true) {

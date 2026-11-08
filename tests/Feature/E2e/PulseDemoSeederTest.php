@@ -8,6 +8,7 @@ use App\Models\PulseEntity;
 use App\Models\PulseMatch;
 use App\Models\PulseNeed;
 use App\Models\PulseOffer;
+use App\Models\PulseQuote;
 use App\Models\PulseReview;
 use App\Models\PulseRole;
 use App\Models\User;
@@ -58,7 +59,7 @@ class PulseDemoSeederTest extends TestCase
         // A request, an open line, three quote slips, a confirmed outcome with both reviews revealed.
         $this->assertSame(1, PulseConversation::where('status', 'requested')->count());
         $this->assertSame(3, PulseConversation::where('kind', 'quote')->count());
-        $this->assertSame(3, \App\Models\PulseQuote::where('status', 'sent')->count());
+        $this->assertSame(3, PulseQuote::where('status', 'sent')->count());
         $this->assertSame(2, PulseReview::whereNotNull('revealed_at')->count());
 
         // The ladder is only what is real: no page is ever "verified by InfoDot".

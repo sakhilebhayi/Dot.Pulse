@@ -47,15 +47,12 @@ class KnockSheet extends Component
     public array $target = [];
 
     #[Locked]
-
     public string $kind = 'enquiry';
 
     #[Locked]
-
     public ?string $contextType = null;
 
     #[Locked]
-
     public ?int $contextId = null;
 
     public string $label = 'Knock';
@@ -65,7 +62,6 @@ class KnockSheet extends Component
     public bool $sent = false;
 
     #[Locked]
-
     public ?int $lineId = null;
 
     public ?string $lineStatus = null;

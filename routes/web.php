@@ -3,17 +3,31 @@
 use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\Pulse\DigestUnsubscribeController;
 use App\Http\Controllers\Pulse\MediaController;
+use App\Http\Controllers\Pulse\PrivacyExportController;
+use App\Http\Middleware\EnsureOnboarded;
+use App\Livewire\Pulse\Business\Support\EntityView;
+use App\Livewire\Pulse\Need\NeedPage;
 use App\Models\Community;
+use App\Models\PulseConversation;
+use App\Models\PulseEntity;
+use App\Models\PulseNeed;
+use App\Models\PulseOffer;
 use App\Models\PulsePost;
 use App\Models\PulseProfile;
+use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
+use App\Services\Pulse\Lines\Access;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Features;
 
 // Sends a signed-in person through the short welcome flow once, on any page that carries it. Left off on purpose:
 // the welcome flow itself, notifications, privacy (and its export), errors and sign-in.
-Route::aliasMiddleware('pulse.onboarded', \App\Http\Middleware\EnsureOnboarded::class);
+Route::aliasMiddleware('pulse.onboarded', EnsureOnboarded::class);
 
 Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->withoutMiddleware(['Illuminate\Foundation\Http\Middleware\PreventRequestForgery', 'Illuminate\Foundation\Http\Middleware\VerifyCsrfToken', 'Illuminate\Foundation\Http\Middleware\ValidateCsrfToken'])
@@ -75,7 +89,7 @@ if (app()->environment('local', 'testing')) {
 // locally and under test: in any other environment this route does not exist (a 404). `{who}` is a user id or email,
 // `?to=/path` an optional landing path on this app.
 if (app()->environment('local', 'testing')) {
-    Route::get('/dev/login/{who}', function (Illuminate\Http\Request $request, string $who) {
+    Route::get('/dev/login/{who}', function (Request $request, string $who) {
         abort_unless(app()->environment('local', 'testing'), 404);
 
         // `new` makes a brand new person with no Pulse profile, so the welcome flow can be walked from the start.
@@ -84,7 +98,7 @@ if (app()->environment('local', 'testing')) {
             : (ctype_digit($who) ? User::find((int) $who) : User::where('email', $who)->first());
         abort_if($user === null, 404);
 
-        Illuminate\Support\Facades\Auth::login($user);
+        Auth::login($user);
         $request->session()->regenerate();
 
         $to = (string) $request->query('to', '');
@@ -94,8 +108,8 @@ if (app()->environment('local', 'testing')) {
     })->name('dev.login');
 
     // Ends the dev session so a journey can sign in as someone else in the same browser context.
-    Route::get('/dev/logout', function (Illuminate\Http\Request $request) {
-        Illuminate\Support\Facades\Auth::logout();
+    Route::get('/dev/logout', function (Request $request) {
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -175,7 +189,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::view('/me/notifications', 'pulse.me.notifications')->name('me.notifications');
     Route::view('/me/privacy', 'pulse.me.privacy')->name('me.privacy');
-    Route::get('/me/privacy/export', \App\Http\Controllers\Pulse\PrivacyExportController::class)
+    Route::get('/me/privacy/export', PrivacyExportController::class)
         ->middleware('throttle:3,10,privacy-export')
         ->name('me.export');
 });
@@ -183,33 +197,33 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 // --- business ---
 // Business pages, offers, roles and needs (UI agent U2). Every page re-checks its policy; a page, offer, role or need
 // a person may not see is a 404, never a 403, so the route does not confirm that it exists.
-Route::get('/b/{entity:slug}', function (App\Models\PulseEntity $entity) {
-    abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity), 404);
+Route::get('/b/{entity:slug}', function (PulseEntity $entity) {
+    abort_unless(Gate::allows('view', $entity), 404);
 
     return view('pulse.business.show', [
         'entity' => $entity,
-        'data' => App\Livewire\Pulse\Business\Support\EntityView::data($entity, auth()->user()),
+        'data' => EntityView::data($entity, auth()->user()),
     ]);
 })->middleware(['pulse.onboarded', 'throttle:120,1'])->name('entities.show'); // the only page a stranger can read: scraping it costs something
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');
 
-    Route::get('/b/{entity:slug}/o/{offer:slug}', function (App\Models\PulseEntity $entity, App\Models\PulseOffer $offer) {
-        abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity) && Illuminate\Support\Facades\Gate::allows('view', $offer), 404);
+    Route::get('/b/{entity:slug}/o/{offer:slug}', function (PulseEntity $entity, PulseOffer $offer) {
+        abort_unless(Gate::allows('view', $entity) && Gate::allows('view', $offer), 404);
 
         return view('pulse.business.offer', ['entity' => $entity, 'offer' => $offer]);
     })->name('offers.show');
 
-    Route::get('/b/{entity:slug}/r/{role:slug}', function (App\Models\PulseEntity $entity, App\Models\PulseRole $role) {
+    Route::get('/b/{entity:slug}/r/{role:slug}', function (PulseEntity $entity, PulseRole $role) {
         // A closed or filled role still answers, so the people who applied can see how it ended.
         $ended = in_array($role->status, ['closed', 'filled'], true) && $role->moderation === 'approved' && $entity->isLive();
-        abort_unless(Illuminate\Support\Facades\Gate::allows('view', $entity) && (Illuminate\Support\Facades\Gate::allows('view', $role) || $ended), 404);
+        abort_unless(Gate::allows('view', $entity) && (Gate::allows('view', $role) || $ended), 404);
 
         return view('pulse.business.role', ['entity' => $entity, 'role' => $role]);
     })->name('roles.show');
 
-    $manage = function (App\Models\PulseEntity $entity, string $tab = 'overview') {
+    $manage = function (PulseEntity $entity, string $tab = 'overview') {
         $role = $entity->memberRole(auth()->user());
         abort_if($role === null, 404);
 
@@ -217,7 +231,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
             'page', 'verify' => in_array($role, ['owner', 'admin'], true),
             'offers', 'roles' => in_array($role, ['owner', 'admin', 'editor'], true),
             'team' => in_array($role, ['owner', 'admin'], true),
-            'lines' => App\Services\Pulse\Lines\Access::canRespondFor(auth()->user(), $entity),
+            'lines' => Access::canRespondFor(auth()->user(), $entity),
             default => true,
         };
         abort_unless($allowed, 403);
@@ -232,11 +246,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/need/new', fn () => view('pulse.need.create'))->name('needs.create');
 
-    Route::get('/need/{need}', function (App\Models\PulseNeed $need) {
-        return view('pulse.need.show', ['need' => App\Livewire\Pulse\Need\NeedPage::authorised($need)]);
+    Route::get('/need/{need}', function (PulseNeed $need) {
+        return view('pulse.need.show', ['need' => NeedPage::authorised($need)]);
     })->whereNumber('need')->name('needs.show');
 
-    Route::get('/need/{need}/edit', function (App\Models\PulseNeed $need) {
+    Route::get('/need/{need}/edit', function (PulseNeed $need) {
         abort_unless($need->user_id === auth()->id(), 404);
 
         return view('pulse.need.edit', ['need' => $need]);
@@ -249,13 +263,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
 
     Route::get('/lines/quotes/{group}', function (string $group) {
-        abort_unless(\Illuminate\Support\Str::isUuid($group), 404);
+        abort_unless(Str::isUuid($group), 404);
 
         return view('livewire.pulse.lines.pages.quotes', ['group' => $group]);
     })->name('lines.quotes');
 
-    Route::get('/lines/{conversation}', function (\App\Models\PulseConversation $conversation) {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('view', $conversation), 404);
+    Route::get('/lines/{conversation}', function (PulseConversation $conversation) {
+        abort_unless(Gate::allows('view', $conversation), 404);
 
         return view('livewire.pulse.lines.pages.show', ['conversation' => $conversation]);
     })->whereNumber('conversation')->name('lines.show');

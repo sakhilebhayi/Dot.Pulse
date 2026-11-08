@@ -7,7 +7,6 @@ use App\Models\PulseEntity;
 use App\Models\PulseReport;
 use App\Models\User;
 use App\Notifications\PulseNotice;
-use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\RetentionPurge;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;

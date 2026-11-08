@@ -4,18 +4,19 @@ namespace App\Livewire\Pulse\Business;
 
 use App\Livewire\Pulse\Business\Support\HandlesServiceErrors;
 use App\Models\PulseEntity;
+use App\Models\PulseEntityInvitation;
 use App\Models\PulseEntityMember;
 use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
 use App\Services\Pulse\Entities\InvitationService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -27,7 +28,6 @@ class TeamManager extends Component
     use HandlesServiceErrors;
 
     #[Locked]
-
     public int $entityId;
 
     public string $email = '';
@@ -111,7 +111,7 @@ class TeamManager extends Component
         $this->notice = 'Invitation taken back.';
     }
 
-    /** @return Collection<int, \App\Models\PulseEntityInvitation> waiting for an answer */
+    /** @return Collection<int, PulseEntityInvitation> waiting for an answer */
     #[Computed]
     public function invitations()
     {

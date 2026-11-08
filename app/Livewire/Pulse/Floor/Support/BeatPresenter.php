@@ -9,6 +9,7 @@ use App\Models\PulseRole;
 use App\Models\User;
 use App\Services\Pulse\Discovery\Beat;
 use App\Services\Pulse\Lines\Access;
+use App\Support\Moment;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
@@ -226,7 +227,7 @@ final class BeatPresenter
     /** "2 h ago", "Yesterday", "3 Nov". Short, because it is set in mono. */
     public static function ago(?CarbonInterface $at): ?string
     {
-        return $at === null ? null : \App\Support\Moment::when($at);
+        return $at === null ? null : Moment::when($at);
     }
 
     /** "today 18:30", "tomorrow 07:00", "Sat 9 Nov, 18:30". */

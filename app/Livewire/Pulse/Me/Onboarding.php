@@ -5,6 +5,7 @@ namespace App\Livewire\Pulse\Me;
 use App\Livewire\Pulse\Me\Concerns\HasTags;
 use App\Livewire\Pulse\Me\Concerns\PicksPlace;
 use App\Models\PulseProfile;
+use App\Services\Pulse\Discovery\Matcher;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Lines\NotificationPrefs;
 use DateTimeZone;
@@ -231,7 +232,7 @@ class Onboarding extends Component
         }
 
         // The first Floor should already hold what fits, not wait for the next scheduled run.
-        app(\App\Services\Pulse\Discovery\Matcher::class)->refreshAfter($user);
+        app(Matcher::class)->refreshAfter($user);
 
         session()->put('pulse.onboarded.'.$user->id, true);
         $this->redirect(session()->pull('url.intended', pulse_route_first(['floor', 'dashboard'])), navigate: false);

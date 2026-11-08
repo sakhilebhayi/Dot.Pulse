@@ -6,7 +6,9 @@ use App\Livewire\Pulse\Operator\Dashboard;
 use App\Models\PulseConversation;
 use App\Models\PulseProfile;
 use App\Models\User;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Concerns\BuildsPulseFixtures;
@@ -52,14 +54,14 @@ class OperatorDashboardTest extends TestCase
         config(['cache.default' => 'file', 'cache.stores.file.path' => $dir, 'cache.serializable_classes' => false]);
         $this->app->forgetInstance('cache');
         $this->app->forgetInstance('cache.store');
-        \Illuminate\Support\Facades\Cache::clearResolvedInstances();
+        Cache::clearResolvedInstances();
 
         $mod = $this->platformModerator();
         $this->actingAs($mod)->get('/operator')->assertOk();
         $this->actingAs($mod)->get('/operator')->assertOk()->assertSee('Range');
         $this->actingAs($mod)->get('/operator')->assertOk();
 
-        (new \Illuminate\Filesystem\Filesystem)->deleteDirectory($dir);
+        (new Filesystem)->deleteDirectory($dir);
     }
 
     public function test_the_component_refuses_anyone_else(): void

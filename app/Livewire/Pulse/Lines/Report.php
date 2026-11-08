@@ -49,11 +49,9 @@ class Report extends Component
     ];
 
     #[Locked]
-
     public string $subjectType = 'conversation';
 
     #[Locked]
-
     public int $subjectId = 0;
 
     public bool $open = false;

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Models\PulseMatch;
+use App\Models\PulseNeed;
 use App\Models\PulseSignal;
 use App\Services\Pulse\Discovery\Digest\DigestBuilder;
 use App\Services\Pulse\Discovery\Floor;
@@ -13,6 +14,7 @@ use App\Services\Pulse\Lines\LineException;
 use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Operator\Metrics;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -85,7 +87,7 @@ class HeldContentVisibilityTest extends TestCase
         return [['suspended'], ['archived'], ['removed'], ['held']];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('states')]
+    #[DataProvider('states')]
     public function test_the_page_state_hides_its_listings_and_stops_contact(string $state): void
     {
         $seller = $this->w('seller');
@@ -138,7 +140,7 @@ class HeldContentVisibilityTest extends TestCase
 
         foreach ([$need, $role] as $subject) {
             app(SignalIndexer::class)->syncSubject($subject->fresh());
-            $type = $subject instanceof \App\Models\PulseNeed ? 'need' : 'role';
+            $type = $subject instanceof PulseNeed ? 'need' : 'role';
             $signal = PulseSignal::query()->where('subject_type', $type)->where('subject_id', $subject->id)->first();
             $this->assertTrue($signal === null || $signal->status !== 'live');
         }

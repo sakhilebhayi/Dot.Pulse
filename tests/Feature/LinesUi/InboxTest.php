@@ -380,7 +380,7 @@ class InboxTest extends TestCase
     {
         $js = file_get_contents(resource_path('js/pulse/shell.js'));
 
-        $this->assertStringContainsString("tab=requests", $js);
-        $this->assertStringContainsString("tab=open", $js);
+        $this->assertStringContainsString('tab=requests', $js);
+        $this->assertStringContainsString('tab=open', $js);
     }
 }

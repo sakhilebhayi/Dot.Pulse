@@ -7,11 +7,12 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Password;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
@@ -30,7 +31,7 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 return $request->wantsJson()
-                    ? new \Illuminate\Http\JsonResponse(['message' => trans(Password::RESET_LINK_SENT)], 200)
+                    ? new JsonResponse(['message' => trans(Password::RESET_LINK_SENT)], 200)
                     : back()->with('status', trans(Password::RESET_LINK_SENT));
             }
         });

@@ -4,6 +4,7 @@ namespace Tests\Feature\E2e;
 
 use App\Services\InfoDot\FakeIdentityClient;
 use App\Services\InfoDot\IdentityClient;
+use App\Services\InfoDot\InfoDotUnavailable;
 use Tests\TestCase;
 
 /** Defects the browser acceptance run (tests/e2e/pulse) found and that no PHP-level test could see. */
@@ -38,7 +39,7 @@ class AcceptanceRegressionTest extends TestCase
         $this->assertTrue($identity['user']['email_verified']);
         $this->assertCount(2, $identity['teams']);
 
-        $this->expectException(\App\Services\InfoDot\InfoDotUnavailable::class);
+        $this->expectException(InfoDotUnavailable::class);
         $fake->redeem('e2e-down');
     }
 }

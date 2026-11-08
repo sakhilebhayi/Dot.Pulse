@@ -3,6 +3,7 @@
 namespace App\Livewire\Pulse\Floor;
 
 use App\Livewire\Pulse\Floor\Support\BeatPresenter;
+use App\Livewire\Pulse\Floor\Support\Persona;
 use App\Models\PulseDoor;
 use App\Models\PulseNeed;
 use App\Models\PulseRole;
@@ -24,7 +25,7 @@ class Context extends Component
         // Re-rendering is the refresh.
     }
 
-    public function render(\App\Livewire\Pulse\Floor\Support\Persona $persona): View
+    public function render(Persona $persona): View
     {
         $user = auth()->user();
 

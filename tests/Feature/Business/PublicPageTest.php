@@ -3,6 +3,7 @@
 namespace Tests\Feature\Business;
 
 use App\Models\PulseOffer;
+use App\Models\PulseReview;
 use App\Models\PulseRole;
 
 class PublicPageTest extends BusinessTestCase
@@ -34,7 +35,7 @@ class PublicPageTest extends BusinessTestCase
         $page = $this->page($owner, ['name' => 'Moyo Books']);
         $a = $this->person();
         $b = $this->person();
-        $make = fn ($user, $body, array $extra = []) => \App\Models\PulseReview::create(array_merge([
+        $make = fn ($user, $body, array $extra = []) => PulseReview::create(array_merge([
             'user_id' => $user->id, 'reviewable_type' => $page->getMorphClass(), 'reviewable_id' => $page->id, 'rating' => 5, 'body' => $body,
             'is_verified' => true, 'reviewer_side' => 'initiator', 'outcome' => 'won', 'pseudonymous' => false, 'moderation' => 'approved',
         ], $extra));

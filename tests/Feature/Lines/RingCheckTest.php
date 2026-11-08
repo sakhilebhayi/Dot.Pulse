@@ -3,12 +3,15 @@
 namespace Tests\Feature\Lines;
 
 use App\Livewire\Pulse\ModerationQueue;
+use App\Models\Community;
 use App\Models\PulseConversation;
 use App\Models\PulseEntity;
 use App\Models\PulseProfile;
 use App\Models\PulseReview;
+use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
+use App\Services\Pulse\Lines\LineService;
 use App\Services\Pulse\Lines\OutcomeService;
 use App\Services\Pulse\Lines\ReviewService;
 use App\Services\Pulse\Operator\Metrics;
@@ -139,13 +142,13 @@ class RingCheckTest extends TestCase
         $second = $this->old($this->member($employer, null, 'admin'));
         [$pro] = $this->talent('open');
         $this->old($pro);
-        $lines = app(\App\Services\Pulse\Lines\LineService::class);
+        $lines = app(LineService::class);
 
         $flags = [];
 
         foreach (range(1, 4) as $i) {
             $recruiter = $i % 2 ? $this->responderOf($employer) : $second;
-            $signal = \App\Models\PulseSignal::query()->where('owner_id', $pro->id)->where('kind', 'talent')->first();
+            $signal = PulseSignal::query()->where('owner_id', $pro->id)->where('kind', 'talent')->first();
             $c = $lines->knock($recruiter, ['signal' => $signal->id, 'as_entity' => $employer->id], 'invite', $this->card(['what' => 'We would like to talk about role number '.$i]));
 
             if ($c->status === PulseConversation::REQUESTED) {
@@ -232,7 +235,7 @@ class RingCheckTest extends TestCase
 
         Livewire::actingAs($this->old($this->person()))->test(ModerationQueue::class)->assertForbidden();
 
-        $community = \App\Models\Community::factory()->create();
+        $community = Community::factory()->create();
         $communityMod = $this->old($this->person());
         $community->addMember($communityMod, 'moderator');
         Livewire::actingAs($communityMod)->test(ModerationQueue::class)->call('approveResult', $flagged->id)->assertForbidden();

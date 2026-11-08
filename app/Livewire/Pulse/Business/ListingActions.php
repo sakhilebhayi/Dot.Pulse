@@ -21,8 +21,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -37,7 +37,6 @@ class ListingActions extends Component
     public string $type = 'entity';
 
     #[Locked]
-
     public int $id = 0;
 
     public bool $reporting = false;

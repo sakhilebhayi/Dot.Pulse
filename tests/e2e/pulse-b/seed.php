@@ -6,9 +6,9 @@
  * with the real commands. Writes out/seed.json with the ids the specs need. Local only, never shipped.
  */
 
-use App\Models\PulseEntity;
+use App\Models\Community;
 use App\Models\PulsePlace;
-use App\Models\PulseProfile;
+use App\Models\PulsePost;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\Pulse\Entities\EntityService;
@@ -16,6 +16,8 @@ use App\Services\Pulse\Entities\NeedService;
 use App\Services\Pulse\Entities\OfferService;
 use App\Services\Pulse\Entities\ProfileService;
 use App\Services\Pulse\Entities\RoleService;
+use App\Services\Pulse\Lines\LineService;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -23,7 +25,7 @@ use Illuminate\Support\Str;
 $root = dirname(__DIR__, 3);
 require $root.'/vendor/autoload.php';
 $app = require $root.'/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 // The ContentGate runs the real LocalRules. Nothing is pinned: this is production behaviour.
 config(['pulse.entities.rules_class' => null]);
@@ -128,9 +130,9 @@ $aneleNeed = $needs->create($anele, [
 // Specs that count lines or notifications start from their own users, so these use people no other spec drives:
 // Naledi (extra) talks to Moyo Books; Jabu asks Moyo Plumbing for a quote (a quote group needs a need or offer).
 if (getenv('PULSE_E2E_RICH') === '1') {
-    $community = App\Models\Community::factory()->create(['created_by' => $extra->id, 'name' => 'Soweto Small Business', 'slug' => 'soweto-small-business', 'description' => 'Neighbours who run small businesses.']);
-    $post = App\Models\PulsePost::factory()->create(['user_id' => $extra->id, 'community_id' => $community->id, 'title' => 'Who delivers in Soweto?', 'body' => 'Looking for a reliable courier for small parcels. Any recommendations?', 'status' => 'published']);
-    $lines = app(App\Services\Pulse\Lines\LineService::class);
+    $community = Community::factory()->create(['created_by' => $extra->id, 'name' => 'Soweto Small Business', 'slug' => 'soweto-small-business', 'description' => 'Neighbours who run small businesses.']);
+    $post = PulsePost::factory()->create(['user_id' => $extra->id, 'community_id' => $community->id, 'title' => 'Who delivers in Soweto?', 'body' => 'Looking for a reliable courier for small parcels. Any recommendations?', 'status' => 'published']);
+    $lines = app(LineService::class);
     $line = $lines->knock($extra, ['entity' => $books->id], 'enquiry', ['what' => 'Monthly books for a salon', 'when_or_qty' => 'From December', 'where' => 'Soweto', 'budget_band' => 'R1 500'], $bookOffer);
     $lines->send($sipho, $line->fresh(), 'Happy to help. How many invoices a month?');
     $lines->send($extra, $line->fresh(), 'About forty.');
@@ -164,4 +166,4 @@ $seed['secrets'] = ['lerato_name' => 'Anonsecret', 'lerato_email' => 'lerato.pri
 $outDir = getenv('PULSE_E2E_OUT') ?: __DIR__.'/out';
 @mkdir($outDir, 0777, true);
 file_put_contents($outDir.'/seed.json', json_encode($seed, JSON_PRETTY_PRINT));
-echo "seed ok: ".count($seed['users'])." users, ".count($seed['signals'])." signals, {$seed['matches']} matches\n";
+echo 'seed ok: '.count($seed['users']).' users, '.count($seed['signals'])." signals, {$seed['matches']} matches\n";
