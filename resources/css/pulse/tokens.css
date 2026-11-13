@@ -70,6 +70,8 @@
     --c-overlay: rgb(11 14 26 / 0.55);
     --c-shadow: rgb(11 14 26 / 0.08);
     --c-shadow-float: rgb(11 14 26 / 0.22);
+    /* The ground the original logo was drawn for. It does not change with the theme. */
+    --c-logo-plate: #ffffff;
 
     /* Type. */
     --f-ui: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
