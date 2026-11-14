@@ -599,4 +599,82 @@ class CompanyEntitlementTest extends TestCase
         $this->assertStringNotContainsString('"components"', $response->getContent());
         $this->assertSame($before, $this->settingsOf($ann));
     }
+
+    // ------------------------------------------------------------------ data-subject rights are never blocked
+
+    /** A refused person (company suspended) with an open privacy page: owner, snapshot of the privacy component. */
+    private function refusedOnPrivacyPage(): array
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, false, 'suspended'))]);
+        $this->actingAs($owner);
+        $this->get(route('floor'))->assertStatus(403);
+
+        return [$owner, $this->snapshotOf(route('me.privacy'), 'pulse.me.privacy')];
+    }
+
+    /** @param array<string, mixed> $updates @param list<string> $calls */
+    private function privacyUpdate(string $snapshot, array $updates, array $calls)
+    {
+        return $this->postJson(Livewire::getUpdateUri(), ['components' => [[
+            'snapshot' => $snapshot,
+            'updates' => $updates,
+            'calls' => array_map(fn ($m) => ['path' => '', 'method' => $m, 'params' => $m === 'withdraw' ? ['contact_policy.requests'] : []], $calls),
+        ]]], ['X-Livewire' => 'true']);
+    }
+
+    public function test_a_refused_person_can_still_open_the_privacy_page_and_export(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, false, 'suspended'))]);
+        $this->actingAs($owner);
+
+        $this->get(route('floor'))->assertStatus(403);
+        $this->get(route('me.privacy'))->assertOk()->assertSee('Download your data');
+
+        $snapshot = $this->snapshotOf(route('me.privacy'), 'pulse.me.privacy');
+        $response = $this->privacyUpdate($snapshot, [], ['startExport']);
+        $this->assertSame(200, $response->getStatusCode());
+
+        $response = $this->privacyUpdate($snapshot, ['confirmation' => 'download my data'], ['export']);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('me\/privacy\/export', $response->getContent(), 'the export confirmation redirects to the download');
+
+        $this->get(route('me.export'))->assertOk();
+    }
+
+    public function test_a_refused_person_can_still_erase_and_the_confirmations_still_apply(): void
+    {
+        [$owner, $snapshot] = $this->refusedOnPrivacyPage();
+
+        // A wrong phrase erases nothing.
+        $this->privacyUpdate($snapshot, ['confirmation' => 'erase'], ['erase'])->assertOk();
+        $this->assertSame(self::HEADLINE, PulseProfile::where('user_id', $owner->id)->value('headline'));
+        $this->assertAuthenticated();
+
+        // The typed phrase erases, exactly as for anyone else.
+        $response = $this->privacyUpdate($snapshot, ['confirmation' => 'erase my data'], ['erase']);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNull(PulseProfile::where('user_id', $owner->id)->value('headline'));
+        $this->assertNull(PulseProfile::where('user_id', $owner->id)->value('onboarded_at'), 'they begin again if they return');
+    }
+
+    public function test_the_privacy_exemption_opens_nothing_else(): void
+    {
+        [$owner, $snapshot] = $this->refusedOnPrivacyPage();
+        PulseProfile::where('user_id', $owner->id)->update(['contact_policy' => 'anyone']);
+
+        // Withdrawing a setting from the same page is refused and changes nothing.
+        $response = $this->privacyUpdate($snapshot, [], ['withdraw']);
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('anyone', $this->settingsOf($owner));
+
+        // So is a mixed request: an allowed step does not carry a forbidden one.
+        $this->assertSame(403, $this->privacyUpdate($snapshot, [], ['startErase', 'withdraw'])->getStatusCode());
+        $this->assertSame(403, $this->privacyUpdate($snapshot, ['placeId' => 3], ['startErase'])->getStatusCode());
+
+        // Every other page stays refused.
+        $this->get(route('me.settings'))->assertStatus(403);
+        $this->get(route('floor'))->assertStatus(403);
+    }
 }

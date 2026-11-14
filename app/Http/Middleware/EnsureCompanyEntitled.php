@@ -47,6 +47,11 @@ class EnsureCompanyEntitled
             return $next($request);
         }
 
+        // Data-subject rights are never blocked by a commercial access state: the person's own export and erasure.
+        if ($request->routeIs('me.privacy') && $this->onlyDataRights()) {
+            return $next($request);
+        }
+
         $user = $request->user() ?? Auth::guard('web')->user();
 
         if (! $user instanceof User) {
@@ -85,6 +90,55 @@ class EnsureCompanyEntitled
             $team->name,
             $user->allTeams()->reject(fn ($other) => $other->id === $team->id),
         ));
+    }
+
+    /** The privacy page's Livewire methods that belong to export and erasure (and their step-up code), nothing else. */
+    private const RIGHTS_CALLS = ['startExport', 'cancelExport', 'export', 'startErase', 'cancelErase', 'erase', 'sendCode', 'codeRequired'];
+
+    /** The only properties a data-rights update may set: the typed confirmation and the emailed code. */
+    private const RIGHTS_PROPS = ['confirmation', 'code'];
+
+    /**
+     * On the privacy page: a plain page load is allowed (it is where the person reads and uses their rights). A
+     * Livewire update is allowed only when every component is the privacy component and it does nothing but export
+     * or erase steps. Withdrawing a setting, unblocking, unmuting and any other component's action stay refused. The
+     * existing confirmations (typed phrase, emailed code, sole-owner check) run inside those methods, unchanged.
+     */
+    private function onlyDataRights(): bool
+    {
+        $live = request();
+
+        if (! $live->headers->has('X-Livewire')) {
+            return true;
+        }
+
+        $components = $live->input('components');
+
+        if (! is_array($components) || $components === []) {
+            return false;
+        }
+
+        foreach ($components as $component) {
+            $snapshot = is_array($component) ? json_decode((string) ($component['snapshot'] ?? ''), true) : null;
+
+            if (! is_array($snapshot) || ($snapshot['memo']['name'] ?? null) !== 'pulse.me.privacy') {
+                return false;
+            }
+
+            foreach ((array) ($component['calls'] ?? []) as $call) {
+                if (! is_array($call) || ! in_array($call['method'] ?? null, self::RIGHTS_CALLS, true)) {
+                    return false;
+                }
+            }
+
+            foreach (array_keys((array) ($component['updates'] ?? [])) as $property) {
+                if (! in_array($property, self::RIGHTS_PROPS, true)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
