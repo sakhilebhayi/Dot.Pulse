@@ -677,4 +677,19 @@ class CompanyEntitlementTest extends TestCase
         $this->get(route('me.settings'))->assertStatus(403);
         $this->get(route('floor'))->assertStatus(403);
     }
+
+    public function test_a_refused_company_does_not_offer_a_personal_workspace_the_rule_also_refuses(): void
+    {
+        $ann = $this->signInThenWorkPersonally(false);
+        $acme = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+        $ann->forceFill(['current_team_id' => $acme->id])->save();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, false, 'suspended'))]);
+
+        $personal = $ann->fresh()->personalTeam();
+        $this->actingAs($ann->fresh());
+
+        $this->get(route('floor'))->assertStatus(403)
+            ->assertSee('Dot.Pulse is suspended for Acme Ltd')
+            ->assertDontSee('name="team_id" value="'.$personal->id.'"', false);
+    }
 }

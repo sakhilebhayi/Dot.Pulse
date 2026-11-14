@@ -2,7 +2,6 @@
      person's other companies, if any, are quiet switches below it. Rendered with HTTP 403 by App\Support\EntitlementRefusal.
      It shows nothing from Pulse: no profile, no signals, no counts. --}}
 @extends('errors.layout')
-@section('code', '403')
 @section('title', $title)
 @section('message', $body)
 @section('actions')

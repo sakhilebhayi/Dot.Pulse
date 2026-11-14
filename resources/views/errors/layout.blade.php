@@ -14,7 +14,9 @@
     </header>
     <main id="main" class="er-main">
         <div class="pub-wrap">
-            <span class="er-code pk-kind">Error @yield('code')</span>
+            @hasSection('code')
+                <span class="er-code pk-kind">Error @yield('code')</span>
+            @endif
             <h1>@yield('title')</h1>
             <p>@yield('message')</p>
             <div class="er-actions">

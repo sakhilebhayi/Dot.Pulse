@@ -88,7 +88,9 @@ class EnsureCompanyEntitled
         return $this->refuse($request, fn () => EntitlementRefusal::response(
             $answer['status'],
             $team->name,
-            $user->allTeams()->reject(fn ($other) => $other->id === $team->id),
+            $user->allTeams()->reject(fn ($other) => $other->id === $team->id
+                // A personal workspace the rule refuses is not a place to switch to.
+                || ($request->hasSession() && $request->session()->get(self::PERSONAL) === false && ($other->personal_team || blank($other->infodot_team_uuid)))),
         ));
     }
 
