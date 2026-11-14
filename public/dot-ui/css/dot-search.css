@@ -95,7 +95,7 @@
 /* no hint: the 104px reserved for "Ctrl K" and the circle shrinks to what the circle needs. Set by the components when
    `hint` is empty; the default look (with a hint) is untouched. The circle is 44px on touch and small screens. */
 .dsr.dsr--nohint .dsr-input {
-    padding-right: var(--dsr-pad-r-nohint);
+    padding-right: var(--dsr-pad-r-nohint, calc(var(--dsr-btn-size) + 18px));
 }
 
 /* the arrow button: a dark circle holding the gold forward arrow from the logo (img/arrow-mask.png) */
@@ -177,13 +177,15 @@
     }
 }
 
+/* Under 640px the hint is hidden, and so is the room for it: the padding follows the hint's visibility, at this breakpoint
+   only (above it the 104px default is untouched). 52px is InfoDot's value there; --dsr-pad-r-narrow lets a host tune it. */
 @media (max-width: 639px) {
     .dsr .dsr-kbd {
         display: none;
     }
 
     .dsr .dsr-input {
-        padding-right: 52px;
+        padding-right: var(--dsr-pad-r-narrow, 52px);
     }
 }
 
@@ -366,11 +368,11 @@
     height: var(--dsr-filter-h);
     margin: 0;
     padding: 0 12px;
-    border: 1px solid var(--dsr-filter-border);
+    border: 1px solid var(--dsr-filter-border, var(--dsr-rule-strong));
     border-radius: var(--dsr-filter-radius);
-    background: var(--dsr-filter-bg);
+    background: var(--dsr-filter-bg, var(--dsr-panel));
     background-image: none;
-    color: var(--dsr-filter-ink);
+    color: var(--dsr-filter-ink, var(--dsr-text));
     font: 400 14px/1.5 var(--dsr-font);
     -webkit-appearance: textfield;
     appearance: textfield;
@@ -379,20 +381,20 @@
 }
 
 .dsr-filter::placeholder {
-    color: var(--dsr-filter-placeholder);
+    color: var(--dsr-filter-placeholder, var(--dsr-text-3));
     opacity: 1;
 }
 
 /* The doubled class lifts these to (0,3,0), above a host's global `input:focus` or `input[type=search]:focus`
    (0,2,1), so the filter keeps its own border and no ring in every host. The computed values are unchanged. */
 .dsr-filter.dsr-filter:hover {
-    border-color: var(--dsr-filter-border-hover);
+    border-color: var(--dsr-filter-border-hover, var(--dsr-text-3));
 }
 
 .dsr-filter.dsr-filter:focus,
 .dsr-filter.dsr-filter:focus-visible {
     outline: none;
-    border-color: var(--dsr-filter-border-focus);
+    border-color: var(--dsr-filter-border-focus, var(--dsr-text));
     box-shadow: none;
 }
 

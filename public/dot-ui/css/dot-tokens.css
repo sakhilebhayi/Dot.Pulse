@@ -20,8 +20,9 @@
     --dsr-radius: 999px;
     --dsr-pad-l: 22px;
     --dsr-pad-r: 104px;
-    /* with no hint (.dsr--nohint): room for the circle only, 34px + its 5px edge + 13px of air */
-    --dsr-pad-r-nohint: calc(var(--dsr-btn-size) + 18px);
+    /* Below 640px the "Ctrl K" hint is hidden: the right padding is --dsr-pad-r-narrow (52px, InfoDot's value there).
+       With no hint (.dsr--nohint) it is --dsr-pad-r-nohint: room for the circle only, 34px + its 5px edge + 13px of air.
+       Neither is declared here: dot-search.css reads them with their fallbacks, so a host may set them on any ancestor. */
     --dsr-pill-bg: #f6f4ee;
     --dsr-pill-bg-focus: #fff;
     --dsr-pill-ink: #1b2124;
@@ -51,15 +52,13 @@
     --dsr-icon: #aeb8bc;
     --dsr-mark: rgba(240, 188, 46, 0.45);
 
-    /* SURFACE (mappable): compact filter, InfoDot's 36px .ix-input */
+    /* SURFACE (mappable): compact filter, InfoDot's 36px .ix-input. Height and radius are plain values. The colours
+       (--dsr-filter-bg, -ink, -placeholder, -border, -border-hover, -border-focus) are deliberately NOT derived here
+       (`--dsr-filter-bg: var(--dsr-panel)` would be resolved on :root, so a host that maps --dsr-panel on <body> would
+       not reach the filter). dot-search.css reads them with var() fallbacks at the point of use: a mapping on any
+       ancestor works, and unmapped they follow --dsr-panel, --dsr-text, --dsr-text-3 and --dsr-rule-strong. */
     --dsr-filter-h: 36px;
     --dsr-filter-radius: 2px;
-    --dsr-filter-bg: var(--dsr-panel);
-    --dsr-filter-ink: var(--dsr-text);
-    --dsr-filter-placeholder: var(--dsr-text-3);
-    --dsr-filter-border: var(--dsr-rule-strong);
-    --dsr-filter-border-hover: var(--dsr-text-3);
-    --dsr-filter-border-focus: var(--dsr-text);
 }
 
 @media (prefers-color-scheme: dark) {

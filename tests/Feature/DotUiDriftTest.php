@@ -6,8 +6,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Drift guard for the shared dot-ui files. `dot-ui/sync.sh` (run from the dot-ui folder) copies the shared Blade
- * components, CSS, fonts, scripts, logos and PHP classes into this repository and writes dot-ui/MANIFEST.json
- * (sha256 of every copied file). This test recomputes the hashes from the files in THIS repository and fails when any
+ * components, CSS, fonts, scripts, logos and PHP classes into this repository and writes dot-ui/MANIFEST.sha256
+ * (`sha256sum` format: sha256 and path of every copied file). This test recomputes the hashes from the files in THIS repository and fails when any
  * differs, is missing, or when an unlisted file sits in a shared folder.
  *
  * Fix a failure by re-running sync.sh, never by editing the shared files here. A change the shared files need goes
@@ -23,13 +23,20 @@ class DotUiDriftTest extends TestCase
     /** @return array{version: string, files: array<string, string>} */
     private function manifest(): array
     {
-        $path = $this->root().'/dot-ui/MANIFEST.json';
-        $this->assertFileExists($path, 'dot-ui/MANIFEST.json is missing: run dot-ui/sync.sh for this repository.');
-        $data = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($data);
-        $this->assertNotEmpty($data['files'] ?? [], 'dot-ui/MANIFEST.json lists no files.');
+        $path = $this->root().'/dot-ui/MANIFEST.sha256';
+        $this->assertFileExists($path, 'dot-ui/MANIFEST.sha256 is missing: run dot-ui/sync.sh for this repository.');
+        $version = '';
+        $files = [];
+        foreach (preg_split('/\R/', (string) file_get_contents($path)) as $line) {
+            if (preg_match('/^# version (\S+)$/', $line, $m)) {
+                $version = $m[1];
+            } elseif ($line !== '' && $line[0] !== '#' && preg_match('/^([0-9a-f]{64})  (.+)$/', $line, $m)) {
+                $files[$m[2]] = $m[1];
+            }
+        }
+        $this->assertNotEmpty($files, 'dot-ui/MANIFEST.sha256 lists no files.');
 
-        return $data;
+        return ['version' => $version, 'files' => $files];
     }
 
     public function test_every_shared_file_matches_the_manifest(): void
@@ -86,6 +93,6 @@ class DotUiDriftTest extends TestCase
         $manifest = $this->manifest();
         $version = trim((string) @file_get_contents($this->root().'/dot-ui/VERSION'));
 
-        $this->assertSame($manifest['version'], $version, 'dot-ui/VERSION and MANIFEST.json disagree.');
+        $this->assertSame($manifest['version'], $version, 'dot-ui/VERSION and MANIFEST.sha256 disagree.');
     }
 }

@@ -15,7 +15,7 @@
     id           the panel's id (default dsw-panel; change it only if a page holds two switchers)
     notice       override of the visible degraded line, e.g. "Could not check your platforms from here" (a platform that
                  structurally cannot ask InfoDot). Default: the model's "Could not check your platforms just now"
-    notice-detail  override of the sentence after it. Default: "These open through InfoDot, which checks what your company has."
+    notice-detail  override of the sentence after it. Default: "These open through InfoDot, which checks your access."
 
   Needs css/dot-switcher.css and, for open/close/filter/"Opening...", js/dot-switcher.js (no inline script, no inline style attributes).
   The nearest positioned ancestor (the header) is where the panel hangs from.
@@ -46,7 +46,7 @@
 @endphp
 @if ($model !== null)
 <div {{ $attributes->class(['dsw', 'dsw--'.$mode]) }} data-dsw data-state="{{ $state }}" data-platform="{{ $model['current'] }}">
-    <a class="dsw-btn dsw-fallback" href="{{ $model['platforms_url'] }}" title="Switch Dot platform">
+    <a class="dsw-fallback" href="{{ $model['platforms_url'] }}" title="Switch Dot platform">
         <svg class="dsw-btn__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="10" y="4" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="16" y="4" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="4" y="10" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="16" y="10" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="4" y="16" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="10" y="16" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/><rect x="16" y="16" width="4" height="4" rx="1.2" fill="currentColor" stroke="none"/></svg>
         <span class="dsw-btn__label">Dot Apps</span>
     </a>
@@ -81,7 +81,7 @@
             </div>
 
             @if ($state === 'degraded')
-                <p class="dsw-notice" role="status"><strong>{{ $notice ?: $model['notice'] }}.</strong> <span>{{ $noticeDetail ?: 'These open through InfoDot, which checks what your company has.' }}</span></p>
+                <p class="dsw-notice" role="status"><strong>{{ $notice ?: $model['notice'] }}.</strong> <span>{{ $noticeDetail ?: 'These open through InfoDot, which checks your access.' }}</span></p>
             @endif
 
             @if ($state === 'personal')

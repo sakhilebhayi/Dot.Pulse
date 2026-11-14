@@ -76,10 +76,9 @@
         gap: 0;
     }
 
-    .sh-mast .dsw-btn {
-        min-width: var(--tap);
-        padding-inline: 0;
-        justify-content: center;
+    .sh-mast .dsw {
+        --dsw-btn-min-w: var(--tap);
+        --dsw-btn-pad-x: 0;
     }
 }
 
