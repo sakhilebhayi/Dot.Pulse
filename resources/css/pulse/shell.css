@@ -68,6 +68,27 @@
     .sh-mast__page {
         display: none;
     }
+
+    /* Six 44 px tools (search, apps, bell, compose, filters, account) plus the logo only fit a 375 px bar when the
+       buttons touch and the apps button is square; their icons stay 44 px apart centre to centre, so nothing gets
+       harder to hit. */
+    .sh-mast .sh-mast__tools {
+        gap: 0;
+    }
+
+    .sh-mast .dsw-btn {
+        min-width: var(--tap);
+        padding-inline: 0;
+        justify-content: center;
+    }
+}
+
+/* At 360 px the same bar is 5 px too wide: the original logo is shown a little smaller (size only). */
+@media (max-width: 380px) {
+    .sh-brand__logo {
+        height: 44px;
+        margin: 10px 0;
+    }
 }
 
 .sh-mast__dial {
