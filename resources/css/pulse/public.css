@@ -463,7 +463,8 @@
 }
 
 .er-main h1 {
-    max-width: 12ch;
+    max-width: 18ch;
+    text-wrap: balance;
 }
 
 .er-main p {
@@ -478,6 +479,49 @@
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 28px;
+}
+
+/* R-50 refusal page: longer titles than the other errors, and the quiet company switches under the one action. */
+.er-main .er-gate-others {
+    margin-top: 32px;
+    max-width: 44ch;
+}
+
+.er-gate-others__label {
+    margin: 0 0 8px;
+    font-size: var(--t-small, 0.8125rem);
+    font-weight: 600;
+    color: var(--c-muted);
+}
+
+.er-gate-others ul {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+}
+
+.er-gate-others li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--c-line);
+}
+
+.er-gate-others__out {
+    background: none;
+    border: 0;
+    padding: 8px 0;
+    color: var(--c-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.er-gate-others__out:hover,
+.er-gate-others__out:focus-visible {
+    color: var(--c-ink);
 }
 
 /* The line that does not meet: two lines run toward each other, miss, and no node appears. */

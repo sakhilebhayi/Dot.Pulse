@@ -16,13 +16,32 @@
     <div class="fl-draw" wire:loading.delay.shortest wire:target="showNext,save,unsave,dismiss,removeReason" aria-hidden="true"></div>
 
     @if ($firstVisit)
-        <x-pulse.empty :title="$emptyTitle" :text="$emptyText">
-            <div class="pk-cluster">
-                @foreach ($emptyActions as $action)
-                    <x-pulse.button :variant="$loop->first ? 'signal' : 'quiet'" :href="$action['href']">{{ $action['label'] }}</x-pulse.button>
-                @endforeach
+        @if ($knows !== [])
+            {{-- The Floor, first visit, nothing matched: the reason is what the matcher holds about this person. Each line is their own record, with the place to change it. No one else is shown or implied. --}}
+            <div class="pk-empty fl-knows" data-floor-empty>
+                <h2 class="pk-empty__title">{{ $emptyTitle }}</h2>
+                <p class="pk-empty__text">The floor stays empty until there is a real reason to introduce someone. This is what it has to match you on so far.</p>
+                <dl class="fl-knows__list">
+                    @foreach ($knows as $k)
+                        <div class="fl-knows__row" @if ($k['value'] === null) data-missing @endif>
+                            <dt>{{ $k['label'] }}</dt>
+                            <dd>
+                                <span class="fl-knows__value">{{ $k['value'] ?? $k['missing'] }}</span>
+                                @if ($k['href'] !== $firstHref)<a href="{{ $k['href'] }}">{{ $k['action'] }}</a>@endif
+                            </dd>
+                        </div>
+                    @endforeach
+                </dl>
             </div>
-        </x-pulse.empty>
+        @else
+            <x-pulse.empty :title="$emptyTitle" :text="$emptyText" data-floor-empty>
+                <div class="pk-cluster">
+                    @foreach ($emptyActions as $action)
+                        <x-pulse.button :variant="$loop->first ? 'signal' : 'quiet'" :href="$action['href']">{{ $action['label'] }}</x-pulse.button>
+                    @endforeach
+                </div>
+            </x-pulse.empty>
+        @endif
     @else
         @if ($fresh !== [])
             <h2 class="sr-only">The round</h2>

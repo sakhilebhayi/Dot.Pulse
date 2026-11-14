@@ -3,6 +3,7 @@
 namespace App\Livewire\Pulse\Floor;
 
 use App\Livewire\Pulse\Floor\Concerns\ActsOnBeats;
+use App\Livewire\Pulse\Floor\Support\Arrival;
 use App\Livewire\Pulse\Floor\Support\BeatPresenter;
 use App\Livewire\Pulse\Floor\Support\Persona;
 use App\Services\Pulse\Discovery\Floor;
@@ -49,9 +50,14 @@ class Round extends Component
     #[Locked]
     public bool $everShown = false;
 
-    public function mount(Floor $floor, string $mode = 'all'): void
+    /** This round sits under the arrival (the Floor itself, not a mode page): its first action is already on screen above it. */
+    #[Locked]
+    public bool $arrival = false;
+
+    public function mount(Floor $floor, string $mode = 'all', bool $arrival = false): void
     {
         $this->mode = in_array($mode, Floor::MODES, true) ? $mode : 'all';
+        $this->arrival = $arrival && $this->mode === 'all';
 
         $presenter = app(BeatPresenter::class);
         $round = $floor->round(auth()->user(), $this->mode);
@@ -109,9 +115,14 @@ class Round extends Component
         $this->waiting = max(0, (int) $round['counts']['new'] - $batch);
     }
 
-    public function render(Persona $persona): View
+    public function render(Persona $persona, Arrival $arrival): View
     {
+        $firstVisit = $this->beats === [] && ! $this->everShown;
+
         return view('livewire.pulse.floor.round', [
+            // An empty first visit to the Floor says what the matcher holds about the person, so the gap explains itself.
+            'knows' => $firstVisit && $this->mode === 'all' ? $arrival->knows(auth()->user()) : [],
+            'firstHref' => $this->arrival ? $arrival->action(auth()->user())['href'] : null,
             'emptyActions' => $persona->emptyActions(auth()->user(), $this->mode),
             'endAction' => $persona->endAction(auth()->user()),
             'readyAt' => $this->nextRoundAt ? Carbon::parse($this->nextRoundAt)->timezone(config('app.timezone')) : null,

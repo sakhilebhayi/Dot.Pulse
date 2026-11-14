@@ -921,3 +921,181 @@ kbd {
     font-size: var(--t-small);
     font-weight: 700;
 }
+
+/* ---------- Arrival: the top of the Floor (logo, what this is, the first thing to do, the way back) ---------- */
+.fl-arrive {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s-lg);
+    margin-bottom: var(--s-lg);
+    padding-bottom: var(--s-lg);
+    border-bottom: 1px solid var(--c-line);
+}
+
+/* The original logo file, whole. It was drawn for white, so it keeps a white plate in both themes. */
+.fl-arrive__logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--r-md);
+    background: var(--c-logo-plate);
+}
+
+.fl-arrive__h {
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.375rem);
+    font-stretch: 118%;
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+}
+
+.fl-arrive__lead {
+    max-width: 58ch;
+    margin-top: 12px;
+    color: var(--c-ink-2);
+}
+
+.fl-arrive__lead strong {
+    color: var(--c-ink);
+    font-weight: 700;
+}
+
+.fl-arrive__act {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px var(--s-lg);
+    margin-top: 20px;
+}
+
+/* The one dominant action on the arrival: a size above every other button on the Floor. */
+.fl-arrive__go {
+    min-height: 52px;
+    padding: 14px 24px;
+    font-size: 1.0625rem;
+}
+
+.fl-arrive__back {
+    display: flex;
+    gap: var(--s-md);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.fl-arrive__back a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    color: var(--c-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--c-line-strong);
+    text-underline-offset: 3px;
+}
+
+.fl-arrive__back a:hover {
+    color: var(--c-ink);
+    text-decoration-color: currentColor;
+}
+
+/* First visit, nothing matched: what the matcher holds about the person, a line per input. */
+.fl-knows__list {
+    display: grid;
+    margin: 20px 0 0;
+}
+
+.fl-knows__row {
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr);
+    gap: 4px var(--s-md);
+    padding: 12px 0;
+    border-top: 1px solid var(--c-line);
+}
+
+.fl-knows__row dt {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    font-weight: 600;
+    line-height: 1.7;
+}
+
+.fl-knows__row dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px var(--s-md);
+    margin: 0;
+}
+
+.fl-knows__value {
+    font-weight: 600;
+}
+
+.fl-knows__row[data-missing] .fl-knows__value {
+    color: var(--c-ink-2);
+    font-weight: 400;
+}
+
+.fl-knows__row a {
+    color: var(--c-link);
+    font-size: var(--t-small);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* The welcome flow's first step: the same logo and way back, beside one welcoming sentence. */
+.me-flow__arrive {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-lg);
+    padding-bottom: var(--s-lg);
+    border-bottom: 1px solid var(--c-line);
+}
+
+.me-flow__welcome {
+    max-width: 52ch;
+    color: var(--c-ink-2);
+}
+
+.me-flow__welcome strong {
+    color: var(--c-ink);
+    font-weight: 700;
+}
+
+.me-flow__arrive .fl-arrive__back {
+    margin-top: 4px;
+}
+
+@media (max-width: 859.98px) {
+    .me-flow__arrive {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .fl-arrive {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--s-md);
+    }
+
+    .fl-arrive__logo {
+        width: 112px;
+    }
+
+    .fl-arrive__go {
+        flex: 1 1 100%;
+    }
+
+    .fl-knows__row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fl-knows__row a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap);
+    }
+}

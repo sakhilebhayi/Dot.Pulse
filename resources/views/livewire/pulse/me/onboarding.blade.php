@@ -7,6 +7,26 @@
 <div class="me-flow"
      x-data
      x-init="if (window.Intl) { $wire.setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone) }">
+    @if ($step === 1)
+        {{-- A new person arrives here before the Floor: the original logo, a welcome from their own records, and the way back. --}}
+        @php
+            $arrival = app(\App\Livewire\Pulse\Floor\Support\Arrival::class);
+            $first = $arrival->firstName(auth()->user());
+            $company = $arrival->company(auth()->user());
+            $infodot = $arrival->infodot();
+        @endphp
+        <div class="me-flow__arrive" data-floor-arrival>
+            <img class="fl-arrive__logo" src="{{ asset(\App\Livewire\Pulse\Floor\Support\Arrival::LOGO) }}" alt="Dot.Pulse" width="1181" height="886" decoding="async">
+            <div>
+                <p class="me-flow__welcome"><strong data-arrival-welcome>Welcome{{ $first !== '' ? ', '.$first : '' }}.</strong>@if ($company) You are here for <strong>{{ $company }}</strong>.@endif Dot.Pulse introduces businesses and people that fit, and says why. {{ $total }} short questions first, so nothing reaches you that you did not choose.</p>
+                <nav class="fl-arrive__back" aria-label="Dot ecosystem">
+                    <a href="{{ $infodot['home'] }}">InfoDot</a>
+                    <a href="{{ $infodot['platforms'] }}">Platforms</a>
+                </nav>
+            </div>
+        </div>
+    @endif
+
     <div class="me-flow__top">
         <p class="me-flow__count pk-mono">Step {{ $step }} of {{ $total }}</p>
         <div class="me-progress" role="progressbar" aria-label="Welcome progress" aria-valuemin="1" aria-valuemax="{{ $total }}" aria-valuenow="{{ $step }}">
@@ -93,7 +113,7 @@
             @if ($step > 1)<x-pulse.button variant="quiet" wire:click="back" type="button">Back</x-pulse.button>@endif
             <span class="me-flow__spacer"></span>
             @if ($skippable)<x-pulse.button variant="ghost" wire:click="skip" type="button">{{ $lastStep ? 'Skip and finish' : 'Skip this' }}</x-pulse.button>@endif
-            <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="next,finish">{{ $lastStep ? 'Finish and go to the Floor' : 'Continue' }}</x-pulse.button>
+            <x-pulse.button variant="signal" type="submit" wire:loading.attr="disabled" wire:target="next,finish" data-primary-action>{{ $lastStep ? 'Finish and go to the Floor' : 'Continue' }}</x-pulse.button>
         </div>
         @if ($skippable)<p class="me-flow__small">Skipping keeps the careful default. Nothing here is permanent.</p>@endif
     </form>

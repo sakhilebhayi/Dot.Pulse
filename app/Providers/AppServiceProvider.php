@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\Community;
 use App\Models\PulseComment;
 use App\Models\PulsePost;
@@ -14,6 +15,7 @@ use App\Services\InfoDot\FakeIdentityClient;
 use App\Services\InfoDot\IdentityClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
         if (env('PULSE_E2E_FAKE_INFODOT') === '1' && $this->app->environment('local', 'testing')) {
             $this->app->bind(IdentityClient::class, FakeIdentityClient::class);
         }
+
+        // R-50: Livewire's file upload route is not on a page's route group, so it carries the check itself.
+        if (! config('livewire.temporary_file_upload.middleware')) {
+            config(['livewire.temporary_file_upload.middleware' => ['throttle:60,1', EnsureCompanyEntitled::class]]);
+        }
     }
 
     /**
@@ -33,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // R-50: Livewire updates from a page in the signed-in area carry that page's entitlement check with them.
+        Livewire::addPersistentMiddleware([EnsureCompanyEntitled::class]);
+
         Gate::policy(PulsePost::class, PulsePostPolicy::class);
         Gate::policy(PulseComment::class, PulseCommentPolicy::class);
         Gate::policy(Community::class, CommunityPolicy::class);

@@ -14,6 +14,8 @@ use Tests\TestCase;
  * Real and used:
  *  - InfoDot sign-in (App\Services\InfoDot\IdentityClient, bearer secret, redeem) and team sync (ProvisionUserFromInfoDot).
  *    Covered by tests/Feature/InfoDotRedeemTest.php, EcosystemSsoPostTest.php and InfoDotTeamSyncTest.php.
+ *  - InfoDot entitlement read (App\Services\InfoDot\EntitlementClient, R-50): asks whether the current company still
+ *    holds Pulse; any failure carries on. Covered by tests/Feature/CompanyEntitlementTest.php (every failure mode).
  *  - Dot.Analytics publisher (AnalyticsClient): inert without its three settings, HMAC signed over "timestamp.body"
  *    when it runs. Covered by tests/Feature/Analytics/AnalyticsClientTest.php (disabled when url, secret or company is
  *    blank; posts the payload signed with hmac over timestamp dot raw body, with Http::fake).
@@ -32,6 +34,7 @@ class IntegrationsAreRealTest extends TestCase
         $this->assertSame([
             'Services'.DIRECTORY_SEPARATOR.'AiModerationService.php',
             'Services'.DIRECTORY_SEPARATOR.'Analytics'.DIRECTORY_SEPARATOR.'AnalyticsClient.php',
+            'Services'.DIRECTORY_SEPARATOR.'InfoDot'.DIRECTORY_SEPARATOR.'EntitlementClient.php',
             'Services'.DIRECTORY_SEPARATOR.'InfoDot'.DIRECTORY_SEPARATOR.'IdentityClient.php',
         ], $callers, 'a new outbound integration needs an audit entry in R41_ACCEPTANCE_B.md and a test of how it behaves when the other side is down');
     }
