@@ -70,6 +70,12 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     @include('layouts.partials.head', ['title' => $pageTitle, 'description' => $description, 'csrf' => true])
+    {{-- Shared Dot UI (search pill, platform switcher), served from this site's own public/dot-ui. The host token mapping lives in resources/css/pulse/shell.css. --}}
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
     @livewireStyles
 </head>
 {{-- data-community-channels: the private communities this user belongs to, one realtime channel each (resources/js/pulse-realtime.js). --}}
@@ -89,13 +95,15 @@
 
         <div class="sh-mast__tools">
             @if (Route::has('search') && ! request()->routeIs('search') && ! $focus)
-                <form class="sh-search" role="search" action="{{ route('search') }}" method="get">
-                    <label for="mast-q" class="sr-only">Search the floor</label>
-                    <x-pulse.icon name="search" :size="16" />
-                    <input id="mast-q" type="search" name="q" placeholder="Search the floor" autocomplete="off" value="{{ request()->routeIs('search') ? request('q') : '' }}">
-                </form>
+                <div class="sh-search">
+                    <x-dot.search id="mast-q" name="q" value="" placeholder="Search the floor" label="Search the floor" :action="route('search')" />
+                </div>
                 <a class="sh-iconbtn sh-searchicon" href="{{ route('search') }}" aria-label="Search"><x-pulse.icon name="search" /></a>
             @endif
+
+            @auth
+                <x-dot.switcher platform="pulse" :company="$user->currentTeam?->infodot_team_uuid" :company-name="$user->currentTeam?->name" logos="/dot-ui/img/platforms" />
+            @endauth
 
             @if ($bellRoute)
                 <a class="sh-iconbtn" href="{{ route('me.notifications') }}" aria-label="Notifications" data-label="Notifications">
@@ -269,6 +277,7 @@
     @stack('modals')
     <x-pulse.toasts />
 
+    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
     @livewireScripts
 </body>
 </html>
