@@ -4,7 +4,8 @@
     $floorRoutes = ['floor' => 'all', 'trade' => 'trade', 'work' => 'work', 'local' => 'local', 'learn' => 'learn'];
     $showDial = $dial ?? array_key_exists((string) $routeName, $floorRoutes);
     $selectedMode = $floorRoutes[$routeName] ?? 'all';
-    $isFloor = $width === 'floor';
+    $isFloor = in_array($width, ['floor', 'desk'], true);
+    $isDesk = $width === 'desk';
     $focus = $focus ?? false;
     $hasContext = isset($context) && trim((string) $context) !== '';
     $pageTitle = $title ? $title.' | Dot.Pulse' : 'Dot.Pulse';
@@ -226,7 +227,7 @@
         </nav>
         @endunless
 
-        <main id="main" tabindex="-1" class="sh-stage {{ $isFloor ? 'sh-stage--floor' : 'sh-stage--wide' }}{{ $isFloor && $hasContext ? ' has-context' : '' }}">
+        <main id="main" tabindex="-1" class="sh-stage {{ $isFloor ? 'sh-stage--floor' : 'sh-stage--wide' }}{{ $isDesk ? ' sh-stage--desk' : '' }}{{ $isFloor && $hasContext ? ' has-context' : '' }}">
             @if ($isFloor)
                 <div class="sh-floor">
                     @isset($header)<header class="sh-pagehead">{{ $header }}</header>@endisset

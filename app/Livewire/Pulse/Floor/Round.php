@@ -7,9 +7,11 @@ use App\Livewire\Pulse\Floor\Support\Arrival;
 use App\Livewire\Pulse\Floor\Support\BeatPresenter;
 use App\Livewire\Pulse\Floor\Support\Persona;
 use App\Services\Pulse\Discovery\Floor;
+use App\Support\Moment;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -54,6 +56,13 @@ class Round extends Component
     #[Locked]
     public bool $arrival = false;
 
+    /**
+     * The beat shown in the pane beside the rows (signal id). Always one of the beats this round holds: whatever the
+     * address or the browser sends is checked against the loaded rows and falls back to the first new beat.
+     */
+    #[Url(as: 'beat', history: false)]
+    public ?int $selected = null;
+
     public function mount(Floor $floor, string $mode = 'all', bool $arrival = false): void
     {
         $this->mode = in_array($mode, Floor::MODES, true) ? $mode : 'all';
@@ -69,6 +78,35 @@ class Round extends Component
         $this->beats = array_merge($new, $seen);
         $this->absorb($round, count($round['beats']));
         $this->everShown = $new !== [] || $earlier['ever_shown'];
+        $this->selected = $this->validSelection($this->selected);
+    }
+
+    /** The person picked a row (desktop, no page change). Anything that is not on this round is ignored. */
+    public function select(int $signalId): void
+    {
+        $this->selected = $this->validSelection($signalId, $this->selected);
+    }
+
+    /** The selected beat's signal id, when it is on this round, else the first new beat, else the first beat. */
+    private function validSelection(?int $wanted, ?int $keep = null): ?int
+    {
+        $ids = array_map('intval', array_column($this->beats, 'signal_id'));
+
+        if ($wanted !== null && in_array($wanted, $ids, true)) {
+            return $wanted;
+        }
+
+        if ($keep !== null && in_array($keep, $ids, true)) {
+            return $keep;
+        }
+
+        foreach ($this->beats as $b) {
+            if (empty($b['earlier'])) {
+                return (int) $b['signal_id'];
+            }
+        }
+
+        return $ids[0] ?? null;
     }
 
     /** The next batch of the round. */
@@ -115,11 +153,48 @@ class Round extends Component
         $this->waiting = max(0, (int) $round['counts']['new'] - $batch);
     }
 
+    /**
+     * What the arrival says about this round: a count of what is really here, never a slogan. New beats only (the
+     * ones seen earlier are not "in this round"); "on two reasons or more" counts the loaded beats' own reasons.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function headline(bool $firstVisit): array
+    {
+        $fresh = array_values(array_filter($this->beats, fn ($b) => empty($b['earlier'])));
+
+        if ($firstVisit) {
+            return ['Nothing fits yet.', 'Say what you want and Dot.Pulse introduces the businesses and people that fit, each with its reasons. Nobody reaches you without stating theirs.'];
+        }
+
+        if ($fresh === []) {
+            return ['You are caught up.', 'Nothing new since you last looked. What you saw earlier is below for a day.'];
+        }
+
+        $total = count($fresh) + $this->waiting;
+        $line = Moment::plural($total, 'introduction').' in this round';
+
+        if ($this->waiting === 0) {
+            $strong = count(array_filter($fresh, fn ($b) => count($b['reasons'] ?? []) >= 2));
+            $line .= $strong > 0 ? ', '.$strong.' on two reasons or more.' : '.';
+        } else {
+            $line .= '.';
+        }
+
+        return [$line, 'Each row says why it fits.'];
+    }
+
     public function render(Persona $persona, Arrival $arrival): View
     {
         $firstVisit = $this->beats === [] && ! $this->everShown;
+        // A beat can leave the round (dismissed, switched off): the pane then moves to the next one that is still here.
+        $this->selected = $this->validSelection($this->selected);
+
+        [$headline, $lead] = $this->headline($firstVisit);
 
         return view('livewire.pulse.floor.round', [
+            'headline' => $headline,
+            'lead' => $lead,
             // An empty first visit to the Floor says what the matcher holds about the person, so the gap explains itself.
             'knows' => $firstVisit && $this->mode === 'all' ? $arrival->knows(auth()->user()) : [],
             'firstHref' => $this->arrival ? $arrival->action(auth()->user())['href'] : null,

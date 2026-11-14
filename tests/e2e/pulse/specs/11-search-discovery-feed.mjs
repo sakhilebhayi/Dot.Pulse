@@ -1,15 +1,23 @@
+import { selectRow } from '../lib/ui.mjs';
+
 // Criterion 11: search, discovery and the feed work end to end, including the end-of-round "caught up" state, empty
 // states, saving, "not for me", and the community feed.
 // The browser reports a beat as seen once it has been on screen, so a person reading the round scrolls through it.
 const readRound = async (page) => {
-  const n = await page.locator('article.pk-beat').count();
+  const n = await page.locator('[data-row]').count();
   for (let i = 0; i < n; i++) {
-    await page.locator('article.pk-beat').nth(i).scrollIntoViewIfNeeded();
+    await page.locator('[data-row]').nth(i).scrollIntoViewIfNeeded();
     await new Promise((r) => setTimeout(r, 450));
   }
   await new Promise((r) => setTimeout(r, 600));
   await page.evaluate(() => window.scrollTo(0, 0));
 };
+
+// The Floor draws rows (R-51); search and saved still draw cards. Rows seen earlier are quiet rows, not new ones.
+const floorCards = (page) => page.evaluate(() => [...document.querySelectorAll('[data-row]:not(.fl-row--quiet)')].map((a) => ({
+  title: a.querySelector('.fl-row__open')?.textContent.trim(),
+  kind: a.querySelector('.pk-kind')?.textContent.trim(),
+})));
 
 const cards = (page) => page.evaluate(() => [...document.querySelectorAll('article.pk-beat')].map((a) => ({
   title: a.querySelector('.pk-beat__title')?.textContent.trim(),
@@ -24,7 +32,7 @@ export default {
     const una = await j.as('una');
     const uid = j.userId('una');
     await j.go(una, '/floor');
-    const first = await cards(una);
+    const first = await floorCards(una);
     const liveMatches = j.value(`select count(*) from pulse_matches where user_id = ? and dismissed_at is null`, uid);
     j.check('the Floor shows her real matches (and no more than the round allows)', first.length > 0 && first.length <= 20 && first.length <= liveMatches, `${first.length} shown, ${liveMatches} matched`);
     const text1 = await j.text(una);
@@ -34,7 +42,7 @@ export default {
     const seen = j.value(`select count(*) from pulse_matches where user_id = ? and seen_at is not null`, uid);
     j.check('what she read is recorded as seen', seen >= first.length, `${seen} seen of ${first.length} shown`);
     await j.go(una, '/floor');
-    const second = await cards(una);
+    const second = await floorCards(una);
     j.check('the next visit is the empty "caught up" state, not the same beats again', second.length === 0 && /caught up/i.test(await j.text(una)), `${second.length} cards`);
     await j.snap(una, 'floor-caught-up-empty');
     j.check('the empty state offers a next step (saved beats, say what you need)', (await una.getByRole('link', { name: /Say what you need/ }).count()) > 0);
@@ -49,11 +57,11 @@ export default {
     const ibrahim = await j.as('ibrahim');
     const bid = j.userId('ibrahim');
     await j.go(ibrahim, '/floor');
-    const ib = await cards(ibrahim);
+    const ib = await floorCards(ibrahim);
     j.check('another person has a Floor of her own', ib.length > 0, `${ib.length} cards`);
     const saveTitle = ib[0].title;
-    const article = (t) => ibrahim.locator('article', { has: ibrahim.getByRole('heading', { name: t, exact: true }) }).first();
-    await article(saveTitle).getByRole('button', { name: /^Save/ }).click();
+    await selectRow(ibrahim, saveTitle);
+    await ibrahim.locator('[data-floor-pane]').getByRole('button', { name: /^Save/ }).click();
     await j.settle(ibrahim, 600);
     const saved = j.value(`select count(*) from pulse_saves where user_id = ?`, bid);
     j.check('Save stores a save for her', saved === 1, String(saved));
