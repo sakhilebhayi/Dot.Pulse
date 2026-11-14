@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\Pulse\DigestUnsubscribeController;
 use App\Http\Controllers\Pulse\MediaController;
 use App\Http\Controllers\Pulse\PrivacyExportController;
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Livewire\Pulse\Business\Support\EntityView;
 use App\Livewire\Pulse\Need\NeedPage;
 use App\Models\Community;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Features;
 
+// R-50: every signed-in group carries EnsureCompanyEntitled right after sign-in and before the welcome-flow redirect.
 // Sends a signed-in person through the short welcome flow once, on any page that carries it. Left off on purpose:
 // the welcome flow itself, notifications, privacy (and its export), errors and sign-in.
 
@@ -41,7 +43,7 @@ Route::get('/', fn () => auth()->check() ? redirect()->route('floor') : view('we
 
 Route::middleware([
     'auth:sanctum',
-    config('jetstream.auth_session'),
+    config('jetstream.auth_session'), EnsureCompanyEntitled::class,
     'verified',
     'pulse.onboarded',
 ])->group(function () {
@@ -117,6 +119,9 @@ if (app()->environment('local', 'testing')) {
 // --- end dev ---
 // --- lines ---
 // The shell badge polls this every 30 seconds while the page is visible: three counts, three indexed queries.
+// R-50: deliberately without the entitlement check: it is polled by every open page every 30 seconds on a two-query
+// budget (see PulseCheckEndpointTest), answers three counts of the person's own and nothing of any company's, and the
+// page that polls it is never drawn for a refused person.
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'throttle:120,1,pulse-check'])
     ->get('/api/pulse/pulse-check', 'App\\Http\\Controllers\\Pulse\\PulseCheckController')
     ->name('pulse.check');
@@ -131,7 +136,7 @@ Route::match(['get', 'post'], '/pulse/digest/unsubscribe/{user}', DigestUnsubscr
 // --- end discovery digest (D2) ---
 // --- operator ---
 // Platform moderators only. The component checks again on every request it serves.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), EnsureCompanyEntitled::class, 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/operator', function () {
         abort_unless(auth()->user()->isPlatformModerator(), 403);
 
@@ -141,7 +146,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 // --- end operator ---
 // --- floor ---
 // The Floor and everything that hangs off it: the four mode pages, a beat in full, search, saved, doors.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), EnsureCompanyEntitled::class, 'verified', 'pulse.onboarded'])->group(function () {
     foreach (['floor' => 'all', 'trade' => 'trade', 'work' => 'work', 'local' => 'local', 'learn' => 'learn'] as $name => $mode) {
         Route::get('/'.$name, fn () => view('pages.pulse.floor.floor', ['mode' => $mode]))->name($name);
     }
@@ -174,7 +179,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 // need pages and the Me pages below. Notifications and privacy are deliberately outside it: reading what Pulse
 // holds about you, and erasing it, are never gated behind a sign-up flow.
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), EnsureCompanyEntitled::class, 'verified'])->group(function () {
     Route::view('/welcome-in', 'pulse.me.onboarding')->name('onboarding');
 
     Route::middleware('pulse.onboarded')->group(function () {
@@ -204,7 +209,7 @@ Route::get('/b/{entity:slug}', function (PulseEntity $entity) {
     ]);
 })->middleware(['pulse.onboarded', 'throttle:120,1'])->name('entities.show'); // the only page a stranger can read: scraping it costs something
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), EnsureCompanyEntitled::class, 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/business/new', fn () => view('pulse.business.create'))->name('entities.create');
 
     Route::get('/b/{entity:slug}/o/{offer:slug}', function (PulseEntity $entity, PulseOffer $offer) {
@@ -257,7 +262,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 // --- end business ---
 // --- lines-ui ---
 // Lines: the inbox, one line's thread, and the side by side comparison of a quote request.
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'pulse.onboarded'])->group(function () {
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), EnsureCompanyEntitled::class, 'verified', 'pulse.onboarded'])->group(function () {
     Route::get('/lines', fn () => view('livewire.pulse.lines.pages.index'))->name('lines');
 
     Route::get('/lines/quotes/{group}', function (string $group) {

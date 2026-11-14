@@ -24,6 +24,7 @@
                     <a class="pk-btn pk-btn--signal" href="/">Back to Pulse</a>
                 @endif
             </div>
+            @yield('after')
             <div class="er-miss" aria-hidden="true">
                 <svg viewBox="0 0 760 120" focusable="false">
                     <path class="er-miss__you" pathLength="1" d="M0 96 C170 96 250 76 332 62 L352 58"/>

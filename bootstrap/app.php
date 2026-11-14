@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Http\Middleware\EnsureOnboarded;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -12,9 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    // R-50: the broadcasting auth route carries the entitlement check (the same routes as withRouting(channels:)).
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', EnsureCompanyEntitled::class]])
     ->withMiddleware(function (Middleware $middleware): void {
         // Security headers and the nonce CSP on every response, including errors and the media route.
         $middleware->append(SecurityHeaders::class);

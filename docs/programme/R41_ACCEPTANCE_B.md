@@ -132,6 +132,7 @@ Outbound HTTP exists in exactly three classes (guarded by `IntegrationsAreRealTe
 | Integration | Real? | Behaviour proven |
 |---|---|---|
 | InfoDot sign-in and team sync (`IdentityClient`, `ProvisionUserFromInfoDot`) | Real (InfoDot's `POST /api/ecosystem/redeem`, bearer secret) | `InfoDotRedeemTest`, `EcosystemSsoPostTest`, `InfoDotTeamSyncTest`; the browser harness signs in through a local-only dev route instead (`/dev/login-b/{id}`, absent outside local and testing) |
+| InfoDot entitlement read (`EntitlementClient`, R-50) | Real (InfoDot's `GET /api/ecosystem/companies/{uuid}/platforms`, same service secret) | `CompanyEntitlementTest`: a clear no is a 403, every failure (401, 403, 404, 5xx, timeout, malformed body, own row missing, no secret) carries on and is logged once per cache window |
 | Dot.Analytics publisher (`AnalyticsClient`) | Real | inert unless url, secret and company are all set (`test_it_is_disabled_when_the_url_secret_or_company_is_blank`, `IntegrationsAreRealTest`); HMAC-SHA256 over `timestamp.body` with `Http::fake` (`test_it_posts_the_payload_signed_with_hmac_over_timestamp_dot_raw_body`) |
 | Optional model second opinion on moderation (`AiModerationService`) | Real, optional | fails closed, inert without a key (`AiModerationFailClosedTest`) |
 
