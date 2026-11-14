@@ -127,7 +127,7 @@ Archivo, a variable grotesk with a width axis. Display and titles use width 112 
 
 ## Layout
 
-Rail 232 px, main column 720 px (left aligned beside the rail on every screen; two-column pages such as a business page use up to 1100 px from the same edge), context column 320 px, 24 px gutters; below 1200 px the context column folds into a drawer; below 860 px the rail becomes a bottom bar of five and the floor is full width with 16 px gutters. Masthead 64 px. Beats are 20 px padded with 12 px between. Tap targets at least 44 px on phones (small controls keep their look and take an invisible 44 px hit area). Nothing is set below 12 px. The phone has no floating button: Compose is a yellow plus in the masthead. A single-task page (the welcome flow) drops the rail, the bar and Compose. Under 430 px the masthead is one bar (mark, then tools) plus the mode strip; a row of tabs that scrolls fades on the side that has more. A long form (the business page tab) runs in two columns from 1100 px and keeps its Save in a sticky bar.
+Rail 232 px, main column 720 px (left aligned beside the rail on every screen; two-column pages such as a business page use up to 1100 px from the same edge), context column 320 px, 24 px gutters; below 1200 px the context column folds into a drawer; below 860 px the rail becomes a bottom bar of five and the floor is full width with 16 px gutters. Masthead 64 px. Beats are 20 px padded with 12 px between. Tap targets at least 44 px on phones (small controls keep their look and take an invisible 44 px hit area). Nothing is set below 12 px. The phone has no floating button: Compose is a yellow plus in the masthead. A single-task page (the welcome flow) drops the rail, the bar and Compose. Under 430 px the masthead is one bar (the original logo on its white plate, then tools) plus the mode strip; a row of tabs that scrolls fades on the side that has more. A long form (the business page tab) runs in two columns from 1100 px and keeps its Save in a sticky bar.
 
 ## Elevation
 
@@ -144,3 +144,7 @@ Button primary (cobalt), signal (yellow, for the one action that moves things fo
 ## Do and do not
 
 Do show why. Do end the round. Do label claims as claims. Do give every stranger contact a stated reason. Do let one yellow thing lead on a screen. Do not add counters of vanity (followers, likes), fake urgency, fake scarcity, fake "N people viewing", decorative pulse animations, gradient blobs or glass. Do not use yellow as decoration. Do not animate anything that is not a state change or a first draw of real data.
+
+## Logo rule
+
+The only Dot.Pulse logo is `public/images/logo.png`, the original artwork. It is never redrawn, recoloured, restyled, replaced or generated; only size, placement, clear space and the light plate behind it may change. It was drawn for a light ground and there is no light-on-dark file, so the masthead and dark theme put it on the white plate (`--c-logo-plate`). Use `<x-pulse.logo>`. Favicons are straight crops of the yellow disc in that file (see `public/favicon*`).

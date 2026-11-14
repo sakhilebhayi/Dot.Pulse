@@ -4,6 +4,7 @@ namespace Tests\Feature\Pulse;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Blade;
 use Symfony\Component\Finder\Finder;
 use Tests\TestCase;
@@ -95,7 +96,7 @@ class OriginalLogoTest extends TestCase
         mkdir($dir);
         file_put_contents($dir.'/probe.blade.php', "@component('mail::message')\nHello\n@endcomponent\n");
         view()->addLocation($dir);
-        $html = (string) app(\Illuminate\Mail\Markdown::class)->render('probe');
+        $html = (string) app(Markdown::class)->render('probe');
         unlink($dir.'/probe.blade.php');
         rmdir($dir);
         $this->logoImg($html);
