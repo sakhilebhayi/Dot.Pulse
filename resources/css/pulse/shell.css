@@ -68,6 +68,26 @@
     .sh-mast__page {
         display: none;
     }
+
+    /* Six 44 px tools (search, apps, bell, compose, filters, account) plus the logo only fit a 375 px bar when the
+       buttons touch and the apps button is square; their icons stay 44 px apart centre to centre, so nothing gets
+       harder to hit. */
+    .sh-mast .sh-mast__tools {
+        gap: 0;
+    }
+
+    .sh-mast .dsw {
+        --dsw-btn-min-w: var(--tap);
+        --dsw-btn-pad-x: 0;
+    }
+}
+
+/* At 360 px the same bar is 5 px too wide: the original logo is shown a little smaller (size only). */
+@media (max-width: 380px) {
+    .sh-brand__logo {
+        height: 44px;
+        margin: 10px 0;
+    }
 }
 
 .sh-mast__dial {
@@ -85,50 +105,48 @@
     flex: none;
 }
 
+/* Header search: the shared Dot UI pill (<x-dot.search>, public/dot-ui/css/dot-search.css), identical to InfoDot's by
+   design. Only its slot is sized here. With no hint the pill reserves just its circle on the right (.dsr--nohint).
+   Below 1100 px the masthead keeps its search icon, which opens the search page. */
 .sh-search {
-    position: relative;
     display: none;
+    width: clamp(240px, 24vw, 340px);
 }
 
-.sh-search input {
-    width: 220px;
-    height: 40px;
-    padding: 0 12px 0 38px;
-    border: 1px solid transparent;
-    border-radius: var(--r-md);
-    background: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
-    color: var(--c-field-ink);
-    font: inherit;
-    font-size: var(--t-ui);
+.sh-search .dsr {
+    margin: 0;
 }
 
-.sh-search input::placeholder {
-    color: color-mix(in srgb, var(--c-field-ink) 78%, transparent);
+/* Host token mapping for the shared Dot UI. The pill itself is not mapped (it is the same cream pill in every platform);
+   the dropdown surfaces, the compact filter and the switcher button/focus follow the Floor's tokens, in light and dark.
+   The package defaults sit under :where() (zero specificity), so this mapping wins in either theme. On body so it follows
+   the data-theme and prefers-color-scheme values of :root. */
+body {
+    --dsr-panel: var(--c-sheet);
+    --dsr-hover: var(--c-raised);
+    --dsr-rule: var(--c-line);
+    --dsr-rule-strong: var(--c-line-strong);
+    --dsr-text: var(--c-ink);
+    --dsr-text-2: var(--c-ink-2);
+    --dsr-text-3: var(--c-muted);
+    --dsr-radius-panel: var(--r-md);
+    /* the package derives these from the tokens above on :root, so they are restated here to follow the body values */
+    --dsr-filter-radius: var(--r-md);
+    --dsr-filter-bg: var(--c-sheet);
+    --dsr-filter-ink: var(--c-ink);
+    --dsr-filter-placeholder: var(--c-muted);
+    --dsr-filter-border: var(--c-line-strong);
+    --dsr-filter-border-hover: var(--c-muted);
+    --dsr-filter-border-focus: var(--c-ink);
 }
 
-.sh-search input:focus {
-    background: var(--c-sheet);
-    color: var(--c-ink);
-    outline: 3px solid var(--c-signal);
-    outline-offset: 0;
-}
-
-.sh-search input:focus::placeholder {
-    color: var(--c-muted);
-}
-
-.sh-search svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    width: 16px;
-    height: 16px;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-.sh-search:focus-within svg {
-    color: var(--c-ink);
+.sh-mast .dsw {
+    --dsw-btn-height: var(--tap);
+    --dsw-btn-ink: var(--c-field-ink);
+    --dsw-btn-border: color-mix(in srgb, var(--c-field-ink) 45%, transparent);
+    --dsw-btn-bg-hover: color-mix(in srgb, var(--c-field-ink) 16%, transparent);
+    --dsw-focus: var(--c-signal);
+    --dsw-radius: var(--r-md);
 }
 
 .sh-iconbtn {

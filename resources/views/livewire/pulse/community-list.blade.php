@@ -2,8 +2,7 @@
     <div class="lg-toolbar">
         <h2 id="communities-title" class="lg-h">Communities</h2>
         <div class="lg-toolbar__type">
-            <label for="community-search" class="sr-only">Search communities</label>
-            <input id="community-search" wire:model.live="search" type="search" placeholder="Search communities" class="pk-control" autocomplete="off">
+            <x-dot.filter-search id="community-search" name="search" label="Search communities" placeholder="Search communities" wire:model.live="search" />
         </div>
     </div>
 

@@ -420,7 +420,7 @@ jobs:
             elif [ "$DOCROOT" = "$HOME" ]; then
               echo "== static files: skipped ($APPDIR is directly in the home folder, no docroot above it)"
             else
-              for NAME in fonts images; do
+              for NAME in fonts images dot-ui; do
                 [ -d "public/$NAME" ] || continue
                 DEST="$DOCROOT/$NAME"
                 if [ -L "$DEST" ]; then
