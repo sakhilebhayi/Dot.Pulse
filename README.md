@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="Dot.Pulse" width="320" />
+<img src="public/images/logo.png" alt="Dot.Pulse" width="320" />
 
 <br /><br />
 

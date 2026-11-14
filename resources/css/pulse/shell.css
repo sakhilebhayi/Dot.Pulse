@@ -35,8 +35,20 @@
     text-decoration: none;
 }
 
-.sh-brand__word span {
-    color: var(--c-signal);
+/* The original logo on its light plate. It was drawn for a light ground and has no light-on-dark version, so on the
+   cobalt masthead (and in dark theme) it keeps the white plate. Presentation only: size and clear space. */
+.sh-brand__logo,
+.pk-logo {
+    display: block;
+    height: 52px;
+    width: auto;
+    max-width: none;
+    border-radius: var(--r-md);
+    background: var(--c-logo-plate);
+}
+
+.sh-brand__logo {
+    margin: 6px 0;
 }
 
 .sh-mast__page {
@@ -556,12 +568,6 @@
 }
 
 /* A phone gets one bar: the mark, then the tools. The name is still the link's label. */
-@media (max-width: 429.98px) {
-    .sh-brand__word {
-        display: none;
-    }
-}
-
 @media (max-width: 859.98px) {
     .sh-menu {
         position: fixed;
@@ -578,10 +584,6 @@
 
     .sh-mast__tools .sh-hide-phone {
         display: none;
-    }
-
-    .sh-brand__word {
-        font-size: 1rem;
     }
 
     .sh-body {

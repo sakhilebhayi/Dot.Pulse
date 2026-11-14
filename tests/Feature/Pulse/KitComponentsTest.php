@@ -54,7 +54,7 @@ class KitComponentsTest extends TestCase
             'confirm' => '<x-pulse.confirm id="c1" title="Sure?" />',
             'row' => '<x-pulse.row title="A line" meta="2 h ago" />',
             'icon' => '<x-pulse.icon name="floor" />',
-            'mark' => '<x-pulse.mark />',
+            'logo' => '<x-pulse.logo />',
             'brand' => '<x-pulse.brand href="/" />',
         ];
 
