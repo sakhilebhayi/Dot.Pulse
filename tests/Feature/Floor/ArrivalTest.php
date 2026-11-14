@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Floor;
 
+use App\Livewire\Pulse\Floor\Round;
 use App\Livewire\Pulse\Floor\Support\Arrival;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use Livewire\Livewire;
 
 /**
  * The top of the Floor, where a person lands after signing in through InfoDot: the original logo, a welcome from their
@@ -94,7 +96,7 @@ class ArrivalTest extends FloorTestCase
 
         $this->floorAs($user->fresh())
             ->assertSeeInOrder(['Welcome, Naledi.', 'You are here for', 'Fenwick Holdings'])
-            ->assertSee('Introductions that say why.');
+            ->assertDontSee('<h1 id="fl-hello-h" class="fl-hello__h">Introductions that say why.', false);
     }
 
     public function test_a_personal_team_is_never_shown_as_a_company_and_a_business_page_stands_in(): void
@@ -167,12 +169,36 @@ class ArrivalTest extends FloorTestCase
         $this->offerFor('Bookkeeping for small shops', [['code' => 'need_offer', 'text' => 'You need bookkeeping, they offer bookkeeping', 'weight' => 40]]);
 
         $this->floorAs($this->me)->assertSeeInOrder([
+            'data-floor-round',
             'data-floor-arrival',
             'data-primary-action',
-            'data-floor-round',
+            'data-row',
             'Bookkeeping for small shops',
             'You need bookkeeping, they offer bookkeeping',
         ], false);
+    }
+
+    public function test_the_headline_is_a_true_count_of_this_round_and_not_a_slogan(): void
+    {
+        $two = [
+            ['code' => 'need_offer', 'text' => 'You need bookkeeping, they offer bookkeeping', 'weight' => 40],
+            ['code' => 'topic', 'text' => 'You follow accounting', 'weight' => 24],
+        ];
+        $this->offerFor('Two reasons', $two);
+        $this->offerFor('One reason');
+
+        $this->floorAs($this->me)
+            ->assertSee('2 introductions in this round, 1 on two reasons or more.')
+            ->assertDontSee('Introductions that say why.</h1>', false);
+    }
+
+    public function test_the_headline_says_caught_up_when_only_seen_beats_remain(): void
+    {
+        [$signal] = $this->offerFor('Seen offer');
+        $this->actingAs($this->me);
+        Livewire::actingAs($this->me)->test(Round::class)->call('markSeen', [$signal->id]);
+
+        $this->floorAs($this->me)->assertSee('You are caught up.');
     }
 
     public function test_the_mode_pages_keep_their_plain_heading(): void

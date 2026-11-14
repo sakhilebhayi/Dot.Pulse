@@ -11,15 +11,24 @@
     $fresh = array_values(array_filter($beats, fn ($b) => empty($b['earlier'])));
     $earlier = array_values(array_filter($beats, fn ($b) => ! empty($b['earlier'])));
     $firstVisit = $fresh === [] && $earlier === [] && ! $everShown;
+    // The beat in the pane (always one this round holds, see Round::validSelection). Not shown on a first visit.
+    $selectedBeat = $firstVisit ? null : (collect($beats)->first(fn ($b) => (int) $b['signal_id'] === (int) $selected));
 @endphp
 <div class="fl-round" data-floor-round>
-    <div class="fl-draw" wire:loading.delay.shortest wire:target="showNext,save,unsave,dismiss,removeReason" aria-hidden="true"></div>
+    <div class="fl-draw" wire:loading.delay.shortest wire:target="showNext,save,unsave,dismiss,removeReason,select" aria-hidden="true"></div>
+
+    @if ($arrival)
+        <x-pulse.arrival :headline="$headline" :lead="$lead" />
+    @endif
+
+    <div @class(['fl-work', 'fl-work--pane' => $selectedBeat !== null])>
+    <div class="fl-work__main">
 
     @if ($firstVisit)
         @if ($knows !== [])
             {{-- The Floor, first visit, nothing matched: the reason is what the matcher holds about this person. Each line is their own record, with the place to change it. No one else is shown or implied. --}}
             <div class="pk-empty fl-knows" data-floor-empty>
-                <h2 class="pk-empty__title">{{ $emptyTitle }}</h2>
+                @unless ($arrival)<h2 class="pk-empty__title">{{ $emptyTitle }}</h2>@endunless
                 <p class="pk-empty__text">The floor stays empty until there is a real reason to introduce someone. This is what it has to match you on so far.</p>
                 <dl class="fl-knows__list">
                     @foreach ($knows as $k)
@@ -44,13 +53,16 @@
         @endif
     @else
         @if ($fresh !== [])
-            <h2 class="sr-only">The round</h2>
-            <div class="pk-enter fl-list">
-                {{-- Two densities: the top three carry the whole strand, the rest a small strand and one line of reasons. --}}
-                @foreach ($fresh as $b)
-                    @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => ! ($loop->first || ($loop->index < 3 && count($b['reasons'] ?? []) >= 2)), 'lead' => $loop->first || ($loop->index < 3 && count($b['reasons'] ?? []) >= 2), 'first' => $loop->first])
-                @endforeach
+            <div class="fl-lh">
+                <h2 class="fl-lh__title">The round</h2>
+                <span class="fl-lh__meta">{{ count($fresh) }} new{{ $earlier !== [] ? ', '.count($earlier).' seen earlier' : '' }}</span>
             </div>
+            {{-- One 56px row per beat; the whole strand and the actions live in the pane beside the rows. --}}
+            <ul class="fl-rows" role="list">
+                @foreach ($fresh as $b)
+                    @include('livewire.pulse.floor.partials.beat-row', ['b' => $b, 'selected' => $selected])
+                @endforeach
+            </ul>
         @endif
 
         @if (! $hasMore && $fresh === [] && $earlier !== [])
@@ -87,14 +99,23 @@
             <section class="fl-earlier" aria-labelledby="fl-earlier-h">
                 <h2 id="fl-earlier-h" class="fl-earlier__title">Seen earlier</h2>
                 <p class="fl-small">Still here for a day, unless you save, dismiss or knock.</p>
-                <div class="fl-list">
+                <ul class="fl-rows" role="list">
                     @foreach ($earlier as $b)
-                        @include('livewire.pulse.floor.partials.beat', ['b' => $b, 'mode' => 'floor', 'why' => [], 'compact' => true, 'quiet' => true])
+                        @include('livewire.pulse.floor.partials.beat-row', ['b' => $b, 'selected' => $selected, 'quiet' => true])
                     @endforeach
-                </div>
+                </ul>
             </section>
         @endif
     @endif
+
+    </div>
+
+    @if ($selectedBeat !== null)
+        <div class="fl-work__side">
+            @include('livewire.pulse.floor.partials.beat-pane', ['b' => $selectedBeat])
+        </div>
+    @endif
+    </div>
 
     @script
     <script>
@@ -148,12 +169,18 @@
                 event.preventDefault();
                 list[to].focus({ preventScroll: true });
                 list[to].scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+                // A row is also what the pane shows: moving along the rows moves the pane (it is the same beat, one round trip).
+                if (list[to].hasAttribute('data-row') && window.matchMedia('(min-width: 1200px)').matches) $wire.select(Number(list[to].dataset.beat));
             } else if (event.key === 's' && current) {
-                const save = current.querySelector('[data-act="save"]');
+                // A card carries its own Save; a row's Save is in the pane when the pane shows that beat, otherwise save it directly.
+                const id = current.dataset.beat;
+                const save = current.querySelector('[data-act="save"]') || root.querySelector('[data-pane-beat="' + id + '"] [data-act="save"]');
                 if (save) { event.preventDefault(); save.click(); }
+                else if (current.hasAttribute('data-row')) { event.preventDefault(); $wire.save(Number(id)); }
             } else if (event.key === 'Enter' && current && document.activeElement === current) {
-                const open = current.querySelector('.pk-beat__title a');
-                if (open) { event.preventDefault(); open.click(); }
+                // Enter on a focused row or card opens the beat's own page (a click on a row only selects it on a wide screen).
+                const open = current.querySelector('.pk-beat__title a, .fl-row__open');
+                if (open) { event.preventDefault(); window.location.assign(open.href); }
             }
         };
         document.addEventListener('keydown', onKey);

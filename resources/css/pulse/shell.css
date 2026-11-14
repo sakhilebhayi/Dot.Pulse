@@ -457,6 +457,12 @@ body {
     grid-template-columns: minmax(0, var(--floor-w)) var(--context-w);
 }
 
+/* The Floor as a desk (arrival, rows, pane): the stage uses the width the shell gives it. */
+.sh-stage--desk {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1280px;
+}
+
 .sh-floor {
     min-width: 0;
 }

@@ -1,6 +1,6 @@
 // Criterion 4: a professional sets discoverability to anonymous, sees the preview, sees employers and roles on the
 // Floor with reasons, applies to a role, and reveals who they are on their own terms.
-import { beat, knock } from '../lib/ui.mjs';
+import { beat, knock, selectRow } from '../lib/ui.mjs';
 
 export default {
   id: '04-professional-discovers-employers',
@@ -32,18 +32,25 @@ export default {
     j.tick();
     await j.go(tendai, '/floor');
     const floor = await j.text(tendai);
-    j.check('the Floor shows the employer with a skills reason (passive career discovery)', /Wildfig Talent Works/.test(floor) && /building a team and want your skills: bookkeeping/i.test(floor));
-    const roleCard = beat(tendai, 'Junior bookkeeper');
-    j.check('the matching role is shown with its reason', (await roleCard.count()) > 0 && /Your skills fit this role/.test(await roleCard.innerText()));
+    await selectRow(tendai, 'Wildfig Talent Works');
+    const employerPane = await tendai.locator('[data-floor-pane]').innerText();
+    j.check('the Floor shows the employer with a skills reason (passive career discovery)', /Wildfig Talent Works/.test(floor) && /building a team and want your skills: bookkeeping/i.test(employerPane));
+    const roleRow = tendai.locator('[data-row]', { hasText: 'Junior bookkeeper' }).first();
+    j.check('the matching role is shown as a row', (await roleRow.count()) > 0);
+    await selectRow(tendai, 'Junior bookkeeper');
+    j.check('and its pane shows the reason', /Your skills fit this role/.test(await tendai.locator('[data-floor-pane]').innerText()));
     await j.snap(tendai, 'floor-employers-and-roles');
     // The reasons on screen are exactly the stored match reasons.
     const stored = j.one(`select m.reasons from pulse_matches m join pulse_signals s on s.id = m.signal_id where m.user_id = ? and s.kind = 'role' and s.title = 'Junior bookkeeper'`, tid);
     const codes = JSON.parse(stored.reasons).map((r) => r.text);
-    j.check('every reason on the card is a stored match reason', codes.every((t) => floor.includes(t)), codes.join(' | '));
+    await selectRow(tendai, 'Junior bookkeeper');
+    const rolePane = await tendai.locator('[data-floor-pane]').innerText();
+    j.check('every reason in the pane is a stored match reason', codes.every((t) => rolePane.includes(t)), codes.join(' | '));
 
     // --- apply to a role ---
     await j.go(tendai, '/work');
-    const apply = beat(tendai, 'Junior bookkeeper').getByRole('button', { name: 'Apply' });
+    await selectRow(tendai, 'Junior bookkeeper');
+    const apply = tendai.locator('[data-floor-pane]').getByRole('button', { name: 'Apply' });
     await knock(j, tendai, apply, { what: 'Bookkeeper with six years of month-end and VAT, available from December' });
     const app = await j.until(() => j.one(`select * from pulse_conversations where kind = 'application' and initiator_id = ?`, tid), 'the application was stored');
     if (!app) return;

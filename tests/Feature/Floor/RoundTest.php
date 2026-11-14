@@ -94,7 +94,7 @@ class RoundTest extends FloorTestCase
         $this->assertTrue($again->get('beats')[0]['earlier']);
     }
 
-    public function test_a_revisit_keeps_the_strand_on_every_seen_beat_and_the_caught_up_note_is_one_line(): void
+    public function test_a_revisit_shows_seen_beats_as_rows_and_the_caught_up_note_is_one_line(): void
     {
         [$signal] = $this->offerFor('Seen offer');
         $this->round()->call('markSeen', [$signal->id]);
@@ -107,28 +107,91 @@ class RoundTest extends FloorTestCase
         $this->assertStringNotContainsString('Nothing new since you last looked.', $html);
         $this->assertLessThan(strpos($html, 'Seen earlier'), strpos($html, 'fl-caught'));
 
-        // The seen beat still draws its strand, small, with its reason chip beside it.
-        $this->assertStringContainsString('pk-meter--mini', $html);
+        // The seen beat is a quiet row, and with nothing new the pane still shows it, strand and reason, so a reload never empties the floor.
+        $this->assertSame(1, substr_count($html, 'fl-row--quiet'));
+        $this->assertStringContainsString('data-pane-beat="'.$signal->id.'"', $html);
         $this->assertStringContainsString('You need bookkeeping, they offer bookkeeping', $html);
     }
 
-    public function test_the_top_beats_carry_the_whole_strand_and_the_rest_a_small_one(): void
+    public function test_every_beat_is_a_row_and_the_pane_carries_the_whole_strand_of_the_selected_one(): void
     {
         $reasons = fn (int $i) => [
             ['code' => 'need_offer', 'text' => "You need bookkeeping {$i}, they offer it", 'weight' => 40, 'ref' => "b{$i}"],
             ['code' => 'topic', 'text' => "You follow accounting {$i}", 'weight' => 24, 'ref' => "a{$i}"],
         ];
 
+        $signals = [];
         foreach (range(1, 5) as $i) {
-            $this->offerFor("Offer number {$i}", $reasons($i));
+            [$signals[$i]] = $this->offerFor("Offer number {$i}", $reasons($i));
         }
 
-        $html = $this->round()->html();
+        $c = $this->round();
+        $html = $c->html();
 
-        // Three full beats and two compact rows with the small strand (their full thread opens on "Show how it fits").
-        $this->assertSame(3, substr_count($html, 'fl-beat--lead'));
-        $this->assertSame(2, substr_count($html, 'fl-beat--compact'));
-        $this->assertSame(2, substr_count($html, 'pk-meter--mini'));
+        $this->assertSame(5, preg_match_all('/<li[^>]*\bdata-row\b/', $html));
+        $this->assertSame(0, substr_count($html, 'fl-beat--lead'), 'the 200px cards are gone from the Floor');
+        $this->assertSame(1, substr_count($html, 'data-floor-pane'));
+        $this->assertSame(1, substr_count($html, 'aria-current="true"'));
+        // Whole strand once, in the pane; each row says how many reasons and nothing more.
+        $this->assertSame(1, substr_count($html, 'data-pk-meter'));
+        $this->assertSame(5, substr_count($html, 'fl-row__dots'));
+        $this->assertContains($c->get('selected'), array_map(fn ($s) => $s->id, $signals));
+    }
+
+    public function test_selecting_a_row_moves_the_pane_and_only_to_beats_this_round_holds(): void
+    {
+        [$first] = $this->offerFor('First offer');
+        [$second] = $this->offerFor('Second offer', [['code' => 'topic', 'text' => 'You follow plumbing', 'weight' => 20, 'ref' => 'p']]);
+        $foreign = $this->matched(['title' => 'Someone elses beat'], 50, null, $this->person());
+
+        $c = $this->round();
+        $startsAt = $c->get('selected');
+        $this->assertContains($startsAt, [$first->id, $second->id]);
+
+        $other = $startsAt === $first->id ? $second->id : $first->id;
+        $c->call('select', $other)->assertSet('selected', $other)->assertSeeHtml('data-pane-beat="'.$other.'"');
+
+        // A beat this person was never shown, or one that does not exist, changes nothing.
+        $c->call('select', $foreign->id)->assertSet('selected', $other);
+        $c->call('select', 999999)->assertSet('selected', $other);
+    }
+
+    public function test_the_beat_in_the_address_is_checked_against_the_loaded_rows(): void
+    {
+        [$first] = $this->offerFor('First offer');
+        $foreign = $this->matched(['title' => 'Someone elses beat'], 50, null, $this->person());
+
+        Livewire::withQueryParams(['beat' => $foreign->id])->actingAs($this->me)->test(Round::class, ['mode' => 'all'])
+            ->assertSet('selected', $first->id)
+            ->assertDontSee('Someone elses beat');
+
+        Livewire::withQueryParams(['beat' => $first->id])->actingAs($this->me)->test(Round::class, ['mode' => 'all'])
+            ->assertSet('selected', $first->id);
+    }
+
+    public function test_when_the_selected_beat_leaves_the_pane_moves_to_the_next_one(): void
+    {
+        [$first] = $this->offerFor('First offer');
+        [$second] = $this->offerFor('Second offer', [['code' => 'topic', 'text' => 'You follow plumbing', 'weight' => 20, 'ref' => 'p']]);
+
+        $c = $this->round();
+        $gone = $c->get('selected');
+        $stays = $gone === $first->id ? $second->id : $first->id;
+
+        $c->call('dismiss', $gone)->assertSet('selected', $stays)->assertSeeHtml('data-pane-beat="'.$stays.'"');
+    }
+
+    public function test_the_pane_knock_is_cobalt_and_the_arrival_action_is_the_only_yellow_one(): void
+    {
+        $this->offerFor('Bookkeeping for small shops');
+
+        $html = $this->actingAs($this->me)->get(route('floor'))->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<section[^>]*data-floor-arrival.*?<\/section>/s', $html, $arrival));
+        $this->assertStringContainsString('pk-btn--signal', $arrival[0], 'the arrival action is the yellow one');
+        $this->assertSame(1, preg_match('/<aside[^>]*data-floor-pane.*?<\/aside>/s', $html, $pane));
+        $this->assertStringNotContainsString('pk-btn--signal', $pane[0], 'Knock in the pane is not yellow');
+        $this->assertMatchesRegularExpression('/pk-btn--primary[^>]*data-act="knock"/', $pane[0]);
     }
 
     public function test_where_and_when_are_labels_and_a_place_only_beat_says_so(): void

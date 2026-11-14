@@ -1,10 +1,10 @@
 // Criterion 8: discovery is based on real data. The reasons drawn on the Floor are the stored match reasons, taking a
 // reason away changes what the person is shown, changing the data changes the results, and someone unrelated is not
 // shown the item (and cannot open it by address either).
-const cards = (page) => page.evaluate(() => [...document.querySelectorAll('article.pk-beat')].map((a) => ({
-  title: a.querySelector('.pk-beat__title')?.textContent.trim(),
-  reasons: [...a.querySelectorAll('.pk-meter__reason > span:not(.pk-meter__tick)')].map((s) => s.textContent.trim()),
-})));
+import { floorBeats, selectRow, floorRows } from '../lib/ui.mjs';
+
+// The Floor draws rows and one pane (R-51): a card is a row read through its pane.
+const cards = (page) => floorBeats(page);
 
 export default {
   id: '08-discovery-real-data',
@@ -58,6 +58,9 @@ export default {
     await j.go(sandile, '/floor');
     const beforeCards = await cards(sandile);
     j.check('before: Sandile sees plumbing offers with the reason "You need plumbing, they offer plumbing"', beforeCards.some((c) => c.reasons.some((r) => /You need plumbing/.test(r))) && before > 0, `${before} stored`);
+    for (let i = 0; i < beforeCards.length; i++) {
+      if (beforeCards[i].reasons.some((r) => /You need plumbing/.test(r))) { await selectRow(sandile, i); break; }
+    }
     await sandile.getByRole('button', { name: /Stop using this reason: You need plumbing, they offer plumbing/ }).first().click();
     await j.settle(sandile, 900);
     j.note('cards before click: ' + JSON.stringify(beforeCards.map((c) => c.title)));

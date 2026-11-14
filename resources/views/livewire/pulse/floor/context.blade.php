@@ -1,40 +1,48 @@
-<div class="fl-context">
-    <section class="pk-card fl-ctx" aria-labelledby="ctx-door">
-        <h2 id="ctx-door" class="fl-ctx__title">Your door</h2>
-        @if ($door)
-            <p><x-pulse.pill tone="good" icon="door">Open until {{ $doorUntil }}</x-pulse.pill></p>
-            <p class="pk-muted fl-small">{{ $door->purpose }}</p>
-            <x-pulse.button size="sm" variant="quiet" :href="pulse_route('door')">Manage your door</x-pulse.button>
-        @else
-            <p class="pk-muted">Closed. Open it for a day or a week when you want strangers to knock.</p>
-            <x-pulse.button size="sm" variant="quiet" icon="door" :href="pulse_route('door')">Open a door</x-pulse.button>
-        @endif
-    </section>
-
-    <section class="pk-card fl-ctx" aria-labelledby="ctx-open">
-        <h2 id="ctx-open" class="fl-ctx__title">What you have open</h2>
-        @if ($needs + $roles + $saved > 0)
-            <dl class="fl-facts">
-                @if ($needs > 0)<div><dt>Needs</dt><dd class="pk-mono">{{ $needs }}</dd></div>@endif
-                @if ($roles > 0)<div><dt>Roles live</dt><dd class="pk-mono">{{ $roles }}</dd></div>@endif
-                @if ($saved > 0)<div><dt><a href="{{ pulse_route('saved') }}">Saved</a></dt><dd class="pk-mono">{{ $saved }}</dd></div>@endif
-            </dl>
-        @else
-            <p class="pk-muted">Nothing yet. What you post or save is counted here.</p>
-        @endif
-        <div class="pk-cluster">
-            <x-pulse.button size="sm" variant="quiet" :href="$action['href']">{{ $action['label'] }}</x-pulse.button>
+{{-- Your desk: one label, one value, one place to act, per row. Real counts of the person's own records only. --}}
+<section class="fl-desk" aria-labelledby="fl-desk-h" data-floor-desk>
+    <div class="fl-lh"><h2 id="fl-desk-h" class="fl-lh__title">Your desk</h2></div>
+    <dl class="fl-kv">
+        <div>
+            <dt>Door</dt>
+            @if ($door)
+                <dd>Open until {{ $doorUntil }}</dd>
+                <dd class="fl-kv__act"><a href="{{ pulse_route('door') }}">Manage your door</a></dd>
+            @else
+                <dd class="fl-kv__zero">Closed</dd>
+                <dd class="fl-kv__act"><a href="{{ pulse_route('door') }}">Open a door</a></dd>
+            @endif
         </div>
-    </section>
-
-    <section class="pk-card fl-ctx" aria-labelledby="ctx-quiet">
-        <h2 id="ctx-quiet" class="fl-ctx__title">Quiet</h2>
-        <p class="pk-muted">Choose what reaches you and when. Quiet hours, the digest, what to mute.</p>
-        <x-pulse.button size="sm" variant="quiet" :href="pulse_route_first(['me.notifications', 'profile.show'])">Quiet settings</x-pulse.button>
-    </section>
-
-    <section class="fl-keys" aria-labelledby="ctx-keys">
-        <h2 id="ctx-keys" class="fl-ctx__title">Keys</h2>
-        <p class="fl-small"><kbd>n</kbd> next beat, <kbd>p</kbd> previous, <kbd>s</kbd> save, <kbd>Enter</kbd> open.</p>
-    </section>
-</div>
+        <div>
+            <dt>Lines</dt>
+            @if ($lines > 0)
+                <dd>{{ $lines }} with something new</dd>
+                <dd class="fl-kv__act"><a href="{{ pulse_route('lines') }}">Open Lines</a></dd>
+            @else
+                <dd class="fl-kv__zero">None waiting</dd>
+                @endif
+        </div>
+        <div>
+            <dt>Requests</dt>
+            <dd @class(['pk-mono' => $requests > 0, 'fl-kv__zero' => $requests === 0])>{{ $requests > 0 ? $requests.' waiting for an answer' : 'None waiting' }}</dd>
+        </div>
+        <div>
+            <dt>Needs open</dt>
+            <dd class="pk-mono">{{ $needs }}</dd>
+            <dd class="fl-kv__act"><a href="{{ $action['href'] }}">{{ $action['label'] }}</a></dd>
+        </div>
+        <div>
+            <dt>Roles live</dt>
+            <dd class="pk-mono">{{ $roles }}</dd>
+        </div>
+        <div>
+            <dt>Saved</dt>
+            <dd class="pk-mono">{{ $saved }}</dd>
+            <dd class="fl-kv__act"><a href="{{ pulse_route('saved') }}">Saved beats</a></dd>
+        </div>
+        <div>
+            <dt>Quiet</dt>
+            <dd class="fl-kv__zero">Hours, digest, mutes</dd>
+            <dd class="fl-kv__act"><a href="{{ pulse_route_first(['me.notifications', 'profile.show']) }}">Quiet settings</a></dd>
+        </div>
+    </dl>
+</section>

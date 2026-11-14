@@ -388,30 +388,10 @@
     }
 }
 
-/* ---------- Context column ---------- */
-.fl-context {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s-md);
-}
 
-.fl-ctx {
-    display: grid;
-    gap: 10px;
-}
 
-.fl-ctx p {
-    margin: 0;
-}
 
-.fl-ctx__title {
-    font-size: 1.0625rem;
-    font-stretch: 108%;
-}
 
-.fl-ctx .pk-btn {
-    justify-self: start;
-}
 
 .fl-facts {
     display: grid;
@@ -460,9 +440,6 @@
     text-align: left;
 }
 
-.fl-keys p {
-    margin-top: 6px;
-}
 
 kbd {
     padding: 1px 6px;
@@ -1097,5 +1074,619 @@ kbd {
         display: inline-flex;
         align-items: center;
         min-height: var(--tap);
+    }
+}
+
+/* ================= The Floor as a desk (R-51): arrival band, 56px rows, selected-beat pane, your desk ================= */
+
+/* Arrival band: logo plate, a true headline, the one primary action. Chrome stays still; the content arrives once. */
+.fl-hello {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-lg);
+    padding-bottom: calc(var(--s-lg) + 28px);
+    margin-bottom: var(--s-lg);
+}
+
+.fl-hello__plate {
+    display: block;
+    padding: 6px 8px;
+    line-height: 0;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-logo-plate);
+}
+
+.fl-hello__logo {
+    display: block;
+    height: 56px;
+    width: auto;
+}
+
+.fl-hello__h {
+    font-size: 1.75rem;
+    font-stretch: 112%;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.fl-hello__lead {
+    max-width: 62ch;
+    margin: 4px 0 0;
+    color: var(--c-muted);
+}
+
+.fl-hello__lead strong {
+    color: var(--c-ink);
+}
+
+.fl-hello__act {
+    display: flex;
+    align-items: center;
+    gap: var(--s-md);
+}
+
+.fl-hello__go {
+    min-height: 48px;
+    padding: 0 var(--s-lg);
+    font-size: 1rem;
+}
+
+.fl-hello__back {
+    display: flex;
+    gap: var(--s-md);
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.fl-hello__back a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    color: var(--c-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--c-line-strong);
+    text-underline-offset: 3px;
+}
+
+.fl-hello__back a:hover {
+    color: var(--c-ink);
+    text-decoration-color: currentColor;
+}
+
+/* The band's lower edge: two lines that meet and part, drawn from the app's own sync meter shape. It carries no data. */
+.fl-hello__band {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 20px;
+    pointer-events: none;
+}
+
+.fl-hello__you,
+.fl-hello__them {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.fl-hello__you {
+    stroke: var(--c-you);
+}
+
+.fl-hello__them {
+    stroke: var(--c-them);
+}
+
+/* Work area: rows beside the selected beat. Below 1200 the pane is not shown and a row opens the beat's own page. */
+.fl-work {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-lg) var(--s-xl);
+    align-items: start;
+}
+
+.fl-work--pane {
+    grid-template-columns: minmax(0, 1fr) 420px;
+}
+
+.fl-work__main {
+    min-width: 0;
+}
+
+.fl-work__side {
+    position: sticky;
+    top: calc(var(--mast-h) + var(--s-md));
+}
+
+.fl-lh {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-md);
+    min-height: 32px;
+}
+
+.fl-lh__title {
+    font-size: 1rem;
+    font-stretch: 112%;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.fl-lh__meta {
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.fl-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--c-ink);
+}
+
+.fl-row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 104px 84px;
+    align-items: center;
+    gap: var(--s-sm) 12px;
+    min-height: 56px;
+    padding: var(--s-sm) 12px;
+    border-bottom: 1px solid var(--c-line);
+}
+
+/* Hover and selection are an opacity change on a tint (compositor only), so no row repaints its neighbours. */
+.fl-row::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--c-field-soft);
+    opacity: 0;
+    transition: opacity var(--d-quick) var(--ease);
+}
+
+.fl-row:hover::before {
+    opacity: 0.45;
+}
+
+.fl-row[aria-current="true"]::before {
+    opacity: 1;
+}
+
+.fl-row:focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: -3px;
+}
+
+.fl-row__kind {
+    justify-self: start;
+}
+
+.fl-row__text {
+    min-width: 0;
+}
+
+.fl-row__open {
+    display: block;
+    overflow: hidden;
+    color: var(--c-ink);
+    font-weight: 700;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fl-row__open::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.fl-row__open:focus-visible {
+    outline: none;
+}
+
+.fl-row:has(.fl-row__open:focus-visible) {
+    outline: 3px solid var(--c-focus);
+    outline-offset: -3px;
+}
+
+.fl-row__text small {
+    display: block;
+    overflow: hidden;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fl-row__why {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--t-small);
+    font-weight: 600;
+}
+
+.fl-row__why--none {
+    color: var(--c-muted);
+    font-weight: 400;
+}
+
+.fl-row__dots {
+    display: inline-flex;
+}
+
+.fl-row__dots i {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--c-ink-fixed);
+    border-radius: 50%;
+    background: var(--c-signal);
+}
+
+.fl-row__dots i + i {
+    margin-left: -2px;
+}
+
+.fl-row__when {
+    color: var(--c-muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.fl-row--quiet .fl-row__open {
+    font-weight: 600;
+}
+
+.fl-row--quiet {
+    color: var(--c-muted);
+}
+
+/* The end of the round, as a row */
+.fl-work__main .fl-caught {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-sm) var(--s-md);
+    min-height: 52px;
+    margin: 0;
+    padding: var(--s-sm) 12px;
+    border-bottom: 1px solid var(--c-line);
+}
+
+.fl-work__main .pk-end {
+    padding: var(--s-md) 12px;
+    border-bottom: 1px solid var(--c-line);
+}
+
+.fl-work__main .pk-end h2 {
+    font-size: 1rem;
+    font-stretch: 112%;
+    letter-spacing: -0.01em;
+}
+
+.fl-earlier {
+    margin-top: var(--s-lg);
+}
+
+/* Selected beat */
+.fl-pane {
+    padding: var(--s-lg);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-md);
+    background: var(--c-sheet);
+    animation: fl-land 180ms var(--ease) both;
+}
+
+.fl-pane > p {
+    margin: 0;
+}
+
+.fl-pane__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-sm) 12px;
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.fl-pane__title {
+    margin-top: var(--s-sm);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.fl-pane__from {
+    margin-top: 12px;
+    font-weight: 600;
+}
+
+.fl-pane > .fl-pane__excerpt {
+    margin-top: var(--s-sm);
+    color: var(--c-ink-2);
+}
+
+.fl-pane__price {
+    margin-top: var(--s-sm);
+}
+
+.fl-pane__meter {
+    margin-top: var(--s-md);
+}
+
+.fl-pane__acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-sm);
+    margin-top: var(--s-md);
+}
+
+.fl-pane__acts .pk-btn {
+    transition: transform var(--d-quick) var(--ease);
+}
+
+.fl-pane__acts .pk-btn:active {
+    transform: scale(0.97);
+}
+
+.fl-pane__open {
+    margin-left: auto;
+    font-size: var(--t-ui);
+}
+
+.fl-pane .fl-menu__panel {
+    left: auto;
+    right: 0;
+}
+
+/* Your desk: one label/value layout */
+.fl-desk {
+    margin-top: var(--s-xl);
+}
+
+.fl-kv {
+    margin: 0;
+    border-top: 1px solid var(--c-ink);
+}
+
+.fl-kv > div {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 0 var(--s-sm);
+    border-bottom: 1px solid var(--c-line);
+}
+
+.fl-kv dt {
+    color: var(--c-muted);
+    font-size: 0.875rem;
+}
+
+.fl-kv dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.fl-kv a {
+    font-size: 0.875rem;
+}
+
+.fl-kv .fl-kv__act {
+    font-weight: 400;
+}
+
+.fl-kv__zero {
+    color: var(--c-muted);
+    font-weight: 400;
+}
+
+.fl-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-sm) var(--s-lg);
+    min-height: 40px;
+    margin-top: var(--s-xl);
+    padding: var(--s-sm) 0 var(--s-lg);
+    border-top: 1px solid var(--c-line);
+    color: var(--c-muted);
+    font-size: var(--t-small);
+}
+
+.fl-foot kbd {
+    font-family: var(--f-mono);
+    font-size: 0.6875rem;
+}
+
+/* First visit: the rows of what the floor holds take the full width */
+.fl-work:not(.fl-work--pane) .fl-knows {
+    max-width: 880px;
+}
+
+/* Motion: the content arrives once on load (band, then rows); the pane lands when the selection changes. Chrome never moves.
+   Transform and opacity only; every rule below is removed under reduced motion, and the content is visible without it. */
+@keyframes fl-land {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes fl-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes fl-band {
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .fl-hello__plate,
+    .fl-hello__say,
+    .fl-hello__act {
+        animation: fl-rise 320ms var(--ease) both;
+    }
+
+    .fl-hello__say {
+        animation-delay: 60ms;
+    }
+
+    .fl-hello__act {
+        animation-delay: 120ms;
+    }
+
+    .fl-hello__band {
+        animation: fl-band 600ms var(--ease) 160ms both;
+    }
+
+    .fl-rows > .fl-row {
+        animation: fl-rise 240ms var(--ease) both;
+        animation-delay: calc(180ms + var(--k, 0) * 40ms);
+    }
+
+    .fl-rows > .fl-row:nth-child(1) { --k: 0; }
+    .fl-rows > .fl-row:nth-child(2) { --k: 1; }
+    .fl-rows > .fl-row:nth-child(3) { --k: 2; }
+    .fl-rows > .fl-row:nth-child(4) { --k: 3; }
+    .fl-rows > .fl-row:nth-child(5) { --k: 4; }
+    .fl-rows > .fl-row:nth-child(6) { --k: 5; }
+    .fl-rows > .fl-row:nth-child(7) { --k: 6; }
+    .fl-rows > .fl-row:nth-child(8) { --k: 7; }
+    .fl-rows > .fl-row:nth-child(n + 9) { --k: 8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fl-pane,
+    .fl-pane__acts .pk-btn,
+    .fl-row::before {
+        animation: none;
+        transition: none;
+    }
+}
+
+@media (min-width: 1200px) {
+    .fl-kv {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: var(--s-xl);
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .fl-work--pane {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fl-work__side {
+        display: none;
+    }
+
+    .fl-kv {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: var(--s-lg);
+    }
+}
+
+@media (max-width: 859.98px) {
+    .fl-hello {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .fl-hello__act {
+        grid-column: 1 / -1;
+    }
+
+    .fl-hello__logo {
+        height: 44px;
+    }
+}
+
+@media (max-width: 599.98px) {
+    .fl-hello {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fl-hello__plate {
+        display: none;
+    }
+
+    .fl-hello__h {
+        font-size: 1.375rem;
+    }
+
+    .fl-hello__act {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--s-sm);
+    }
+
+    .fl-hello__go {
+        width: 100%;
+    }
+
+    .fl-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "k w" "t t" "y y";
+        min-height: 92px;
+        padding: 12px var(--s-sm);
+        row-gap: 6px;
+    }
+
+    .fl-row__kind { grid-area: k; }
+    .fl-row__when { grid-area: w; }
+    .fl-row__text { grid-area: t; }
+    .fl-row__why { grid-area: y; }
+
+    .fl-row__open,
+    .fl-row__text small {
+        white-space: normal;
+    }
+
+    .fl-kv {
+        display: block;
+    }
+
+    .fl-kv > div {
+        grid-template-columns: 96px minmax(0, 1fr) auto;
+        min-height: 48px;
     }
 }
