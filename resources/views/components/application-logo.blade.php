@@ -1,1 +1,1 @@
-<x-pulse.mark {{ $attributes }} />
+<x-pulse.logo {{ $attributes }} />

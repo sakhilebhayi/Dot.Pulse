@@ -97,31 +97,19 @@ img {
     width: 100%;
 }
 
-/* Header: the cobalt field, a white wordmark and one yellow node. Email clients do not read CSS variables, so the
-   Floor palette is written out here: chalk #eef0f5, sheet #ffffff, ink #0b0e1a, cobalt #1f3cff, signal #ffd400. */
+/* Header: the original Dot.Pulse logo on white (the file was drawn for a light ground), closed by a cobalt rule.
+   Email clients do not read CSS variables, so the Floor palette is written out here: chalk #eef0f5, sheet #ffffff,
+   ink #0b0e1a, cobalt #1f3cff, signal #ffd400. */
 
 .header {
-    background-color: #1f3cff;
-    padding: 22px 32px;
+    background-color: #ffffff;
+    border-bottom: 4px solid #1f3cff;
+    padding: 16px 32px;
     text-align: left;
 }
 
 .header a {
-    color: #ffffff;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
     text-decoration: none;
-}
-
-.header .node {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    margin-right: 10px;
-    border: 2px solid #0b0e1a;
-    border-radius: 12px;
-    background-color: #ffd400;
 }
 
 /* Logo */
