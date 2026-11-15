@@ -218,10 +218,7 @@
     @stack('modals')
     <x-pulse.toasts />
 
-    <script src="{{ asset('dot-ui/js/dot-search.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-search-results.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
     @livewireScripts
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
 </body>
 </html>

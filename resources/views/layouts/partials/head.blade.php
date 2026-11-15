@@ -16,7 +16,7 @@
 <link rel="preload" href="{{ asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ asset('fonts/jetbrains-mono-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 {{-- First paint: the stored light/dark/system choice (key pulse-theme, set on <html data-dh-theme-key>) is applied by dot-ui's external, synchronous boot script. --}}
-<script src="{{ asset('dot-ui/js/dot-theme-boot.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}"></script>
+<script src="{{ asset('dot-ui/js/dot-theme-boot.min.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}"></script>
 <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
     (function () {
         document.documentElement.classList.add('js');
@@ -25,13 +25,8 @@
         if (q) { document.documentElement.setAttribute('data-theme', q[1]); }
     })();
 </script>
-{{-- Shared Dot UI, served from this site's own public/dot-ui (no CDN): Roboto and the type scale, the search pill, the switcher, the header. The host token mapping lives in resources/css/pulse/shell.css. --}}
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-roboto.css') }}">
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-type.css') }}">
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
-<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-header.css') }}">
+{{-- Shared Dot UI 0.6.1, served from this site's own public/dot-ui (no CDN): Roboto and the type scale, tokens, the search pill, the switcher and the header in ONE minified stylesheet. The host token mapping lives in resources/css/pulse/shell.css. --}}
+<link rel="stylesheet" href="{{ asset('dot-ui/css/dot-ui.min.css') }}">
 @php
     try {
         $__assets = (string) app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js']);

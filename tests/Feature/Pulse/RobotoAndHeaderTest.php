@@ -25,7 +25,7 @@ class RobotoAndHeaderTest extends TestCase
         $html = $this->actingAs($this->pulseUser())->get('/floor')->assertOk()->getContent();
 
         $this->assertStringContainsString('class="dot-roboto"', $html);
-        $this->assertStringContainsString(asset('dot-ui/css/dot-roboto.css'), $html);
+        $this->assertStringContainsString(asset('dot-ui/css/dot-ui.min.css'), $html);
         $this->assertStringContainsString(asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2'), $html);
         $this->assertStringContainsString("font-family: 'Roboto'", (string) file_get_contents(public_path('dot-ui/css/dot-roboto.css')));
         $this->assertFileExists(public_path('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2'));

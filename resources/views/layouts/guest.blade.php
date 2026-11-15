@@ -19,7 +19,7 @@
         {{ $slot }}
     </main>
     <x-pulse.toasts />
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
     @livewireScripts
 </body>
 </html>

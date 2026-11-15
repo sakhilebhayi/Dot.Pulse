@@ -33,6 +33,6 @@
         </div>
     </footer>
     <x-pulse.toasts />
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" defer></script>
 </body>
 </html>
