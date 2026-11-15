@@ -1738,3 +1738,9 @@ body:has(dialog.pk-dialog[open]) {
     font-family: var(--f-mono);
     font-size: 0.75rem;
 }
+
+/* A field's label is as wide as its words, not the column, so a narrow control (the 200px number field) is not out-measured by its own label. */
+.pk-field > label {
+    width: fit-content;
+    max-width: 100%;
+}

@@ -1698,6 +1698,57 @@ kbd {
     }
 }
 
+@media (max-width: 1024px) {
+    .sh-stage input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]),
+    .sh-stage select,
+    .lg-seg .pk-btn,
+    .bz-chosen button,
+    .fl-filters summary {
+        min-height: var(--tap);
+    }
+
+    .bz-chosen button {
+        min-width: var(--tap);
+    }
+
+    .fl-filters summary {
+        display: flex;
+        align-items: center;
+    }
+
+    .fl-kv__act a,
+    .fl-caught a:not(.pk-btn),
+    .pk-beat__title a,
+    .pk-row__title a,
+    .bz-todos a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap);
+    }
+}
+
+/* 861 to 1024: the title keeps its 56px row; its box grows to 44px with padding that margin gives back, so the row does not get taller. */
+@media (min-width: 861px) and (max-width: 1024px) {
+    .fl-row__open {
+        padding-block: 11px;
+        margin-block: -11px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sh-stage .pk-btn,
+    .sh-stage .ln-chip {
+        min-height: var(--tap);
+    }
+
+    .me-chip button {
+        min-width: var(--tap);
+        min-height: var(--tap);
+        margin-block: -8px;
+        margin-inline-end: -10px;
+    }
+}
+
 @media (max-width: 860px) {
     .pk-row__title a,
     .bz-todos a {

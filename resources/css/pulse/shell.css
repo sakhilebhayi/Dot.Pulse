@@ -403,7 +403,7 @@ body {
 }
 
 .sh-rail__more .sh-verb {
-    min-height: 40px;
+    min-height: var(--tap);
     font-weight: 500;
     font-size: var(--t-ui);
     letter-spacing: 0;
