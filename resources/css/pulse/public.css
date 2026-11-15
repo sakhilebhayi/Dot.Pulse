@@ -341,6 +341,21 @@
     margin-left: auto;
 }
 
+/* 44px hit area on the footer links; the text keeps its size. */
+.lp-foot a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* The password form's "Forgot your password?" link on the sign-in page. */
+.au-or .pk-cluster a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
 /* ---------- Auth ---------- */
 .au-main {
     min-height: calc(100dvh - var(--mast-h));
