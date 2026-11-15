@@ -15,7 +15,6 @@ body {
     font-family: var(--f-ui);
     font-size: var(--t-ui);
     font-weight: 400;
-    font-stretch: 100%;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -41,7 +40,6 @@ h4 {
     margin: 0;
     color: var(--c-ink);
     font-family: var(--f-ui);
-    font-stretch: 112%;
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.1;
@@ -55,7 +53,6 @@ h1 {
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 0.95;
-    font-stretch: 118%;
 }
 
 h2 {
@@ -64,7 +61,6 @@ h2 {
 
 h3 {
     font-size: 1.125rem;
-    font-stretch: 108%;
 }
 
 p {

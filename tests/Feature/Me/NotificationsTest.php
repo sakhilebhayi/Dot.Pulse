@@ -205,6 +205,6 @@ class NotificationsTest extends MeTestCase
         $this->actingAs($this->member())->get('/me/notifications')
             ->assertOk()
             ->assertSee(route('me.notifications'), false)
-            ->assertSee('data-pulse-badge="notifications"', false);
+            ->assertSee('data-pulse-bell', false);
     }
 }

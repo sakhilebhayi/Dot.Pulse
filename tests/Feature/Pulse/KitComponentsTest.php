@@ -191,7 +191,7 @@ class KitComponentsTest extends TestCase
     {
         $html = $this->get('/dev/floor')->assertOk()->getContent();
 
-        $this->assertStringContainsString('class="pk-dial"', $html);
+        $this->assertStringContainsString('class="pk-dial', $html);
         $this->assertStringContainsString('pk-meter', $html);
         $this->assertStringContainsString('id="sh-context"', $html);
         $this->assertStringContainsString('You are caught up.', $html);

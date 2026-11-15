@@ -129,7 +129,6 @@
 .lp-section h2 {
     max-width: 18ch;
     font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3rem);
-    font-stretch: 116%;
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 1;
@@ -215,7 +214,6 @@
     display: block;
     margin-top: 18px;
     font-size: 1.25rem;
-    font-stretch: 114%;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
@@ -283,7 +281,6 @@
 
 .lp-promises strong {
     font-size: 1.25rem;
-    font-stretch: 112%;
     letter-spacing: -0.02em;
 }
 
@@ -307,7 +304,6 @@
     max-width: 14ch;
     color: var(--c-field-ink);
     font-size: clamp(2rem, 1.2rem + 3.2vw, 3.75rem);
-    font-stretch: 118%;
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 0.98;

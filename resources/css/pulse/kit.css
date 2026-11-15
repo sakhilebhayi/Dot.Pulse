@@ -14,7 +14,6 @@
     border: 2px solid transparent;
     border-radius: var(--r-md);
     font: inherit;
-    font-stretch: 106%;
     font-size: var(--t-ui);
     font-weight: 700;
     letter-spacing: -0.005em;
@@ -136,7 +135,6 @@
     background: transparent;
     color: var(--c-field-ink);
     font: inherit;
-    font-stretch: 108%;
     font-size: var(--t-ui);
     font-weight: 700;
     text-decoration: none;
@@ -282,7 +280,6 @@
     background: var(--c-raised);
     border: 1px solid var(--c-line-strong);
     color: var(--c-ink);
-    font-stretch: 112%;
     font-weight: 800;
     font-size: 0.875rem;
     letter-spacing: -0.02em;
@@ -364,7 +361,6 @@
 
 .pk-beat__title {
     font-size: 1.3125rem;
-    font-stretch: 110%;
     line-height: 1.15;
 }
 
@@ -406,7 +402,6 @@
 
 .pk-beat__from-name {
     font-weight: 700;
-    font-stretch: 104%;
     overflow-wrap: anywhere;
 }
 
@@ -707,7 +702,6 @@
     align-items: baseline;
     gap: 2px 10px;
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 .pk-rung__state {
@@ -758,7 +752,6 @@
 .pk-field__label {
     font-size: var(--t-small);
     font-weight: 700;
-    font-stretch: 104%;
     color: var(--c-ink);
 }
 
@@ -857,7 +850,6 @@ select.pk-control {
     margin-bottom: 8px;
     font-size: var(--t-small);
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 .pk-chips__list {
@@ -1034,7 +1026,6 @@ select.pk-control {
 
 .pk-empty__title {
     font-size: 1.25rem;
-    font-stretch: 110%;
 }
 
 .pk-empty__text {
@@ -1108,7 +1099,6 @@ select.pk-control {
 
 .pk-row__title {
     font-weight: 700;
-    font-stretch: 104%;
     overflow-wrap: anywhere;
 }
 
@@ -1178,7 +1168,6 @@ select.pk-control {
     background: transparent;
     color: var(--c-muted);
     font: inherit;
-    font-stretch: 106%;
     font-weight: 700;
     white-space: nowrap;
     text-decoration: none;
@@ -1484,7 +1473,6 @@ select.pk-control {
 }
 
 .pk-end h2 {
-    font-stretch: 118%;
     font-weight: 800;
     font-size: 1.75rem;
 }

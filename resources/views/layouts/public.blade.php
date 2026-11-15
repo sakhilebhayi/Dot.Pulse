@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto" data-dh-theme-key="pulse-theme">
 <head>
     @include('layouts.partials.head', ['title' => $title ?: 'Dot.Pulse: say what you want', 'description' => $description, 'csrf' => false])
 </head>
 <body>
     <a class="skip-link" href="#main">Skip to the content</a>
-    <header class="sh-mast">
-        <x-pulse.brand :href="url('/')" />
-        <div class="sh-mast__tools">
-            <button type="button" class="sh-iconbtn sh-theme" data-pk-theme aria-pressed="false" aria-label="Switch theme">
-                <x-pulse.icon name="moon" class="sh-theme__moon" />
-                <x-pulse.icon name="sun" class="sh-theme__sun" />
-            </button>
+    <x-dot.header brand-href="{{ url('/') }}" brand-label="Dot.Pulse home" skip="#main"
+        :account="auth()->check() ? \App\Support\ShellAccount::for(auth()->user(), pulse_my_businesses()) : null"
+        :guest="auth()->check() ? null : \App\Support\ShellAccount::guest()">
+        <x-slot:brand><x-pulse.logo :height="40" class="sh-brand__logo" /></x-slot:brand>
+        <x-slot:tools>
+            @guest
+                <button type="button" class="dh-icon-btn sh-theme" data-pk-theme aria-pressed="false" aria-label="Switch theme">
+                    <x-pulse.icon name="moon" class="sh-theme__moon" />
+                    <x-pulse.icon name="sun" class="sh-theme__sun" />
+                </button>
+            @endguest
             @auth
-                <x-pulse.button variant="signal" size="sm" :href="pulse_route_first(['floor', 'dashboard'])">Open the Floor</x-pulse.button>
-            @else
-                @if (Route::has('login'))
-                    <x-pulse.button variant="signal" size="sm" :href="route('login')">Sign in</x-pulse.button>
-                @endif
+                <x-pulse.button variant="signal" size="sm" class="sh-open-floor" :href="pulse_route_first(['floor', 'dashboard'])">Open the Floor</x-pulse.button>
             @endauth
-        </div>
-    </header>
+        </x-slot:tools>
+    </x-dot.header>
     <main id="main" tabindex="-1">
         {{ $slot }}
     </main>
@@ -33,5 +33,6 @@
         </div>
     </footer>
     <x-pulse.toasts />
+    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
 </body>
 </html>

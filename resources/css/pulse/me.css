@@ -206,7 +206,6 @@
 
 .me-choice__title {
     font-weight: 700;
-    font-stretch: 104%;
     color: var(--c-ink);
 }
 
@@ -406,7 +405,6 @@
 .me-job legend {
     padding: 0 6px;
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 .me-job__grid {
@@ -523,7 +521,6 @@
 .me-cat legend {
     padding: 0 4px;
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 .me-cat__text {
@@ -695,7 +692,6 @@
     border-radius: var(--r-md);
     background: var(--c-sheet);
     font-weight: 700;
-    font-stretch: 104%;
     cursor: pointer;
 }
 
@@ -771,7 +767,6 @@
 
 .up-name {
     font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
-    font-stretch: 118%;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.03em;
@@ -863,7 +858,6 @@
 
 .up-jobs__title {
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 @media (min-width: 640px) {
@@ -960,7 +954,6 @@
 .jt-head h2,
 .jt-title {
     font-size: 1.125rem;
-    font-stretch: 108%;
 }
 
 .jt-form {
