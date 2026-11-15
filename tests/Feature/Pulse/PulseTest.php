@@ -79,7 +79,7 @@ class PulseTest extends TestCase
         $this->actingAs($this->onboard($this->user))
             ->get('/community')
             ->assertSee('href="'.route('me.notifications').'"', false)
-            ->assertSee('data-pulse-badge="notifications"', false);
+            ->assertSee('data-pulse-bell', false);
     }
 
     public function test_a_person_with_no_profile_is_sent_through_the_welcome_flow_first(): void

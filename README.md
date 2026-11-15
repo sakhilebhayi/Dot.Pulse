@@ -57,7 +57,7 @@ Nothing is anonymous to the database administrator. Private means private from o
 
 ## The Floor: shell and component kit (R-41)
 
-The interface is "The Floor" (`DESIGN.md`): cobalt masthead, a rail of verbs (Floor, Trade, Work, Lines, You) and a Compose button, a 680 px column of beats, and a context column from 1200 px. Tokens live in `resources/css/pulse/tokens.css` (light, dark by `prefers-color-scheme`, `html[data-theme]` override, `?theme=light|dark` for previews); Archivo (variable, width axis) and JetBrains Mono are self-hosted in `public/fonts/`. Tailwind 3 stays for the Jetstream screens; the new system is plain CSS under `resources/css/pulse/`.
+The interface is "The Floor" (`DESIGN.md`): cobalt masthead, a rail of verbs (Floor, Trade, Work, Lines, You) and a Compose button, a 680 px column of beats, and a context column from 1200 px. Tokens live in `resources/css/pulse/tokens.css` (light, dark by `prefers-color-scheme`, `html[data-theme]` override, `?theme=light|dark` for previews); Roboto (shared dot-ui, `public/dot-ui/fonts/roboto/`) and JetBrains Mono (readouts, `public/fonts/`) are self-hosted. Tailwind 3 stays for the Jetstream screens; the new system is plain CSS under `resources/css/pulse/`.
 
 | Breakpoint | Layout |
 |---|---|

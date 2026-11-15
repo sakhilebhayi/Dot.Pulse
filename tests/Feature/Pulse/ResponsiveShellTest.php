@@ -51,7 +51,7 @@ class ResponsiveShellTest extends TestCase
 
             $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1"', $html, "$label: viewport meta");
             $this->assertStringContainsString('class="skip-link" href="#main"', $html, "$label: skip link");
-            $this->assertStringContainsString('<header class="sh-mast', $html, "$label: masthead");
+            $this->assertStringContainsString('<header class="dh', $html, "$label: header");
             $this->assertMatchesRegularExpression('/<nav class="sh-rail" aria-label="[^"]+"/', $html, "$label: rail");
             $this->assertMatchesRegularExpression('/<nav class="sh-bar" aria-label="[^"]+"/', $html, "$label: phone bar");
             $this->assertStringContainsString('id="main"', $html, "$label: main landmark");
@@ -83,7 +83,7 @@ class ResponsiveShellTest extends TestCase
         $user = $this->pulseUser();
 
         $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
-        $menu = $this->between($html, 'id="user-menu"', '</header>');
+        $menu = $this->between($html, 'id="dh-account-menu"', '</header>');
 
         $this->assertStringContainsString('action="'.route('logout').'"', $menu);
         $this->assertStringContainsString('href="'.route('teams.show', $user->currentTeam).'"', $menu);
@@ -102,7 +102,7 @@ class ResponsiveShellTest extends TestCase
         $user->teams()->attach($second, ['role' => 'editor']);
 
         $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
-        $menu = $this->between($html, 'id="user-menu"', '</header>');
+        $menu = $this->between($html, 'id="dh-account-menu"', '</header>');
 
         $this->assertStringContainsString('Switch team', $menu);
         $this->assertStringContainsString('Distinctive Second Workspace', $menu);
@@ -131,7 +131,7 @@ class ResponsiveShellTest extends TestCase
 
         $this->assertStringContainsString('data-pulse-check="'.url('/api/pulse/pulse-check').'"', $html);
         $this->assertStringContainsString('data-pulse-badge="lines"', $html);
-        $this->assertStringContainsString('data-pk-theme', $html, 'theme toggle');
+        $this->assertStringContainsString('data-dh-theme-set="dark"', $html, 'theme control in the account menu');
     }
 
     public function test_the_notification_bell_is_in_the_masthead_and_labelled(): void
@@ -139,7 +139,7 @@ class ResponsiveShellTest extends TestCase
         $user = $this->pulseUser();
 
         $html = $this->actingAs($user)->get(route('community.feed'))->assertOk()->getContent();
-        $masthead = $this->between($html, '<header class="sh-mast', '</header>');
+        $masthead = $this->between($html, '<header class="dh', '</header>');
 
         // Until the notifications page route exists the legacy Livewire bell is shown; either way it is named "Notifications".
         $this->assertStringContainsString('aria-label="Notifications"', $masthead);

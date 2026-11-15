@@ -47,7 +47,6 @@
 
 .sh-stage [style*="font-family:'Syne'"] {
     font-family: var(--f-ui) !important;
-    font-stretch: 110%;
 }
 
 .sh-stage [style*="font-family:'Inter'"] {
@@ -106,7 +105,6 @@
     background: var(--c-raised);
     border: 1px solid var(--c-line-strong);
     color: var(--c-ink);
-    font-stretch: 112%;
     font-weight: 800;
     text-decoration: none;
 }
@@ -221,7 +219,6 @@
  */
 .lg-pagetitle {
     font-size: var(--t-title);
-    font-stretch: 118%;
     font-weight: 800;
     letter-spacing: -0.03em;
 }
@@ -229,7 +226,6 @@
 .lg-h {
     margin-bottom: 12px;
     font-size: 1.0625rem;
-    font-stretch: 108%;
 }
 
 .lg-small {
@@ -348,7 +344,6 @@
 
 .lg-post__title {
     font-size: 1.0625rem;
-    font-stretch: 106%;
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
@@ -366,7 +361,6 @@
 
 .lg-post__title--lg {
     font-size: var(--t-title);
-    font-stretch: 112%;
 }
 
 .lg-post__text {
@@ -690,7 +684,6 @@
 
 .lg-chead__title {
     font-size: var(--t-title);
-    font-stretch: 118%;
     font-weight: 800;
     letter-spacing: -0.03em;
 }

@@ -111,13 +111,13 @@ class DotUiHeaderTest extends TestCase
         $this->actingAs($user)->get(route('search', ['q' => 'bookkeeping']))->assertOk()->assertSee('bookkeeping');
     }
 
-    public function test_the_search_page_itself_has_no_second_masthead_search(): void
+    public function test_the_search_page_has_the_header_search_as_well_as_its_own_field(): void
     {
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
 
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get(route('search'))->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('dsr-input', $html, 'the pill is hidden where the page is the search, as before');
+        $this->assertStringContainsString('class="dsr-input"', $html, 'R-52: the header search is on every page type, the search page included');
         $this->assertStringContainsString('id="fl-q"', $html, 'the page keeps its own search field');
     }
 
@@ -245,7 +245,7 @@ class DotUiHeaderTest extends TestCase
         $response = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get(route('floor'))->assertOk();
         $html = $response->getContent();
 
-        foreach (['css/dot-fonts.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher-fonts.css', 'css/dot-switcher.css', 'js/dot-switcher.js'] as $asset) {
+        foreach (['css/dot-ui.min.css', 'js/dot-ui-core.min.js', 'js/dot-theme-boot.min.js'] as $asset) {
             $this->assertStringContainsString(asset('dot-ui/'.$asset), $html, $asset.' is linked from this site');
             $this->assertFileExists(public_path('dot-ui/'.$asset));
         }
@@ -270,9 +270,9 @@ class DotUiHeaderTest extends TestCase
         // The policy gained no origin: the script carries the page's nonce and the image/font sources are unchanged.
         $policy = (string) $response->headers->get('Content-Security-Policy');
         $this->assertStringContainsString("img-src 'self' data: blob:", $policy);
-        $this->assertStringContainsString("font-src 'self' data: https://fonts.gstatic.com", $policy);
+        $this->assertStringContainsString("font-src 'self' data:", $policy);
         preg_match("/'nonce-([A-Za-z0-9]+)'/", $policy, $nonce);
-        $this->assertStringContainsString('src="'.asset('dot-ui/js/dot-switcher.js').'" nonce="'.$nonce[1].'"', $html);
+        $this->assertStringContainsString('src="'.asset('dot-ui/js/dot-ui-core.min.js').'" nonce="'.$nonce[1].'"', $html);
     }
 
     public function test_the_shared_markup_has_no_inline_style_or_script(): void
@@ -280,8 +280,8 @@ class DotUiHeaderTest extends TestCase
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get(route('floor'))->getContent();
 
-        $this->assertSame(1, preg_match('/<div class="sh-search">.*?<\/div>\s*<\/div>/s', $html, $pill));
-        foreach ([$pill[0], $this->switcherHtml($html)] as $fragment) {
+        $this->assertSame(1, preg_match('/<header\b.*?<\/header>/s', $html, $bar));
+        foreach ([$bar[0], $this->switcherHtml($html)] as $fragment) {
             $this->assertStringNotContainsString(' style=', $fragment);
             $this->assertStringNotContainsString('<style', $fragment);
             $this->assertStringNotContainsString('<script', $fragment);

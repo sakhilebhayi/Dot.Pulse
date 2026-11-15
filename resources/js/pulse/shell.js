@@ -204,7 +204,27 @@ let pollFailures = 0;
 let pollStopped = false;
 let lastPoll = 0;
 
+/* The shared header's bell is a link with a .dh-badge that only exists when the count is above zero. */
+function setHeaderBell(count) {
+    $$('[data-pulse-bell]').forEach((bell) => {
+        const n = Number(count) || 0;
+        let badge = bell.querySelector('.dh-badge');
+        if (n > 0 && !badge) {
+            badge = document.createElement('span');
+            badge.className = 'dh-badge';
+            badge.setAttribute('aria-hidden', 'true');
+            bell.appendChild(badge);
+        }
+        if (badge) {
+            badge.textContent = n > 99 ? '99+' : String(n);
+            badge.hidden = n < 1;
+        }
+        bell.setAttribute('aria-label', n > 0 ? 'Notifications, ' + n + ' unread' : 'Notifications');
+    });
+}
+
 function setBadge(kind, count) {
+    if (kind === 'notifications') setHeaderBell(count);
     $$('[data-pulse-badge="' + kind + '"]').forEach((el) => {
         const n = Number(count) || 0;
         el.textContent = n > 99 ? '99+' : String(n);

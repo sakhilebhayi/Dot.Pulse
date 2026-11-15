@@ -7,7 +7,6 @@
 
 .fl-h1 {
     font-size: var(--t-title);
-    font-stretch: 118%;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.02em;
@@ -312,7 +311,6 @@
 
 .fl-earlier__title {
     font-size: var(--t-ui);
-    font-stretch: 108%;
     font-weight: 700;
 }
 
@@ -475,7 +473,6 @@ kbd {
 
 .fl-sheet__lead {
     font-size: 1.25rem;
-    font-stretch: 112%;
     outline: none;
 }
 
@@ -591,7 +588,6 @@ kbd {
 .fl-filters summary {
     cursor: pointer;
     font-weight: 700;
-    font-stretch: 106%;
     min-height: 28px;
 }
 
@@ -652,7 +648,6 @@ kbd {
 .fl-door__purpose {
     margin: 0;
     font-size: 1.1875rem;
-    font-stretch: 108%;
     font-weight: 700;
 }
 
@@ -676,7 +671,6 @@ kbd {
     padding: 0;
     font-size: var(--t-small);
     font-weight: 700;
-    font-stretch: 104%;
 }
 
 .fl-radios--stack {
@@ -755,7 +749,6 @@ kbd {
 
 .fl-detail__title {
     font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.125rem);
-    font-stretch: 116%;
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -786,7 +779,6 @@ kbd {
 
 .fl-section h2 {
     font-size: 1.125rem;
-    font-stretch: 110%;
 }
 
 .fl-section p {
@@ -921,7 +913,6 @@ kbd {
 
 .fl-arrive__h {
     font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.375rem);
-    font-stretch: 118%;
     font-weight: 800;
     line-height: 1.04;
     letter-spacing: -0.025em;
@@ -1107,7 +1098,6 @@ kbd {
 
 .fl-hello__h {
     font-size: 1.75rem;
-    font-stretch: 112%;
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.02em;
@@ -1145,6 +1135,8 @@ kbd {
 
 .fl-hello__back a {
     display: inline-flex;
+    min-width: var(--tap);
+    justify-content: center;
     align-items: center;
     min-height: var(--tap);
     color: var(--c-muted);
@@ -1215,7 +1207,6 @@ kbd {
 
 .fl-lh__title {
     font-size: 1rem;
-    font-stretch: 112%;
     font-weight: 700;
     letter-spacing: -0.01em;
 }
@@ -1373,7 +1364,6 @@ kbd {
 
 .fl-work__main .pk-end h2 {
     font-size: 1rem;
-    font-stretch: 112%;
     letter-spacing: -0.01em;
 }
 
@@ -1688,5 +1678,82 @@ kbd {
     .fl-kv > div {
         grid-template-columns: 96px minmax(0, 1fr) auto;
         min-height: 48px;
+    }
+}
+
+/* R-52: the whole row is the link (the title's ::after covers it); on a phone the title line itself is also a 44px target. */
+@media (max-width: 860px) {
+    .fl-row__open {
+        display: flex;
+        align-items: center;
+        min-height: var(--tap);
+    }
+
+    .fl-kv__act a,
+    .fl-caught a:not(.pk-btn),
+    .pk-beat__title a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap);
+    }
+}
+
+@media (max-width: 1024px) {
+    .sh-stage input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]),
+    .sh-stage select,
+    .lg-seg .pk-btn,
+    .bz-chosen button,
+    .fl-filters summary {
+        min-height: var(--tap);
+    }
+
+    .bz-chosen button {
+        min-width: var(--tap);
+    }
+
+    .fl-filters summary {
+        display: flex;
+        align-items: center;
+    }
+
+    .fl-kv__act a,
+    .fl-caught a:not(.pk-btn),
+    .pk-beat__title a,
+    .pk-row__title a,
+    .bz-todos a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap);
+    }
+}
+
+/* 861 to 1024: the title keeps its 56px row; its box grows to 44px with padding that margin gives back, so the row does not get taller. */
+@media (min-width: 861px) and (max-width: 1024px) {
+    .fl-row__open {
+        padding-block: 11px;
+        margin-block: -11px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sh-stage .pk-btn,
+    .sh-stage .ln-chip {
+        min-height: var(--tap);
+    }
+
+    .me-chip button {
+        min-width: var(--tap);
+        min-height: var(--tap);
+        margin-block: -8px;
+        margin-inline-end: -10px;
+    }
+}
+
+@media (max-width: 860px) {
+    .pk-row__title a,
+    .bz-todos a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap);
     }
 }

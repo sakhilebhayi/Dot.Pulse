@@ -68,15 +68,9 @@
     $bellRoute = Route::has('me.notifications');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto" data-dh-theme-key="pulse-theme">
 <head>
     @include('layouts.partials.head', ['title' => $pageTitle, 'description' => $description, 'csrf' => true])
-    {{-- Shared Dot UI (search pill, platform switcher), served from this site's own public/dot-ui. The host token mapping lives in resources/css/pulse/shell.css. --}}
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-fonts.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher-fonts.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
     @livewireStyles
 </head>
 {{-- data-community-channels: the private communities this user belongs to, one realtime channel each (resources/js/pulse-realtime.js). --}}
@@ -84,104 +78,42 @@
     <a class="skip-link" href="#main">Skip to the floor</a>
     <x-banner />
 
-    <header class="sh-mast{{ $showDial ? ' sh-mast--dial' : '' }}" id="shell-topbar">
-        <x-pulse.brand />
+    {{-- The shared Dot header (dot-ui 0.6.0): one row, the search centred by the grid. The five verbs live in the rail (from 861px) and the
+         phone bottom bar; the drawer below holds what the bar cannot reach (Search, Saved, Community, Open door, Moderation, Operator, your
+         businesses). The header itself carries no primary nav, so nothing is listed twice. --}}
+    <x-dot.header id="shell-topbar" brand-href="{{ pulse_route_first(['floor', 'dashboard']) }}" brand-label="Dot.Pulse home" skip="#main" drawer-title="Menu"
+        :account="$user ? \App\Support\ShellAccount::for($user, $businesses) : null" :guest="$user ? null : \App\Support\ShellAccount::guest()">
+        <x-slot:brand><x-pulse.logo :height="40" class="sh-brand__logo" /></x-slot:brand>
 
-        @if ($showDial)
-            <div class="sh-mast__dial"><x-pulse.mode-dial :selected="$selectedMode" /></div>
-        @else
-            {{-- A spacer: the page already says its own name in its h1, so the masthead does not say it twice. --}}
-            <div class="sh-mast__page" aria-hidden="true"></div>
+        @if (Route::has('search') && $user)
+            <x-slot:search>
+                <livewire:pulse.header-search :query="request()->routeIs('search') ? (string) request('q', '') : ''" />
+            </x-slot:search>
         @endif
 
-        <div class="sh-mast__tools">
-            @if (Route::has('search') && ! request()->routeIs('search') && ! $focus)
-                <div class="sh-search">
-                    <x-dot.search id="mast-q" name="q" value="" placeholder="Search the floor" label="Search the floor" :action="route('search')" />
-                </div>
-                <a class="sh-iconbtn sh-searchicon" href="{{ route('search') }}" aria-label="Search"><x-pulse.icon name="search" /></a>
-            @endif
-
+        <x-slot:tools>
             @auth
                 <x-dot.switcher platform="pulse" :company="$user->currentTeam?->infodot_team_uuid" :company-name="$user->currentTeam?->name" logos="/dot-ui/img/platforms" />
             @endauth
-
             @if ($bellRoute)
-                <a class="sh-iconbtn" href="{{ route('me.notifications') }}" aria-label="Notifications" data-label="Notifications">
-                    <x-pulse.icon name="bell" />
-                    <span class="sh-badge" data-pulse-badge="notifications" data-label="Notifications" hidden>0</span>
-                </a>
-            @else
-                @auth
-                    <livewire:pulse.notification-bell />
-                @endauth
+                <x-dot.bell :href="route('me.notifications')" :count="0" :always="true" data-pulse-bell />
             @endif
+            @unless ($focus)<button type="button" class="dh-icon-btn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>@endunless
+        </x-slot:tools>
 
-            @unless ($focus)<button type="button" class="sh-iconbtn sh-compose-top" data-pk-dialog="compose" aria-label="Compose"><x-pulse.icon name="plus" /></button>@endunless
-
-            <button type="button" class="sh-iconbtn sh-theme sh-hide-phone" data-pk-theme aria-pressed="false" aria-label="Switch theme">
-                <x-pulse.icon name="moon" class="sh-theme__moon" />
-                <x-pulse.icon name="sun" class="sh-theme__sun" />
-            </button>
-
-            @if ($isFloor && $hasContext)
-                <button type="button" class="sh-iconbtn sh-context-open" data-pk-context-open aria-controls="sh-context" aria-expanded="false" aria-label="Filters and context">
-                    <x-pulse.icon name="menu" />
-                </button>
-            @endif
-
-            @auth
-                <div class="sh-menuwrap">
-                    <button type="button" class="sh-iconbtn" data-pk-toggle="user-menu" aria-expanded="false" aria-controls="user-menu">
-                        <span class="sr-only">Your account, {{ $user->name }}</span>
-                        <x-pulse.avatar :name="$user->name" size="sm" style="background: var(--c-signal); color: var(--c-on-signal); border-color: var(--c-ink-fixed)" />
-                    </button>
-                    <div class="sh-menu" id="user-menu" hidden>
-                        <div class="sh-menu__who">
-                            <strong>{{ $user->name }}</strong>
-                            <span>{{ $user->currentTeam->name ?? 'Personal' }}</span>
-                        </div>
-                        <a href="{{ pulse_route('me.profile') }}">Profile and settings</a>
-                        <a href="{{ pulse_route('me.account') }}">Account and security</a>
-                        @if (count($biz))
-                            <div class="sh-menu__label">{{ count($biz) === 1 ? 'Your business' : 'Your businesses' }}</div>
-                            @foreach ($biz as $b)
-                                <a href="{{ $b['href'] }}">Manage {{ $b['label'] }}</a>
-                            @endforeach
-                        @endif
-                        @if (Laravel\Jetstream\Jetstream::hasTeamFeatures() && $user->currentTeam)
-                            <div class="sh-menu__label">Team</div>
-                            <a href="{{ route('teams.show', $user->currentTeam->id) }}">Team settings</a>
-                            @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                                <a href="{{ route('teams.create') }}">Create new team</a>
-                            @endcan
-                            @if ($user->allTeams()->count() > 1)
-                                <div class="sh-menu__label">Switch team</div>
-                                @foreach ($user->allTeams() as $team)
-                                    <form method="POST" action="{{ route('current-team.update') }}">
-                                        @method('PUT')
-                                        @csrf
-                                        <input type="hidden" name="team_id" value="{{ $team->id }}">
-                                        <button type="submit" class="sh-menu__item" @if ($user->isCurrentTeam($team)) aria-current="true" @endif>
-                                            <span>{{ $team->name }}</span>
-                                            @if ($user->isCurrentTeam($team))<x-pulse.icon name="check" class="sh-check" :size="16" />@endif
-                                        </button>
-                                    </form>
-                                @endforeach
-                            @endif
-                        @endif
-                        <div class="sh-menu__label">Appearance</div>
-                        <button type="button" class="sh-menu__item" data-pk-theme aria-pressed="false">Switch theme</button>
-                        <div class="sh-menu__label">Session</div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="sh-menu__item">Log out</button>
-                        </form>
-                    </div>
-                </div>
-            @endauth
-        </div>
-    </header>
+        <x-slot:drawer>
+            <nav class="dh-dnav" aria-label="More places">
+                <ul>
+                    @foreach ($more as $item)
+                        <li><a class="dh-dnav__link" href="{{ $item['href'] }}" @if ($activeKey === $item['key']) aria-current="page" @endif><span class="dh-menu__label">{{ $item['label'] }}</span></a></li>
+                    @endforeach
+                    @foreach ($biz as $b)
+                        <li><a class="dh-dnav__link" href="{{ $b['href'] }}" @if ($activeKey === $b['key']) aria-current="page" @endif><span class="dh-menu__label">{{ $b['label'] }}</span></a></li>
+                    @endforeach
+                </ul>
+            </nav>
+        </x-slot:drawer>
+    </x-dot.header>
 
     <div class="sh-body content-wrap{{ $focus ? ' sh-body--focus' : '' }}">
         @unless ($focus)
@@ -230,6 +162,14 @@
         <main id="main" tabindex="-1" class="sh-stage {{ $isFloor ? 'sh-stage--floor' : 'sh-stage--wide' }}{{ $isDesk ? ' sh-stage--desk' : '' }}{{ $isFloor && $hasContext ? ' has-context' : '' }}">
             @if ($isFloor)
                 <div class="sh-floor">
+                    @if ($showDial || ($hasContext && $isFloor))
+                        <div class="sh-floorbar">
+                            @if ($showDial)<x-pulse.mode-dial :selected="$selectedMode" :page="true" />@endif
+                            @if ($hasContext)
+                                <button type="button" class="pk-btn pk-btn--quiet sh-context-open" data-pk-context-open aria-controls="sh-context" aria-expanded="false"><x-pulse.icon name="menu" :size="18" />Filters</button>
+                            @endif
+                        </div>
+                    @endif
                     @isset($header)<header class="sh-pagehead">{{ $header }}</header>@endisset
                     {{ $slot }}
                 </div>
@@ -278,7 +218,7 @@
     @stack('modals')
     <x-pulse.toasts />
 
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
     @livewireScripts
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" defer></script>
 </body>
 </html>

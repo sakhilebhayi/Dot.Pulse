@@ -19,24 +19,24 @@ colors:
   bad: "#B3261E"
 typography:
   display:
-    fontFamily: Archivo
+    fontFamily: Roboto
     fontSize: 3.5rem
     fontWeight: 800
     lineHeight: 0.95
     letterSpacing: -0.03em
   title:
-    fontFamily: Archivo
+    fontFamily: Roboto
     fontSize: 1.5rem
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: -0.02em
   ui:
-    fontFamily: Archivo
+    fontFamily: Roboto
     fontSize: 0.9375rem
     fontWeight: 400
     lineHeight: 1.5
   small:
-    fontFamily: Archivo
+    fontFamily: Roboto
     fontSize: 0.8125rem
     fontWeight: 600
     lineHeight: 1.35
@@ -123,7 +123,7 @@ Dark theme keeps the roles: ground `#0B0E1A`, beat `#141A2E`, ink `#EEF0F5`, cob
 
 ## Typography
 
-Archivo, a variable grotesk with a width axis. Display and titles use width 112 to 125 and weight 700 to 800, set tight (-0.02 to -0.03em), used large and rarely. Interface text uses width 100 at 15 px, small labels 13 px at 600. JetBrains Mono at 12 px for kind words, numbers, times and prices with tabular figures; never for decoration, and never for words ("Market related", "under an hour" are set in Archivo). Large figures are 20 px, not jumbo. Fonts are self hosted in `public/fonts/` and mirrored to the docroot on deploy.
+Roboto (R-52, the one face of every Dot platform; it replaced Archivo, which had a width axis Roboto does not). Display and titles use weight 700 to 800, set tight (-0.02 to -0.03em), used large and rarely. Interface text 15 px, small labels 13 px at 600. JetBrains Mono at 12 px for kind words, numbers, times and prices with tabular figures; never for decoration, and never for words ("Market related", "under an hour" are set in Roboto). Large figures are 20 px, not jumbo. Roboto is self hosted in `public/dot-ui/fonts/roboto/` and JetBrains Mono in `public/fonts/`; both are mirrored to the docroot on deploy.
 
 ## Layout
 

@@ -3,7 +3,7 @@
     Sections: code, title, message, actions (optional).
 --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto" data-dh-theme-key="pulse-theme">
 <head>
     @include('layouts.partials.head', ['title' => trim($__env->yieldContent('title')).' | Dot.Pulse', 'description' => null, 'csrf' => false])
     <meta name="robots" content="noindex">

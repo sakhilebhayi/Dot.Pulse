@@ -1,9 +1,12 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 import typography from '@tailwindcss/typography';
+import dotPreset from './dot-ui/tailwind/tailwind-preset.cjs';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    // Roboto and the shared type scale (text-dot-*) come from dot-ui; the Floor keeps JetBrains Mono for its readouts.
+    presets: [dotPreset],
     // The Floor follows the OS colour scheme and html[data-theme="light"|"dark"] (set by the theme toggle).
     // Tailwind's dark: variant is bound to the same two conditions, so Jetstream's stock dark: classes
     // flip with the rest of the interface.
@@ -23,7 +26,6 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Archivo', ...defaultTheme.fontFamily.sans],
                 mono: ['JetBrains Mono', ...defaultTheme.fontFamily.mono],
             },
             colors: {
