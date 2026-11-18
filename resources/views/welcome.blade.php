@@ -16,7 +16,7 @@
         ['label' => 'Website', 'state' => 'claimed', 'detail' => 'Entered by the business'],
         ['label' => 'Trade licence', 'state' => 'missing'],
     ];
-    $door = pulse_infodot_url();
+    $door = \App\Support\CentralSignIn::door(pulse_infodot_url());
     $signedIn = auth()->check();
     $doorLabel = $signedIn ? 'Open the Floor' : 'Sign in with InfoDot';
     $doorHref = $signedIn ? pulse_route_first(['floor', 'dashboard']) : $door;
@@ -116,7 +116,7 @@
     <section class="lp-final" aria-labelledby="final-title">
         <div class="pub-wrap">
             <h2 id="final-title">Come in through InfoDot.</h2>
-            <p>New to InfoDot? Start there, then come back through the same door.</p>
+            <p>New to InfoDot? @if (\App\Support\CentralSignIn::active())<a href="{{ \App\Support\CentralSignIn::register('') }}">Create your account</a> and you come straight back.@else Start there, then come back through the same door.@endif</p>
             <x-pulse.button variant="signal" :href="$doorHref">{{ $doorLabel }}</x-pulse.button>
         </div>
     </section>

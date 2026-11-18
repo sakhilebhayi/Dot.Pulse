@@ -59,7 +59,7 @@
                     <livewire:pulse.business.listing-actions type="entity" :id="$entity->id" :key="'actions-entity-'.$entity->id" />
                 @endif
             @else
-                <x-pulse.button variant="signal" :href="route('login')">Sign in with InfoDot to knock</x-pulse.button>
+                <x-pulse.button variant="signal" :href="\App\Support\CentralSignIn::login(request()->getRequestUri())">Sign in with InfoDot to knock</x-pulse.button>
                 <p class="pk-muted">Knocking, following and the full page are for signed-in people.</p>
             @endif
         </div>

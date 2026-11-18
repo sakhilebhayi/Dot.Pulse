@@ -38,6 +38,22 @@ Route::post('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
 // the visitor is sent to the normal sign-in page and the token in the URL is never read.
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'legacy']);
 
+// R-54: a signed-out person who chose to sign in from a page (the business page they want to knock on) comes back to that page.
+// The page is checked by the shared package's deep-link rules; with the central sign-in off this is just the old login page.
+Route::get('/enter', function (\Illuminate\Http\Request $request) {
+    if (! \App\Support\CentralSignIn::active()) {
+        return redirect()->route('login');
+    }
+
+    $to = \Dot\SsoClient\Support\DeepLink::clean($request->query('to'), $request);
+
+    if ($to !== null) {
+        $request->session()->put('url.intended', $to);
+    }
+
+    return redirect()->route('dotsso.login');
+})->middleware('throttle:60,1,pulse-enter')->name('pulse.enter');
+
 // Signed-in people land on the Floor; everyone else sees the front page.
 Route::get('/', fn () => auth()->check() ? redirect()->route('floor') : view('welcome'));
 

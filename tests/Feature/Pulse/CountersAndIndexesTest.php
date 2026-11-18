@@ -209,7 +209,8 @@ class CountersAndIndexesTest extends TestCase
         // whichever driver the suite runs on. Three steps: the InfoDot team
         // link, then the two moderation migrations.
         // R-41 migrations (2026_11_*) sit on top of those three, so they roll back first.
-        $r41 = count(glob(database_path('migrations/2026_11_*.php')));
+        $r41 = count(glob(database_path('migrations/2026_11_*.php'))) + count(glob(base_path('packages/dot-sso-client/database/migrations/2026_11_*.php')));
+        // R-54: the shared sign-in package's own migration (dotsso tables) is part of the 2026_11 stack too.
         $this->artisan('migrate:rollback', ['--step' => 3 + $r41])->assertSuccessful();
         $this->assertFalse(Schema::hasColumn('teams', 'infodot_team_uuid'));
         $this->assertFalse(Schema::hasTable('community_join_requests'));
