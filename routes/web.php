@@ -18,6 +18,8 @@ use App\Models\PulseRole;
 use App\Models\PulseSignal;
 use App\Models\User;
 use App\Services\Pulse\Lines\Access;
+use App\Support\CentralSignIn;
+use Dot\SsoClient\Support\DeepLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -40,12 +42,12 @@ Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'legacy']);
 
 // R-54: a signed-out person who chose to sign in from a page (the business page they want to knock on) comes back to that page.
 // The page is checked by the shared package's deep-link rules; with the central sign-in off this is just the old login page.
-Route::get('/enter', function (\Illuminate\Http\Request $request) {
-    if (! \App\Support\CentralSignIn::active()) {
+Route::get('/enter', function (Request $request) {
+    if (! CentralSignIn::active()) {
         return redirect()->route('login');
     }
 
-    $to = \Dot\SsoClient\Support\DeepLink::clean($request->query('to'), $request);
+    $to = DeepLink::clean($request->query('to'), $request);
 
     if ($to !== null) {
         $request->session()->put('url.intended', $to);
