@@ -641,3 +641,25 @@
 .doc-prose li {
     margin: 4px 0;
 }
+
+/* ---------- R-54: the claim page ---------- */
+.au-card .au-code {
+    min-height: 48px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.au-claim-aside {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.au-claim-aside .pk-btn {
+    min-height: 44px;
+}

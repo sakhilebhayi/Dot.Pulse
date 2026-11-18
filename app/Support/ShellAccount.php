@@ -66,7 +66,7 @@ class ShellAccount
     public static function guest(): array
     {
         return array_filter([
-            'login' => Route::has('login') ? ['label' => 'Log in', 'href' => route('login')] : null,
+            'login' => Route::has('login') ? ['label' => 'Log in', 'href' => CentralSignIn::login()] : null,
         ]);
     }
 }

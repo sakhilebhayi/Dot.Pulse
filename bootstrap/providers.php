@@ -7,6 +7,7 @@ use App\Providers\HealthCheckServiceProvider;
 use App\Providers\JetstreamServiceProvider;
 use App\Providers\PulseEntitiesServiceProvider;
 use App\Providers\PulseShellServiceProvider;
+use Dot\SsoClient\DotSsoServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -17,4 +18,5 @@ return [
     // --- entities ---
     PulseEntitiesServiceProvider::class,
     PulseShellServiceProvider::class,
+    DotSsoServiceProvider::class,
 ];

@@ -10,6 +10,15 @@
 
 {{ __('If you already have an account, you may accept this invitation by clicking the button below:') }}
 
+@elseif (\App\Support\CentralSignIn::active())
+{{ __('If you do not have an account yet, create one on InfoDot first (you come straight back here), then accept the invitation with the button below:') }}
+
+@component('mail::button', ['url' => \App\Support\CentralSignIn::register(route('login'))])
+{{ __('Create Account') }}
+@endcomponent
+
+{{ __('If you already have an account, you may accept this invitation by clicking the button below:') }}
+
 @else
 {{ __('You may accept this invitation by clicking the button below:') }}
 @endif

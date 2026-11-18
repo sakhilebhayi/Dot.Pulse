@@ -29,6 +29,8 @@ class RouteSweepTest extends TestCase
     /** Routes that exist on purpose without a sign in, and why. */
     private const PUBLIC = [
         '/', 'login', 'forgot-password', 'reset-password', 'reset-password/{token}', 'two-factor-challenge', 'auth/ecosystem', 'up',
+        // R-54: the shared sign-in package's routes (they 404 until DOTSSO_ENABLED) and the knock-in entry that remembers a page.
+        'sso/login', 'sso/callback', 'sso/logout', 'sso/claim', 'sso/claim/resend', 'sso/claim/cancel', 'sso/backchannel-logout', 'enter',
         'b/{entity}', 'media/{mediaFile}/{size?}', 'pulse/digest/unsubscribe/{user}', 'sanctum/csrf-cookie',
         'register', 'storage/{path}', 'livewire/update', 'livewire/upload-file', 'livewire/preview-file/{filename}',
         'livewire/livewire.js', 'livewire/livewire.min.js.map', 'broadcasting/auth', 'dev/kit', 'dev/floor', 'dev/login/{who}', 'dev/logout', 'dev/login-b/{id}', 'dev/boom-b', 'dev/login/{who}', 'dev/logout', '_boost/browser-logs',
