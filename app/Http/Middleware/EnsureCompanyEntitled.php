@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\InfoDot\EntitlementClient;
 use App\Support\EntitlementRefusal;
 use Closure;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
  * InfoDot decides whether a company holds Dot.Pulse. A person who is already signed in must stop working when that
  * ends, so each request in the signed-in area asks (through a ten-minute cache) whether the company whose Pulse is
  * being used still holds the platform. A clear "no" answers with the plain refusal page and HTTP 403: nothing is
- * read from or written to Pulse. Anything else, including every kind of failure, lets the request through
+ * read from or written to Pulse. R-61: a platform InfoDot says is not available answers with a plain "temporarily
+ * unavailable" page and HTTP 503 (JSON 503 with Retry-After for JSON and Livewire calls), for every company. Anything else, including every kind of failure, lets the request through
  * exactly as before.
  *
  * It sits on the signed-in route group (routes/web.php) and on Jetstream's own pages (config/jetstream.php), and is
@@ -81,6 +83,13 @@ class EnsureCompanyEntitled
 
         $answer = $this->entitlements->forCompany((string) $team->infodot_team_uuid);
 
+        // R-61: a platform InfoDot has switched off (maintenance, unavailable) is off for everyone, whatever they hold.
+        // Nothing is deleted or changed; the page says so plainly. Checked before what the company holds, because it
+        // is a different question.
+        if ($answer !== null && ! $answer['available']) {
+            return $this->unavailable($request, $answer['message']);
+        }
+
         if ($answer === null || $answer['entitled'] === true) {
             return $next($request);
         }
@@ -141,6 +150,29 @@ class EnsureCompanyEntitled
         }
 
         return true;
+    }
+
+    /**
+     * The 503 page (JSON for a JSON or Livewire call). A Livewire update must be stopped by throwing, because Livewire
+     * throws away any non-redirect response a persistent middleware returns and would run the update.
+     */
+    private function unavailable(Request $request, ?string $message): Response
+    {
+        $isLivewire = $request->headers->has('X-Livewire') || request()->headers->has('X-Livewire') || $request->is('livewire/*');
+
+        if ($isLivewire || $request->expectsJson()) {
+            $json = response()->json(['message' => $message ?? 'Dot.Pulse is temporarily unavailable.', 'reason' => 'platform_unavailable'], 503)
+                ->header('Retry-After', '60')->header('Cache-Control', 'no-store, private');
+
+            if ($isLivewire) {
+                throw new HttpResponseException($json);
+            }
+
+            return $json;
+        }
+
+        return response()->view('errors.platform-unavailable', ['message' => $message], 503)
+            ->header('Cache-Control', 'no-store, private')->header('Retry-After', '60');
     }
 
     /**

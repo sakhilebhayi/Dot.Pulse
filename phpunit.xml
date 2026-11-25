@@ -37,5 +37,6 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
             <env name="ALLOW_REGISTRATION" value="true"/>
+        <env name="PULSE_ENTITLEMENT_CHECK" value="false" force="true"/>
     </php>
 </phpunit>

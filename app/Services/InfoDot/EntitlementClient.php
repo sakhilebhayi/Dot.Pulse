@@ -8,18 +8,26 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Asks InfoDot whether a company still holds this platform (R-50).
+ * Asks InfoDot whether a company holds this platform, and whether the platform is available (R-50, R-61).
  *
- * One question, about one company, answered from InfoDot's read endpoint with this platform's own service secret.
- * The answer is kept for ten minutes per company; a failure for one minute. Anything that is not a clear answer
- * (InfoDot down, slow, refusing, a body this app cannot read, no secret configured) is "unknown", and unknown never
- * locks a company out: the caller carries on as if the check did not exist. A failure is logged once per window.
+ * One question, about one company, answered from InfoDot's read endpoint with this platform's own service secret. A
+ * clear answer is kept for one minute per company, so a switch made at InfoDot (a platform put in maintenance) takes
+ * effect within about a minute, and is also remembered for six hours. Anything that is not a clear answer (InfoDot
+ * down, slow, refusing, a body this app cannot read, no secret configured) is "unknown": the last clear answer
+ * under six hours old is used, so a platform last told "unavailable" stays unavailable; with none, the caller carries
+ * on as if the check did not exist. An outage at InfoDot never locks a company out that was last told it could work.
+ * A failure is logged once per window.
  */
 class EntitlementClient
 {
-    public const ANSWER_TTL = 600;
+    /** How long one clear answer is used before InfoDot is asked again. */
+    public const ANSWER_TTL = 60;
 
+    /** How long "no answer" is remembered, so a broken InfoDot is not asked on every request. */
     public const FAILURE_TTL = 60;
+
+    /** How long the last clear answer is used when InfoDot cannot be reached. */
+    public const LAST_KNOWN_TTL = 21600;
 
     public function enabled(): bool
     {
@@ -27,7 +35,7 @@ class EntitlementClient
     }
 
     /**
-     * @return array{entitled: bool, status: string}|null null when InfoDot gave no usable answer
+     * @return array{entitled: bool, status: string, available: bool, message: ?string, features: array<string, array{state: string, message: ?string}>}|null null when InfoDot gave no clear answer and none is remembered
      */
     public function forCompany(string $uuid): ?array
     {
@@ -39,38 +47,39 @@ class EntitlementClient
             $cached = null;
         }
 
-        if (is_array($cached)) {
-            return isset($cached['entitled']) ? ['entitled' => (bool) $cached['entitled'], 'status' => (string) ($cached['status'] ?? '')] : null;
+        // An entry from before R-61 has no `answer` key and is read as a miss.
+        if (is_array($cached) && array_key_exists('answer', $cached)) {
+            return $cached['answer'];
         }
 
         $answer = $this->ask($uuid);
 
         if (is_string($answer)) {
             Log::warning('InfoDot entitlement check gave no answer; carrying on without it.', ['company' => $uuid, 'reason' => $answer]);
-            $this->remember($key, ['unknown' => true], self::FAILURE_TTL);
-
-            return null;
+            $answer = null;
+            $fresh = false;
+        } else {
+            $fresh = true;
         }
 
-        $this->remember($key, $answer, self::ANSWER_TTL);
+        try {
+            if ($fresh) {
+                Cache::put($key.':last', ['answer' => $answer, 'at' => time()], self::LAST_KNOWN_TTL);
+            } else {
+                $last = Cache::get($key.':last');
+                $answer = is_array($last) && is_array($last['answer'] ?? null) && time() - (int) ($last['at'] ?? 0) < self::LAST_KNOWN_TTL ? $last['answer'] : null;
+            }
+
+            Cache::put($key, ['answer' => $answer], $answer === null ? self::FAILURE_TTL : self::ANSWER_TTL);
+        } catch (Throwable) {
+            // No cache, no memory of the answer: the next request asks again.
+        }
 
         return $answer;
     }
 
     /**
-     * @param  array<string, mixed>  $value
-     */
-    private function remember(string $key, array $value, int $seconds): void
-    {
-        try {
-            Cache::put($key, $value, $seconds);
-        } catch (Throwable) {
-            // A cache that cannot be written only means the next request asks again.
-        }
-    }
-
-    /**
-     * @return array{entitled: bool, status: string}|string the answer, or why there is none
+     * @return array{entitled: bool, status: string, available: bool, message: ?string, features: array<string, array{state: string, message: ?string}>}|string the answer, or why there is none
      */
     private function ask(string $uuid): array|string
     {
@@ -87,7 +96,7 @@ class EntitlementClient
                 ->withHeaders(['X-Dot-Platform' => $platform])
                 ->acceptJson()
                 ->connectTimeout(2)
-                ->timeout(max(1, min(3, (int) config('ecosystem.infodot.timeout', 5))))
+                ->timeout(max(1, min(3, (int) config('ecosystem.infodot.entitlement_timeout', 3))))
                 ->get($url, ['platform' => $platform]);
         } catch (Throwable $e) {
             return 'unreachable ('.class_basename($e).')';
@@ -109,11 +118,42 @@ class EntitlementClient
                     return 'malformed body';
                 }
 
-                return ['entitled' => $row['entitled'], 'status' => is_string($row['status'] ?? null) ? $row['status'] : ''];
+                return [
+                    'entitled' => $row['entitled'],
+                    'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+                    // R-61: an InfoDot from before contract 2 gives no `available`, which is not a switch-off.
+                    'available' => ($row['available'] ?? true) !== false,
+                    'message' => $this->text($row['message'] ?? null),
+                    'features' => $this->features($row['features'] ?? null),
+                ];
             }
         }
 
         return 'own row missing';
+    }
+
+    private function text(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? mb_substr($value, 0, 400) : null;
+    }
+
+    /**
+     * The feature switches in this platform's own row (R-61), kept as key => state and message. Anything malformed is
+     * ignored, and a feature that is not listed is available.
+     *
+     * @return array<string, array{state: string, message: ?string}>
+     */
+    private function features(mixed $raw): array
+    {
+        $out = [];
+
+        foreach (is_array($raw) ? $raw : [] as $key => $row) {
+            if (is_string($key) && is_array($row) && is_string($row['state'] ?? null)) {
+                $out[$key] = ['state' => $row['state'], 'message' => $this->text($row['message'] ?? null)];
+            }
+        }
+
+        return $out;
     }
 
     private function platform(): string
@@ -124,6 +164,12 @@ class EntitlementClient
     /** The read endpoint sits beside the redeem endpoint: .../api/ecosystem/companies/{uuid}/platforms. */
     private function url(string $uuid): ?string
     {
+        $configured = config('ecosystem.infodot.entitlement_url');
+
+        if (is_string($configured) && $configured !== '') {
+            return str_replace('{uuid}', rawurlencode($uuid), $configured);
+        }
+
         $redeem = (string) config('ecosystem.infodot.redeem_url');
 
         if ($redeem === '' || ! preg_match('#/redeem/?$#', $redeem)) {
