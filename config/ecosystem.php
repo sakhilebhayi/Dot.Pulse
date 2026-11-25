@@ -22,9 +22,13 @@ return [
         'timeout' => (int) env('INFODOT_REDEEM_TIMEOUT', 5),
         'provision' => (bool) env('INFODOT_PROVISION_USERS', true),
 
-        // R-50: during a session, ask InfoDot whether the current company still holds this platform (cached ten
-        // minutes per company; an outage or a misconfiguration never locks anyone out). See EnsureCompanyEntitled.
+        // R-50/R-61: during a session, ask InfoDot whether the current company still holds this platform and whether
+        // the platform is available (a clear answer is cached one minute per company and remembered six hours; an
+        // outage or a misconfiguration never locks anyone out). See EnsureCompanyEntitled.
         'entitlement_check' => (bool) env('PULSE_ENTITLEMENT_CHECK', true),
+        // Optional full URL of the read endpoint, with {uuid} for the company; blank = beside the redeem endpoint.
+        'entitlement_url' => env('PULSE_ENTITLEMENT_URL'),
+        'entitlement_timeout' => (int) env('PULSE_ENTITLEMENT_TIMEOUT', 3),
     ],
 
 ];
